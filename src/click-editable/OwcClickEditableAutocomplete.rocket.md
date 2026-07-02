@@ -1,0 +1,273 @@
+```js server
+export const config = {
+  path: '/components/click-editable-autocomplete',
+  title: 'Click Editable Autocomplete',
+  menu: {
+    order: 30,
+  },
+};
+import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
+export const components = atlasDocComponents;
+import { docsData } from '@finum/data-table/docsData.js';
+
+export const layout = pageData => docLayout(pageData, docsData);
+```
+
+```js client
+import { html } from 'lit';
+
+import '@finum/data-table/define/owc-click-editable-autocomplete.js';
+```
+
+# Click Editable Autocomplete
+
+A input field with autocomplete options that is editable through double clicking.
+
+Example:
+
+The `<owc-click-editable-autocomplete>` element is the input field with autocomplete options. Add options with a `label` and `value` property in the `.data` attribute. Add a default option with the `value` attribute.
+
+```js demo
+export const simpleAutocompleteField = () => {
+  return html`
+    <owc-click-editable-autocomplete
+      id="simpleAutocomplete"
+      value="103"
+      .data=${[
+        { label: 'Apple', value: '100' },
+        { label: 'Banana', value: '101' },
+        { label: 'Grape', value: '102' },
+        { label: 'Strawberry', value: '103' },
+      ]}
+    ></owc-click-editable-autocomplete>
+  `;
+};
+```
+
+## Read Only
+
+Use the `read-only` attribute to set a field to be read only.
+
+```js demo
+export const notEditableField = () => {
+  return html`
+    <owc-click-editable-autocomplete
+      id="autocomplete"
+      value="102"
+      read-only
+      .data=${[
+        { label: 'Apple', value: '100' },
+        { label: 'Banana', value: '101' },
+        { label: 'Grape', value: '102' },
+        { label: 'Strawberry', value: '103' },
+      ]}
+    ></owc-click-editable-autocomplete>
+  `;
+};
+```
+
+## Copy Button
+
+Use the `show-copy-button` attribute display a copy button next to the field.
+
+```js demo
+export const copyButtonField = () => {
+  return html`
+    <owc-click-editable-autocomplete
+      id="autocomplete"
+      value="102"
+      show-copy-button
+      .data=${[
+        { label: 'Apple', value: '100' },
+        { label: 'Banana', value: '101' },
+        { label: 'Grape', value: '102' },
+        { label: 'Strawberry', value: '103' },
+      ]}
+    ></owc-click-editable-autocomplete>
+  `;
+};
+```
+
+## Custom Formatter
+
+To implement the custom formatter use the `.formatter` attribute and define a custom formatter function.
+
+```js demo
+export const formatterField = () => {
+  return html`
+    <owc-click-editable-autocomplete
+      id="autocomplete"
+      .formatter=${value => (value ? html`Selected Date: ${value}` : html`No Date Selected`)}
+      .data=${[
+        { label: 'Today', value: '28.01' },
+        { label: 'Tomorrow', value: '29.01' },
+        { label: 'Yesterday', value: '27.01' },
+      ]}
+    ></owc-click-editable-autocomplete>
+  `;
+};
+```
+
+## Clearable
+
+Use the `clearable` attribute to add a button next to the selected option, that clears the selection.
+
+```js demo
+export const clearableAutocompleteField = () => {
+  return html`
+    <owc-click-editable-autocomplete
+      id="clearableAutocomplete"
+      value="100"
+      clearable
+      .data=${[
+        { label: 'Apple', value: '100' },
+        { label: 'Banana', value: '101' },
+        { label: 'Grape', value: '102' },
+        { label: 'Strawberry', value: '103' },
+      ]}
+    ></owc-click-editable-autocomplete>
+  `;
+};
+```
+
+## Multi-Select
+
+Use the `multiple` attribute to enable multi-select.
+
+```js demo
+export const multipleAutocompleteField = () => {
+  return html`
+    <owc-click-editable-autocomplete
+      id="multipleAutocomplete"
+      value="103"
+      multiple
+      .data=${[
+        { label: 'Apple', value: '100' },
+        { label: 'Banana', value: '101' },
+        { label: 'Grape', value: '102' },
+        { label: 'Strawberry', value: '103' },
+      ]}
+    ></owc-click-editable-autocomplete>
+  `;
+};
+```
+
+## Hide Select All
+
+Use the `hide-select-all` attribute to hide the "Select All" button in the multi-select window.
+
+```js demo
+export const hideSelectAutocompleteField = () => {
+  return html`
+    <owc-click-editable-autocomplete
+      id="multipleAutocomplete"
+      value="103"
+      multiple
+      hide-select-all
+      .data=${[
+        { label: 'Apple', value: '100' },
+        { label: 'Banana', value: '101' },
+        { label: 'Grape', value: '102' },
+        { label: 'Strawberry', value: '103' },
+      ]}
+    ></owc-click-editable-autocomplete>
+  `;
+};
+```
+
+## Hide Select All
+
+Use the `label` slot attribute to add a label.
+
+```js demo
+export const labelAutocompleteField = () => {
+  return html`
+    <owc-click-editable-autocomplete
+      id="multipleAutocomplete"
+      value="103"
+      .data=${[
+        { label: 'Apple', value: '100' },
+        { label: 'Banana', value: '101' },
+        { label: 'Grape', value: '102' },
+        { label: 'Strawberry', value: '103' },
+      ]}
+    >
+      <div slot="label">Frut:</div>
+    </owc-click-editable-autocomplete>
+  `;
+};
+```
+
+## Edit externally
+
+To simulate a double click call a function that sets `.editable` and `.open` to `true`. In this case there is an edit button with an event handler. This will not be affected by the `read-only` attribute.
+
+```js demo
+export const buttonAutocompleteField = () => {
+  return html`
+    <owc-click-editable-autocomplete
+      id="buttonAutocomplete"
+      .data=${[
+        { label: 'Apple', value: '100' },
+        { label: 'Banana', value: '101' },
+        { label: 'Grape', value: '102' },
+        { label: 'Strawberry', value: '103' },
+      ]}
+    ></owc-click-editable-autocomplete>
+    <wa-button
+      variant="brand"
+      style="margin-top: 20px"
+      size="small"
+      @click=${() => {
+        const buttonAutocomplete = document
+          .querySelector('[demo-name=buttonAutocompleteField]')
+          ?.shadowRoot?.querySelector('owc-click-editable-autocomplete');
+        if (buttonAutocomplete) {
+          buttonAutocomplete.editable = true;
+          buttonAutocomplete.open = true;
+        }
+      }}
+      >Edit</wa-button
+    >
+  `;
+};
+```
+
+## Manual Width
+
+You can use the variable `--owc-autocomplete-popover-width` to manually set the width of the autocompletes dropdown. This is useful when sync does not work, or the dropdown width needs to be significantly larger than the form field.
+
+```js demo
+export const manualWidth = () => {
+  return html`
+    <owc-click-editable-autocomplete
+      style="--owc-autocomplete-popover-width: 500px"
+      .data=${[
+        { label: 'Today', value: '28.01' },
+        { label: 'Tomorrow', value: '29.01' },
+        { label: 'Yesterday', value: '27.01' },
+        { label: 'This is a really long option, his may not fit in the usual box', value: '30' },
+      ]}
+    ></owc-click-editable-autocomplete>
+  `;
+};
+```
+
+## Number
+
+You can also use numbers as values.
+
+```js demo
+export const number = () => {
+  return html`
+    <owc-click-editable-autocomplete
+      .data=${[
+        { label: 'VAV', value: 100 },
+        { label: 'Standard Life', value: 101 },
+        { label: 'UNIQA', value: 102 },
+      ]}
+      .value=${100}
+    ></owc-click-editable-autocomplete>
+  `;
+};
+```
