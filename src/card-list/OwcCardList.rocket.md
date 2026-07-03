@@ -8,7 +8,7 @@ export const config = {
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
 export const components = atlasDocComponents;
-import { docsData } from '@finum/data-table/docsData.js';
+import { docsData } from '@open-wc/components/docsData.js';
 
 export const layout = pageData => docLayout(pageData, docsData);
 ```
@@ -16,7 +16,7 @@ export const layout = pageData => docLayout(pageData, docsData);
 ```js client
 import { html } from 'lit';
 
-import '@finum/data-table/define/owc-card-list.js';
+import '@open-wc/components/define/owc-card-list.js';
 ```
 
 # Card List
@@ -38,7 +38,7 @@ export const simpleCardList = () => {
       }}
       .data=${[
         {
-          firstName: 'Robert Mustermann',
+          firstName: 'Robert Chen',
           subject: 'Meeting with Michael, Lorem Ipsum dolor',
         },
         {
@@ -69,7 +69,7 @@ export const cardListTitle = () => {
       }}
       .data=${[
         {
-          firstName: 'Robert Mustermann',
+          firstName: 'Robert Chen',
           subject: 'Meeting with Michael, Lorem Ipsum dolor',
         },
         {
@@ -101,7 +101,7 @@ export const cardListViewAll = () => {
       }}
       .data=${[
         {
-          firstName: 'Robert Mustermann',
+          firstName: 'Robert Chen',
           subject: 'Meeting with Michael, Lorem Ipsum dolor',
         },
         {
@@ -133,7 +133,7 @@ export const cardListSorter = () => {
       }}
       .data=${[
         {
-          firstName: 'Robert Mustermann',
+          firstName: 'Robert Chen',
           meetingDate: new Date('2022-06-28T14:30:00.000Z'),
         },
         {
@@ -207,7 +207,7 @@ export const cardLink = () => {
       }}
       .data=${[
         {
-          firstName: 'Robert Mustermann',
+          firstName: 'Robert Chen',
           subject: 'Meeting with Michael, Lorem Ipsum dolor',
         },
         {

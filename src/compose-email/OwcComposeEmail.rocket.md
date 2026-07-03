@@ -8,7 +8,7 @@ export const config = {
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
 export const components = atlasDocComponents;
-import { docsData } from '@finum/data-table/docsData.js';
+import { docsData } from '@open-wc/components/docsData.js';
 
 export const layout = pageData => docLayout(pageData, docsData);
 ```
@@ -16,7 +16,7 @@ export const layout = pageData => docLayout(pageData, docsData);
 ```js client
 import { html } from 'lit';
 
-import '@finum/data-table/define/owc-compose-email.js';
+import '@open-wc/components/define/owc-compose-email.js';
 ```
 
 # Compose Email
@@ -32,10 +32,10 @@ export const simpleCompose = () => {
   return html`
     <owc-compose-email
       .recipientList=${[
-        { id: 1, email: 'max.mustermann@mail.com' },
-        { id: 2, email: 'susi-mustermann@mail.com' },
+        { id: 1, email: 'ada.lovelace@example.com' },
+        { id: 2, email: 'grace.hopper@example.com' },
       ]}
-      .user=${{ email: 'petermüller@mail.com' }}
+      .user=${{ email: 'alex.taylor@example.com' }}
     >
     </owc-compose-email>
   `;
@@ -51,10 +51,10 @@ export const sendComposedEmail = () => {
   return html`
     <owc-compose-email
       .recipientList=${[
-        { id: 1, email: 'max.mustermann@mail.com' },
-        { id: 2, email: 'susi-mustermann@mail.com' },
+        { id: 1, email: 'ada.lovelace@example.com' },
+        { id: 2, email: 'grace.hopper@example.com' },
       ]}
-      .user=${{ email: 'petermüller@mail.com' }}
+      .user=${{ email: 'alex.taylor@example.com' }}
       .sendMail=${({ recipientList, generateMailFromTo, draft, sendDate }) => {
         if (draft) {
           console.log('Draft Saved!');
@@ -83,10 +83,10 @@ export const variablesCompose = () => {
   return html`
     <owc-compose-email
       .recipientList=${[
-        { id: 1, firstName: 'Max', lastName: 'Mustermann', email: 'max.mustermann@mail.com' },
-        { id: 2, firstName: 'Susi', lastName: 'Musterfrau', email: 'susi-mustermann@mail.com' },
+        { id: 1, firstName: 'Ada', lastName: 'Lovelace', email: 'ada.lovelace@example.com' },
+        { id: 2, firstName: 'Grace', lastName: 'Hopper', email: 'grace.hopper@example.com' },
       ]}
-      .user=${{ firstName: 'Peter', lastName: 'Müller', email: 'petermüller@mail.com' }}
+      .user=${{ firstName: 'Alex', lastName: 'Taylor', email: 'alex.taylor@example.com' }}
       .defaultVariables=${{
         signature: 'This is a signature',
       }}
@@ -112,27 +112,27 @@ export const templateCompose = () => {
       .recipientList=${[
         {
           id: 1,
-          firstName: 'Max',
-          lastName: 'Mustermann',
-          email: 'max.mustermann@mail.com',
+          firstName: 'Ada',
+          lastName: 'Lovelace',
+          email: 'ada.lovelace@example.com',
           formal: true,
         },
         {
           id: 2,
-          firstName: 'Susi',
-          lastName: 'Musterfrau',
-          email: 'susi-mustermann@mail.com',
+          firstName: 'Grace',
+          lastName: 'Hopper',
+          email: 'grace.hopper@example.com',
           formal: false,
         },
         {
           id: 3,
           firstName: 'Stefan',
           lastName: 'Test',
-          email: 'stefan123@mail.com',
+          email: 'sam.rivera@example.com',
           formal: true,
         },
       ]}
-      .user=${{ name: 'Peter Müller', email: 'peter.müller@mail.com' }}
+      .user=${{ name: 'Alex Taylor', email: 'alex.taylor@example.com' }}
       .selectVariant=${(data, options) => {
         if (options.includes('formal') && options.includes('informal')) {
           return data.client.formal === true ? 'formal' : 'informal';
@@ -201,13 +201,13 @@ export const previewIndexCompose = () => {
   return html`
     <owc-compose-email
       .recipientList=${[
-        { id: 1, email: 'max.mustermann@mail.com' },
-        { id: 2, email: 'susi.mustermann@mail.com' },
-        { id: 3, email: 'john.doe@mail.com' },
-        { id: 4, email: 'jane.doe@mail.com' },
-        { id: 5, email: 'alex.smith@mail.com' },
+        { id: 1, email: 'ada.lovelace@example.com' },
+        { id: 2, email: 'grace.hopper@example.com' },
+        { id: 3, email: 'john.doe@example.com' },
+        { id: 4, email: 'jane.doe@example.com' },
+        { id: 5, email: 'alex.smith@example.com' },
       ]}
-      .user=${{ email: 'petermüller@mail.com' }}
+      .user=${{ email: 'alex.taylor@example.com' }}
       .previewIndex=${3}
     >
     </owc-compose-email>
@@ -224,10 +224,10 @@ export const previewModeCompose = () => {
   return html`
     <owc-compose-email
       .recipientList=${[
-        { id: 1, email: 'max.mustermann@mail.com' },
-        { id: 2, email: 'susi.mustermann@mail.com' },
+        { id: 1, email: 'ada.lovelace@example.com' },
+        { id: 2, email: 'grace.hopper@example.com' },
       ]}
-      .user=${{ email: 'petermüller@mail.com' }}
+      .user=${{ email: 'alex.taylor@example.com' }}
     >
     </owc-compose-email>
     <wa-button
@@ -259,10 +259,10 @@ export const unsubscribeCompose = () => {
   return html`
     <owc-compose-email
       .recipientList=${[
-        { id: 1, email: 'max.mustermann@mail.com' },
-        { id: 2, email: 'susi.mustermann@mail.com' },
+        { id: 1, email: 'ada.lovelace@example.com' },
+        { id: 2, email: 'grace.hopper@example.com' },
       ]}
-      .user=${{ email: 'petermüller@mail.com' }}
+      .user=${{ email: 'alex.taylor@example.com' }}
       .addUnsubscribe=${input => {
         return `
           ${input}
@@ -286,10 +286,10 @@ export const draftInfoCompose = () => {
   return html`
     <owc-compose-email
       .recipientList=${[
-        { id: 1, email: 'max.mustermann@mail.com' },
-        { id: 2, email: 'susi.mustermann@mail.com' },
+        { id: 1, email: 'ada.lovelace@example.com' },
+        { id: 2, email: 'grace.hopper@example.com' },
       ]}
-      .user=${{ email: 'petermüller@mail.com' }}
+      .user=${{ email: 'alex.taylor@example.com' }}
       .allowSendActions=${false}
     >
     </owc-compose-email>
@@ -309,26 +309,26 @@ export const tagsCompose = () => {
         {
           id: 1,
           tagList: ['newsWeekly', 'newsMonthly', 'discount', 'policy'],
-          firstName: 'Max',
-          lastName: 'Mustermann',
-          email: 'max.mustermann@mail.com',
+          firstName: 'Ada',
+          lastName: 'Lovelace',
+          email: 'ada.lovelace@example.com',
         },
         {
           id: 2,
           tagList: ['discount', 'policy'],
-          firstName: 'Susi',
-          lastName: 'Musterfrau',
-          email: 'susi-mustermann@mail.com',
+          firstName: 'Grace',
+          lastName: 'Hopper',
+          email: 'grace.hopper@example.com',
         },
         {
           id: 3,
           tagList: ['policy'],
           firstName: 'John',
           lastName: 'Doe',
-          email: 'john.doe@mail.com',
+          email: 'john.doe@example.com',
         },
       ]}
-      .user=${{ name: 'Peter Müller', email: 'petermüller@mail.com' }}
+      .user=${{ name: 'Alex Taylor', email: 'alex.taylor@example.com' }}
       .tags=${[
         { label: 'Newsletter (Weekly)', value: 'newsWeekly' },
         { label: 'Newsletter (Monthly)', value: 'newsMonthly' },
@@ -350,10 +350,10 @@ export const formatterCompose = () => {
   return html`
     <owc-compose-email
       .recipientList=${[
-        { id: 1, firstName: 'Max', lastName: 'Mustermann', email: 'max.mustermann@mail.com' },
-        { id: 2, firstName: 'Susi', lastName: 'Musterfrau', email: 'susi-mustermann@mail.com' },
+        { id: 1, firstName: 'Ada', lastName: 'Lovelace', email: 'ada.lovelace@example.com' },
+        { id: 2, firstName: 'Grace', lastName: 'Hopper', email: 'grace.hopper@example.com' },
       ]}
-      .user=${{ email: 'petermüller@mail.com' }}
+      .user=${{ email: 'alex.taylor@example.com' }}
       .emailFormatter=${({ recipient, good, remove }) => html`
         <wa-tag
           size="medium"

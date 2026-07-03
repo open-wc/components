@@ -7,7 +7,7 @@ export const config = {
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
-import { docsData } from '@finum/data-table/docsData.js';
+import { docsData } from '@open-wc/components/docsData.js';
 
 export const components = atlasDocComponents;
 export const layout = pageData => docLayout(pageData, docsData);
@@ -16,7 +16,7 @@ export const layout = pageData => docLayout(pageData, docsData);
 ```js client
 import { html } from 'lit';
 
-import '@finum/data-table/define/owc-table-info.js';
+import '@open-wc/components/define/owc-table-info.js';
 const personData = [
   {
     id: '0013X00002eOb5BQAS',
@@ -36,7 +36,7 @@ const personData = [
   },
   {
     id: '0013X00002eP8sDQAS',
-    firstName: 'Lisa',
+    firstName: 'Grace',
     lastName: 'Annerer',
     profession: '',
     premium: false,

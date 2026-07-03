@@ -8,7 +8,7 @@ export const config = {
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
 export const components = atlasDocComponents;
-import { docsData } from '@finum/data-table/docsData.js';
+import { docsData } from '@open-wc/components/docsData.js';
 
 export const layout = pageData => docLayout(pageData, docsData);
 ```
@@ -16,10 +16,10 @@ export const layout = pageData => docLayout(pageData, docsData);
 ```js client
 import { html } from 'lit';
 import { spreadProps } from '@open-wc/lit-helpers';
-import '@finum/data-table/define/owc-data-detail.js';
+import '@open-wc/components/define/owc-data-detail.js';
 const data = {
-  firstName: 'Max',
-  lastName: 'Mustermann',
+  firstName: 'Ada',
+  lastName: 'Lovelace',
   age: 12,
   dateOfBirth: '2000-01-01',
   planet: 'Mercurius',
@@ -121,13 +121,13 @@ class ClientRelationShip {
 }
 
 const client = new Client({
-  firstName: 'Max',
-  lastName: 'Mustermann',
+  firstName: 'Ada',
+  lastName: 'Lovelace',
   dateOfBirth: '2000-01-01',
   favoritePlanet: 'Terra',
   familyMemberList: [
-    { id: 10, type: 'husband/wife', client: { firstName: 'Susi', lastName: 'Mustermann' } },
-    { id: 20, type: 'parent/child', client: { firstName: 'Frank', lastName: 'Mustermann' } },
+    { id: 10, type: 'husband/wife', client: { firstName: 'Grace', lastName: 'Lovelace' } },
+    { id: 20, type: 'parent/child', client: { firstName: 'Frank', lastName: 'Lovelace' } },
   ],
   emailList: [
     { id: 1, type: 'public', email: 'max@example.com' },

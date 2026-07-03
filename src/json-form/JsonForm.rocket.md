@@ -8,14 +8,14 @@ export const config = {
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
 export const components = atlasDocComponents;
-import { docsData } from '@finum/data-table/docsData.js';
+import { docsData } from '@open-wc/components/docsData.js';
 
 export const layout = pageData => docLayout(pageData, docsData);
 ```
 
 ```js client
 import { html } from 'lit';
-import '@finum/data-table/define/json-form.js';
+import '@open-wc/components/define/json-form.js';
 ```
 
 # Json-form
@@ -810,7 +810,7 @@ If you set one of these, it will overwrite the existing renderer. Otherwise, a n
 use your new renderer by setting the name of your render type to `true` in the `options` of the `uiSchema`
 
 ```js demo
-import { inputListener, resolveDataSchema, processLabel } from '@finum/data-table/JsonForm.js';
+import { inputListener, resolveDataSchema, processLabel } from '@open-wc/components/JsonForm.js';
 
 export const customize = () =>
   html`<json-form

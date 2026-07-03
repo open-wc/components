@@ -5,7 +5,7 @@ export const config = {
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
 export const components = atlasDocComponents;
-import { docsData } from '@finum/data-table/docsData.js';
+import { docsData } from '@open-wc/components/docsData.js';
 
 export const layout = pageData => docLayout(pageData, docsData);
 ```
@@ -14,7 +14,7 @@ export const layout = pageData => docLayout(pageData, docsData);
 import { html, LitElement } from 'lit';
 import { ref } from 'lit/directives/ref.js';
 
-import { WaveController, ReactiveObject } from '@finum/data-table/WaveController.js';
+import { WaveController, ReactiveObject } from '@open-wc/components/WaveController.js';
 ```
 
 # WaveController

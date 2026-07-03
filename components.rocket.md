@@ -4,7 +4,7 @@ export const config = {
   title: 'Components',
   metadata: {
     title: 'Components',
-    description: 'Index of @finum/data-table component reference pages.',
+    description: 'Index of @open-wc/components component reference pages.',
     custom: {
       atlasDoc: {
         asideTip: {
@@ -23,7 +23,7 @@ export const config = {
 };
 
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
-import { docsData } from '@finum/data-table/docsData.js';
+import { docsData } from '@open-wc/components/docsData.js';
 
 export const components = atlasDocComponents;
 export const layout = pageData => docLayout(pageData, docsData);

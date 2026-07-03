@@ -9,14 +9,14 @@ export const config = {
 
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
 export const components = atlasDocComponents;
-import { docsData } from '@finum/data-table/docsData.js';
+import { docsData } from '@open-wc/components/docsData.js';
 
 export const layout = pageData => docLayout(pageData, docsData);
 ```
 
 ```js client
 import { html } from 'lit';
-import '@finum/data-table/define/owc-count-up.js';
+import '@open-wc/components/define/owc-count-up.js';
 ```
 
 # Count Up

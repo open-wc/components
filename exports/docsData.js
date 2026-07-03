@@ -1,6 +1,6 @@
 export const docsData = {
   headerData: {
-    logo: ['/finum-data-table-logo.svg'],
+    logo: ['/open-wc-components-logo.svg'],
     homeLink: '/',
     navLinks: [{ text: 'Components', href: '/components' }],
     socials: [],

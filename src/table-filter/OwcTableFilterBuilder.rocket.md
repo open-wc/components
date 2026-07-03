@@ -8,14 +8,14 @@ export const config = {
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
 export const components = atlasDocComponents;
-import { docsData } from '@finum/data-table/docsData.js';
+import { docsData } from '@open-wc/components/docsData.js';
 
 export const layout = pageData => docLayout(pageData, docsData);
 ```
 
 ```js client
 import { html } from 'lit';
-import { OwcTableFilterBuilder } from '@finum/data-table/OwcTableFilterBuilder.js';
+import { OwcTableFilterBuilder } from '@open-wc/components/OwcTableFilterBuilder.js';
 
 customElements.define('owc-table-filter-builder', OwcTableFilterBuilder);
 ```

@@ -7,7 +7,7 @@ export const config = {
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
-import { docsData } from '@finum/data-table/docsData.js';
+import { docsData } from '@open-wc/components/docsData.js';
 
 export const components = atlasDocComponents;
 export const layout = pageData => docLayout(pageData, docsData);
@@ -16,7 +16,7 @@ export const layout = pageData => docLayout(pageData, docsData);
 ```js client
 import { html, nothing } from 'lit';
 
-import '@finum/data-table/define/owc-table.js';
+import '@open-wc/components/define/owc-table.js';
 const personData = [
   {
     id: '0013X00002eOb5BQAS',
@@ -38,7 +38,7 @@ const personData = [
   },
   {
     id: '0013X00002eP8sDQAS',
-    firstName: 'Lisa',
+    firstName: 'Grace',
     lastName: 'Annerer',
     profession: '',
     premium: false,
@@ -147,8 +147,8 @@ export const dataHandlingPassing = () => {
         },
       ]}
       .data=${[
-        { id: 1, firstName: 'Max', lastName: 'Mustermann' },
-        { id: 2, firstName: 'Lisa', lastName: 'Musterfrau' },
+        { id: 1, firstName: 'Ada', lastName: 'Lovelace' },
+        { id: 2, firstName: 'Grace', lastName: 'Hopper' },
       ]}
     ></owc-table>
   `;
@@ -457,7 +457,7 @@ export const headerContent = () => {
 To use formatted cells define the `formatter`. Existing formatters are `rownum` (numbered rows), `datetime` (date from Date object) and `currency` (local currency). A custom formatter function can also be used to filter information from this row or visually change a column with html.
 
 ```js demo
-import { renderSubList } from '@finum/data-table/subListHelpers.js';
+import { renderSubList } from '@open-wc/components/subListHelpers.js';
 export const formatTable = () => {
   return html`
     <owc-table
@@ -688,7 +688,7 @@ export const filterTable = () => {
         },
         {
           id: 2,
-          clientName: 'Max Mustermann',
+          clientName: 'Ada Lovelace',
           country: 'Austria',
           status: 'Away',
           age: 19,
@@ -785,7 +785,7 @@ export const sortingTable = () => {
         },
         {
           id: 2,
-          firstName: 'Max',
+          firstName: 'Ada',
           status: 'Online',
           meetingDate: new Date('2023-05-31T14:30:00.000Z'),
         },
@@ -850,7 +850,7 @@ export const groupedTable = () => {
         },
         {
           id: 2,
-          firstName: 'Max',
+          firstName: 'Ada',
           status: 'Online',
           meetingDate: new Date('2023-05-31T14:30:00.000Z'),
         },
@@ -985,8 +985,8 @@ let testTableData = [
     profession: 'Teacher',
   },
   {
-    firstName: 'Max',
-    lastName: 'Mustermann',
+    firstName: 'Ada',
+    lastName: 'Lovelace',
     profession: 'Lawyer',
   },
   {
@@ -1491,7 +1491,7 @@ const faqList = [
 
 ```js demo
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-import { highlightSearchTerms } from '@finum/data-table/highlightSearchTerms.js';
+import { highlightSearchTerms } from '@open-wc/components/highlightSearchTerms.js';
 
 export const exampleFaq = () => {
   return html`
