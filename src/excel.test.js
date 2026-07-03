@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { renderSubListAsString } from '@finum/data-table/subListHelpers.js';
+import { renderSubListAsString } from '@open-wc/components/subListHelpers.js';
 import { convertToExcel } from './excel.js';
 
 const data = [

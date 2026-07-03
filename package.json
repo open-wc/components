@@ -1,9 +1,9 @@
 {
-  "name": "@finum/data-table",
-  "version": "1.0.0",
-  "description": "",
+  "name": "@open-wc/components",
+  "version": "0.1.0",
+  "description": "Reusable web components and helpers for data, forms, and workflow interfaces.",
   "keywords": [],
-  "license": "unlicensed",
+  "license": "MIT",
   "author": "Finum <admin@finum.at>",
   "type": "module",
   "exports": {

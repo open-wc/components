@@ -1,5 +1,5 @@
 import { html } from 'lit';
-import '@finum/data-table/define/owc-multi-checkbox.js';
+import '@open-wc/components/define/owc-multi-checkbox.js';
 
 export function demo() {
   /** @type {import('./OwcMultiCheckbox.types.js').OwcMultiCheckboxOptions} */

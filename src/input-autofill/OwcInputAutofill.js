@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
-import { OwcAutocomplete } from '@finum/data-table/OwcAutocomplete.js';
+import { OwcAutocomplete } from '@open-wc/components/OwcAutocomplete.js';
 
 import '@awesome.me/webawesome/dist/components/input/input.js';
 

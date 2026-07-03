@@ -1,7 +1,7 @@
 import { LitElement, css } from 'lit';
 import { html } from 'lit/static-html.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
-import { OwcCard } from '@finum/data-table/OwcCard.js';
+import { OwcCard } from '@open-wc/components/OwcCard.js';
 import { dataPathSegments, resolveDataSchema, resolveSchema } from '../resolve.js';
 import { inputListener } from '../renderers/inputListener.js';
 import { OwcIconButton } from '../../icon-button/OwcIconButton.js';

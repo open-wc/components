@@ -8,13 +8,13 @@ import { ifDefined } from 'lit/directives/if-defined.js';
 import { classMap } from 'lit/directives/class-map.js';
 
 if (!customElements.get('owc-click-editable-input')) {
-  import('@finum/data-table/define/owc-click-editable-input.js');
+  import('@open-wc/components/define/owc-click-editable-input.js');
 }
 if (!customElements.get('owc-click-editable-autocomplete')) {
-  import('@finum/data-table/define/owc-click-editable-autocomplete.js');
+  import('@open-wc/components/define/owc-click-editable-autocomplete.js');
 }
 if (!customElements.get('owc-click-editable-textarea')) {
-  import('@finum/data-table/define/owc-click-editable-textarea.js');
+  import('@open-wc/components/define/owc-click-editable-textarea.js');
 }
 
 export const percentFormatter = new Intl.NumberFormat('de', {

@@ -123,7 +123,7 @@ export class OwcDataDetail extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * @param {import('@finum/data-table/OwcDataDetail.types.js').OwcDataDetailItem<T>} detailItem
+   * @param {import('@open-wc/components/OwcDataDetail.types.js').OwcDataDetailItem<T>} detailItem
    */
   iconOrLabel(detailItem) {
     const labelBadge = detailItem.labelBadge ? detailItem.labelBadge(this.data) : '';
@@ -152,7 +152,7 @@ export class OwcDataDetail extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * @param {import('@finum/data-table/OwcDataDetail.types.js').OwcDataDetailItem<T>}  cell
+   * @param {import('@open-wc/components/OwcDataDetail.types.js').OwcDataDetailItem<T>}  cell
    */
   renderCell(cell) {
     if (!cell) {

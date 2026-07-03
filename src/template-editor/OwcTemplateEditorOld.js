@@ -11,7 +11,7 @@ import '@awesome.me/webawesome/dist/components/tab-group/tab-group.js';
 
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import '@awesome.me/webawesome/dist/components/relative-time/relative-time.js';
-import { JsonForm } from '@finum/data-table/JsonForm.js';
+import { JsonForm } from '@open-wc/components/JsonForm.js';
 import { OwcSeparator } from '../separator/OwcSeparator.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { filesToObj, generateValueForData, replaceValues } from './generateValueForData.js';

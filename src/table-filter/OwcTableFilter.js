@@ -10,7 +10,7 @@ import {
   OTHER_OPERATORS,
   ARRAY_OPERATORS,
 } from './operators.js';
-import { OwcMultiCheckbox } from '@finum/data-table/OwcMultiCheckbox.js';
+import { OwcMultiCheckbox } from '@open-wc/components/OwcMultiCheckbox.js';
 
 import '@awesome.me/webawesome/dist/components/input/input.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
