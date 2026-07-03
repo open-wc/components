@@ -136,14 +136,14 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
                   ? html`<wa-button
                       variant="brand"
                       @click=${() => {
-                      this.preview = true;
-                    }}
+                        this.preview = true;
+                      }}
                       >Preview</wa-button
                     >`
                   : html`<wa-button
                         @click=${() => {
-                        this.preview = false;
-                      }}
+                          this.preview = false;
+                        }}
                         >Abbrechen</wa-button
                       >
                       <wa-button @click=${this.executeEdit}

@@ -802,15 +802,15 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
                             return html`
                               <div class="display">
                                 ${
-                                this.accentBar
-                                  ? html`
-                                      <div
-                                        class="accent-bar"
-                                        style="--accent-bar-color: ${accentBarColor || 'transparent'}"
-                                      ></div>
-                                    `
-                                  : nothing
-                              }
+                                  this.accentBar
+                                    ? html`
+                                        <div
+                                          class="accent-bar"
+                                          style="--accent-bar-color: ${accentBarColor || 'transparent'}"
+                                        ></div>
+                                      `
+                                    : nothing
+                                }
                                 <div class="display-input">${this.valueLabel}</div>
                               </div>
                             `;

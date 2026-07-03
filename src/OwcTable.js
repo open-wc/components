@@ -778,27 +778,27 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
                           size="small"
                           variant="brand"
                           @click=${async () => {
-                          if (this.handleInsert) {
-                            this.insertData = [...this.insertData, this.handleInsert()];
-                            setTimeout(async () => {
-                              await this.updateComplete;
-                              const editableElement = /** @type {HTMLInputElement} */ (
-                                this.shadowRoot?.querySelector('[editable]')
-                              );
-                              if (editableElement) {
-                                scrollIntoViewIfNeeded(editableElement);
-                                // @ts-ignore
-                                if (
-                                  editableElement.focus &&
-                                  typeof editableElement.focus === 'function'
-                                ) {
+                            if (this.handleInsert) {
+                              this.insertData = [...this.insertData, this.handleInsert()];
+                              setTimeout(async () => {
+                                await this.updateComplete;
+                                const editableElement = /** @type {HTMLInputElement} */ (
+                                  this.shadowRoot?.querySelector('[editable]')
+                                );
+                                if (editableElement) {
+                                  scrollIntoViewIfNeeded(editableElement);
                                   // @ts-ignore
-                                  editableElement.focus();
+                                  if (
+                                    editableElement.focus &&
+                                    typeof editableElement.focus === 'function'
+                                  ) {
+                                    // @ts-ignore
+                                    editableElement.focus();
+                                  }
                                 }
-                              }
-                            }, 100);
-                          }
-                        }}
+                              }, 100);
+                            }
+                          }}
                         >
                           <wa-icon slot="start" name="plus" label="New"></wa-icon>Neu
                         </wa-button>`

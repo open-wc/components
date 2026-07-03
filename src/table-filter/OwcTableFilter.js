@@ -724,118 +724,118 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
                 return html`<wa-input
                   class="field-filter"
                   .value=${(() => {
-                  const isDT = this.column?.filterType === 'datetime';
-                  const isD = this.column?.filterType === 'date';
-                  const to = /** @type {{to: Date}} */ (this.value.value).to;
-                  return isDT
-                    ? toLocalDateTimeInputValue(to)
-                    : isD
-                      ? toLocalDateInputValue(to)
-                      : String(this.value.value);
-                })()}
+                    const isDT = this.column?.filterType === 'datetime';
+                    const isD = this.column?.filterType === 'date';
+                    const to = /** @type {{to: Date}} */ (this.value.value).to;
+                    return isDT
+                      ? toLocalDateTimeInputValue(to)
+                      : isD
+                        ? toLocalDateInputValue(to)
+                        : String(this.value.value);
+                  })()}
                   .type=${type}
                   @change=${(/** @type {Event} */ ev) => {
-                  ev.stopPropagation();
-                  // numbers: handled via @input
-                  // dates/datetimes: handled via @blur
-                }}
-                  @blur=${(/** @type {FocusEvent} */ ev) => {
-                  // Only blur for date/datetime filters.
-                  if (!isDT && !isD) {
-                    return;
-                  }
-
-                  ev.stopPropagation();
-                  const target = /** @type {HTMLInputElement} */ (ev?.target);
-
-                  /** @type {Date | null} */
-                  let toDate = null;
-
-                  if (isDT) {
-                    const parsed = fromLocalDateTimeInputValue(target.value);
-                    if (!parsed) {
-                      // invalid/empty -> restore previous "to" value in the UI
-                      const previous =
-                        range && range.to instanceof Date
-                          ? range.to
-                          : this.value.value instanceof Date
-                            ? this.value.value
-                            : new Date();
-
-                      target.value = toLocalDateTimeInputValue(previous);
-                      return;
-                    }
-                    toDate = parsed;
-                  } else if (isD) {
-                    const parsed = fromLocalDateInputValue(target.value);
-                    if (!parsed) {
-                      const previous =
-                        range && range.to instanceof Date
-                          ? range.to
-                          : this.value.value instanceof Date
-                            ? this.value.value
-                            : new Date();
-
-                      target.value = toLocalDateInputValue(previous);
-                      return;
-                    }
-                    toDate = parsed;
-                  }
-
-                  if (!toDate) {
-                    return;
-                  }
-
-                  this.value = {
-                    ...this.value,
-                    value: {
-                      .../** @type {{from: Date; to: Date}} */ (this.value.value),
-                      to: toDate,
-                    },
-                  };
-
-                  this.requestUpdate();
-                  this.#fireChangeEvent();
-                }}
-                  @keydown=${(/** @type {KeyboardEvent} */ ev) => {
-                  // "Enter" key -> commit by blurring
-                  if (ev.key === 'Enter') {
                     ev.stopPropagation();
-                    const target = /** @type {HTMLInputElement} */ (ev.currentTarget);
-                    target.blur();
-                  }
-                }}
+                    // numbers: handled via @input
+                    // dates/datetimes: handled via @blur
+                  }}
+                  @blur=${(/** @type {FocusEvent} */ ev) => {
+                    // Only blur for date/datetime filters.
+                    if (!isDT && !isD) {
+                      return;
+                    }
+
+                    ev.stopPropagation();
+                    const target = /** @type {HTMLInputElement} */ (ev?.target);
+
+                    /** @type {Date | null} */
+                    let toDate = null;
+
+                    if (isDT) {
+                      const parsed = fromLocalDateTimeInputValue(target.value);
+                      if (!parsed) {
+                        // invalid/empty -> restore previous "to" value in the UI
+                        const previous =
+                          range && range.to instanceof Date
+                            ? range.to
+                            : this.value.value instanceof Date
+                              ? this.value.value
+                              : new Date();
+
+                        target.value = toLocalDateTimeInputValue(previous);
+                        return;
+                      }
+                      toDate = parsed;
+                    } else if (isD) {
+                      const parsed = fromLocalDateInputValue(target.value);
+                      if (!parsed) {
+                        const previous =
+                          range && range.to instanceof Date
+                            ? range.to
+                            : this.value.value instanceof Date
+                              ? this.value.value
+                              : new Date();
+
+                        target.value = toLocalDateInputValue(previous);
+                        return;
+                      }
+                      toDate = parsed;
+                    }
+
+                    if (!toDate) {
+                      return;
+                    }
+
+                    this.value = {
+                      ...this.value,
+                      value: {
+                        .../** @type {{from: Date; to: Date}} */ (this.value.value),
+                        to: toDate,
+                      },
+                    };
+
+                    this.requestUpdate();
+                    this.#fireChangeEvent();
+                  }}
+                  @keydown=${(/** @type {KeyboardEvent} */ ev) => {
+                    // "Enter" key -> commit by blurring
+                    if (ev.key === 'Enter') {
+                      ev.stopPropagation();
+                      const target = /** @type {HTMLInputElement} */ (ev.currentTarget);
+                      target.blur();
+                    }
+                  }}
                   @input=${(/** @type {InputEvent} */ ev) => {
-                  if (
-                    this.column?.filterType === 'date' ||
-                    this.column?.filterType === 'datetime'
-                  ) {
-                    return;
-                  }
+                    if (
+                      this.column?.filterType === 'date' ||
+                      this.column?.filterType === 'datetime'
+                    ) {
+                      return;
+                    }
 
-                  const target = /** @type {HTMLInputElement} */ (ev?.target);
-                  const parsedNumber = Number.parseFloat(target.value);
+                    const target = /** @type {HTMLInputElement} */ (ev?.target);
+                    const parsedNumber = Number.parseFloat(target.value);
 
-                  const prev =
-                    typeof this.value.value === 'object'
-                      ? /** @type {{from: number; to: number}} */ (this.value.value)
-                      : /** @type {{from: number; to?: number}} */ ({});
+                    const prev =
+                      typeof this.value.value === 'object'
+                        ? /** @type {{from: number; to: number}} */ (this.value.value)
+                        : /** @type {{from: number; to?: number}} */ ({});
 
-                  this.value = {
-                    ...this.value,
-                    value: /** @type {{from: number; to: number}} */ {
-                      from: prev.from,
-                      to: parsedNumber ?? 0,
-                    },
-                  };
+                    this.value = {
+                      ...this.value,
+                      value: /** @type {{from: number; to: number}} */ {
+                        from: prev.from,
+                        to: parsedNumber ?? 0,
+                      },
+                    };
 
-                  this.#fireChangeEvent();
-                }}
+                    this.#fireChangeEvent();
+                  }}
                   ${spreadProps(
-                  this.value.operator.includes('NoYear')
-                    ? { min: `${year}-01-01`, max: `${year}-12-31` }
-                    : { min: toMin },
-                )}
+                    this.value.operator.includes('NoYear')
+                      ? { min: `${year}-01-01`, max: `${year}-12-31` }
+                      : { min: toMin },
+                  )}
                 >
                 </wa-input>`;
               })}`

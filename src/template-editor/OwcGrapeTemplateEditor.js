@@ -2333,8 +2333,8 @@ export class OwcGrapeTemplateEditor extends ScopedElementsMixin(LitElement) {
                                               class="mini-btn"
                                               @click=${this.handleRemoveBlockClick}
                                               ?disabled=${
-                                              !this.selectedTemplateRecord || templateCount <= 1
-                                            }
+                                                !this.selectedTemplateRecord || templateCount <= 1
+                                              }
                                               title="Block entfernen"
                                             >
                                               -

@@ -23,7 +23,5 @@ assets/icons/*
 # generated
 **/generated.*
 
-.trigger
 .codex
-.agents
-skills-lock.json
+.scratch
