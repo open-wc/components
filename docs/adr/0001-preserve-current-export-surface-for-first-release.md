@@ -1,3 +1,3 @@
-# Preserve current export surface for first release
+# Allow breaking public-surface cleanup before first release
 
-For the first open source release, every current file under `exports/` remains part of the package public surface. This favors compatibility and a lower-risk initial publication over aggressively trimming uncertain modules before release; later deprecations or removals should be handled deliberately rather than by accidental cleanup.
+Before the first open source release, the package may break current `exports/` entry points when doing so produces a clearer public surface and source layout. Breaking changes must be documented with migration notes so downstream internal applications can update their imports deliberately, rather than discovering removed or renamed entry points by failure.

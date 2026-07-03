@@ -457,7 +457,7 @@ export const headerContent = () => {
 To use formatted cells define the `formatter`. Existing formatters are `rownum` (numbered rows), `datetime` (date from Date object) and `currency` (local currency). A custom formatter function can also be used to filter information from this row or visually change a column with html.
 
 ```js demo
-import { renderSubList } from '@open-wc/components/subListHelpers.js';
+import { renderSubList } from '@open-wc/components/table/subListHelpers.js';
 export const formatTable = () => {
   return html`
     <owc-table
@@ -1491,7 +1491,7 @@ const faqList = [
 
 ```js demo
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-import { highlightSearchTerms } from '@open-wc/components/highlightSearchTerms.js';
+import { highlightSearchTerms } from '@open-wc/components/text/highlightSearchTerms.js';
 
 export const exampleFaq = () => {
   return html`

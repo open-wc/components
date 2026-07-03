@@ -15,7 +15,7 @@ Import component classes or helper modules from package entry points:
 
 ```js
 import { OwcTable } from '@open-wc/components/OwcTable.js';
-import { convertToCsv } from '@open-wc/components/csv.js';
+import { convertToCsv } from '@open-wc/components/table/csv.js';
 ```
 
 Register custom elements with the matching `define/*` entry point:

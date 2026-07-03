@@ -1,70 +1,100 @@
 # Public Export Audit
 
-This audit accounts for the `exports/` surface kept for the `0.1.0` release of
-`@open-wc/components`. The first release preserves the current entry points; directory-layout
-cleanup is tracked as follow-up work instead of being mixed into the release metadata cleanup.
+This audit accounts for the `exports/` surface for the `0.1.0` release target of
+`@open-wc/components`. Top-level UI component entry points remain stable for this pass. Loose
+helper and aggregate type entries have been removed before the initial release in favor of owned
+public namespaces.
 
 ## Coverage Summary
 
-- Top-level files under `exports/`: 48
+- Top-level files under `exports/`: 45
+- Owned helper/type files under `exports/table/`, `exports/filter/`, `exports/text/`, and
+  `exports/lit/`: 10
 - Custom-element registration files under `exports/define/`: 30
-- All UI entry points have a component page, README, or demo note listed below.
-- Helper and type entry points are covered by this audit or by an existing module README.
+- All UI entry points have a component page, README, demo note, or audit note listed below.
 - `OwcTemplateEditorOld` is intentionally retained as a legacy internal implementation used by
   `OwcTemplateEditor`; it is not exported as its own package entry point.
 
-## Top-Level Exports
+## Top-Level Component And Package Exports
 
-| Export file                 | Source module                                              | Documentation                                                            | Layout status                                                      |
-| --------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| `JsonForm.js`               | `src/json-form/`                                           | `src/json-form/JsonForm.rocket.md`, `src/json-form/README.md`            | OK                                                                 |
-| `JsonFormTypes.ts`          | `src/json-form/types/renderer.ts`                          | This audit                                                               | OK                                                                 |
-| `OwcAutocomplete.js`        | `src/autocomplete/OwcAutocomplete.js`                      | `src/autocomplete/OwcAutocomplete.rocket.md`                             | OK                                                                 |
-| `OwcCard.js`                | `src/card/OwcCard.js`                                      | `src/card/OwcCard.rocket.md`                                             | OK                                                                 |
-| `OwcCardList.js`            | `src/card-list/OwcCardList.js`                             | `src/card-list/OwcCardList.rocket.md`                                    | OK                                                                 |
-| `OwcChartElement.js`        | `src/chart/OwcChartElement.js`                             | This audit                                                               | Follow-up: add chart docs and split matching export directory.     |
-| `OwcClickEditable.js`       | `src/click-editable/`                                      | Component variant docs in `src/click-editable/*.rocket.md`               | Follow-up: split variant exports into matching directories.        |
-| `OwcComposeEmail.js`        | `src/compose-email/OwcComposeEmail.js`                     | `src/compose-email/OwcComposeEmail.rocket.md`                            | OK                                                                 |
-| `OwcCountUp.js`             | `src/count-up/OwcCountUp.js`                               | `src/count-up/OwcCountUp.rocket.md`                                      | OK                                                                 |
-| `OwcDataDetail.js`          | `src/data-detail/OwcDataDetail.js`                         | `src/data-detail/OwcDataDetail.rocket.md`                                | OK                                                                 |
-| `OwcDataDetail.types.ts`    | `src/data-detail/OwcDataDetail.types.ts`                   | `src/data-detail/OwcDataDetail.rocket.md`                                | OK                                                                 |
-| `OwcDetailCard.js`          | `src/detail-card/OwcDetailCard.js`                         | `src/detail-card/OwcDetailCard.rocket.md`                                | OK                                                                 |
-| `OwcFileUpload.js`          | `src/file-upload/OwcFileUpload.js`                         | `src/file-upload/OwcFileUpload.rocket.md`                                | OK                                                                 |
-| `OwcGrapeTemplateEditor.js` | `src/template-editor/OwcGrapeTemplateEditor.js`            | `src/template-editor/OwcTemplateEditor.rocket.md`                        | OK                                                                 |
-| `OwcIconButton.js`          | `src/icon-button/OwcIconButton.js`                         | `src/icon-button/OwcIconButton.rocket.md`                                | OK                                                                 |
-| `OwcInputAutofill.js`       | `src/input-autofill/OwcInputAutofill.js`                   | `src/input-autofill/OwcInputAutofill.rocket.md`                          | OK                                                                 |
-| `OwcInputSlider.js`         | `src/input-slider/OwcInputSlider.js`                       | `src/input-slider/OwcInputSlider.rocket.md`                              | OK                                                                 |
-| `OwcLayoutSidebar.js`       | `src/layout-sidebar/OwcLayoutSidebar.js`                   | This audit                                                               | Follow-up: add component docs.                                     |
-| `OwcLoadingScreen.js`       | `src/loading-screen/OwcLoadingScreen.js`                   | This audit                                                               | Follow-up: add component docs.                                     |
-| `OwcMultiCheckbox.js`       | `src/multi-checkbox/OwcMultiCheckbox.js`                   | `src/multi-checkbox/OwcMultiCheckbox.demo.js`                            | OK                                                                 |
-| `OwcPieChartElement.js`     | `src/chart/OwcPieChartElement.js`                          | This audit                                                               | Follow-up: add pie chart docs and split matching export directory. |
-| `OwcPinboard.js`            | `src/pinboard/OwcPinboard.js`                              | `src/pinboard/OwcPinboard.rocket.md`                                     | OK                                                                 |
-| `OwcQuestionnaire.js`       | `src/questionnaire/OwcQuestionnaire.js`                    | `src/questionnaire/OwcQuestionnaire.rocket.md`                           | OK                                                                 |
-| `OwcSeparator.js`           | `src/separator/OwcSeparator.js`                            | This audit                                                               | Follow-up: add component docs.                                     |
-| `OwcTable.js`               | `src/table/OwcTable.js`                                    | `src/table/OwcTable.rocket.md`                                           | OK                                                                 |
-| `OwcTable.types.ts`         | `src/table/OwcTable.types.ts`, filter and field-path types | `src/table/OwcTable.rocket.md`                                           | OK                                                                 |
-| `OwcTableFilterBuilder.js`  | `src/table-filter/OwcTableFilterBuilder.js`                | `src/table-filter/OwcTableFilterBuilder.rocket.md`                       | OK                                                                 |
-| `OwcTableInfo.js`           | `src/table/OwcTableInfo.js`                                | `src/table/OwcTableInfo.rocket.md`                                       | OK                                                                 |
-| `OwcTableMassEdit.js`       | `src/table/OwcTableMassEdit.js`                            | This audit                                                               | Follow-up: add docs.                                               |
-| `OwcTabs.js`                | `src/tabs/OwcTabs.js`                                      | `src/tabs/OwcTabs.rocket.md`                                             | OK                                                                 |
-| `OwcTabs.types.ts`          | `src/tabs/OwcTabs.types.ts`                                | `src/tabs/OwcTabs.rocket.md`                                             | OK                                                                 |
-| `OwcTemplateEditor.js`      | `src/template-editor/OwcTemplateEditor.js`                 | `src/template-editor/OwcTemplateEditor.rocket.md`                        | OK                                                                 |
-| `OwcTemplateEditorTypes.ts` | `src/template-editor/OwcTemplateEditorTypes.ts`            | `src/template-editor/OwcTemplateEditor.rocket.md`                        | OK                                                                 |
-| `OwcToast.js`               | `src/toast/OwcToast.js`                                    | `src/toast/OwcToast.rocket.md`                                           | OK                                                                 |
-| `OwcTooltip.js`             | `src/tooltip/OwcTooltip.js`                                | `src/tooltip/OwcTooltip.rocket.md`                                       | OK                                                                 |
-| `RowClickEvent.js`          | `src/table/RowClickEvent.js`                               | `src/table/OwcTable.rocket.md`                                           | OK                                                                 |
-| `WaveController.js`         | `src/waves/`                                               | `src/waves/WaveController.rocket.md`, `src/waves/ReactiveObject.demo.js` | OK                                                                 |
-| `compress.js`               | `src/compress/`                                            | `src/compress/OwcCompress.rocket.md`, `src/compress/compress.demo.js`    | OK                                                                 |
-| `csv.js`                    | `src/table/csv.js`                                         | This audit                                                               | Table helper export; add API reference before stable `1.0`.        |
-| `docsData.js`               | `exports/docsData.js`                                      | This audit                                                               | Public docs metadata.                                              |
-| `excel.js`                  | `src/table/excel.js`                                       | This audit                                                               | Table helper export; add API reference before stable `1.0`.        |
-| `filter.js`                 | `src/filter/`, `src/table/dateParserForJsonDecode.js`      | This audit                                                               | Helper export; add API reference before stable `1.0`.              |
-| `highlightSearchTerms.js`   | `src/highlight-search-terms/highlightSearchTerms.js`       | This audit                                                               | Helper export; add API reference before stable `1.0`.              |
-| `jsonFormHelpers.js`        | `src/json-form/`                                           | `src/json-form/README.md`                                                | OK                                                                 |
-| `lit-helpers.js`            | `src/lit-helpers/litHtmlToString.js`                       | This audit                                                               | Helper export; add API reference before stable `1.0`.              |
-| `subListHelpers.js`         | `src/subListHelpers.js`                                    | This audit                                                               | Helper export; add API reference before stable `1.0`.              |
-| `templateHelpers.js`        | `src/template-editor/generateValueForData.js`              | `src/template-editor/OwcTemplateEditor.rocket.md`                        | OK                                                                 |
-| `types.ts`                  | Aggregated type declarations                               | This audit                                                               | Follow-up: split type-only exports by component.                   |
+| Export file                 | Source module                                         | Documentation                                                            | Layout status                                                      |
+| --------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| `JsonForm.js`               | `src/json-form/`                                      | `src/json-form/JsonForm.rocket.md`, `src/json-form/README.md`            | OK                                                                 |
+| `JsonFormTypes.ts`          | `src/json-form/types/renderer.ts`                     | This audit                                                               | OK                                                                 |
+| `OwcAutocomplete.js`        | `src/autocomplete/OwcAutocomplete.js`                 | `src/autocomplete/OwcAutocomplete.rocket.md`                             | OK                                                                 |
+| `OwcCard.js`                | `src/card/OwcCard.js`                                 | `src/card/OwcCard.rocket.md`                                             | OK                                                                 |
+| `OwcCardList.js`            | `src/card-list/OwcCardList.js`                        | `src/card-list/OwcCardList.rocket.md`                                    | OK                                                                 |
+| `OwcCardList.types.ts`      | `src/card-list/CardListTypes.ts`                      | `src/card-list/OwcCardList.rocket.md`                                    | OK                                                                 |
+| `OwcChartElement.js`        | `src/chart/OwcChartElement.js`                        | This audit                                                               | Follow-up: add chart docs and split matching export directory.     |
+| `OwcClickEditable.js`       | `src/click-editable/`                                 | Component variant docs in `src/click-editable/*.rocket.md`               | Follow-up: split variant exports into matching directories.        |
+| `OwcClickEditable.types.ts` | `src/click-editable/OwcClickEditable.types.ts`        | Component variant docs in `src/click-editable/*.rocket.md`               | OK                                                                 |
+| `OwcComposeEmail.js`        | `src/compose-email/OwcComposeEmail.js`                | `src/compose-email/OwcComposeEmail.rocket.md`                            | OK                                                                 |
+| `OwcComposeEmail.types.ts`  | `src/compose-email/OwcComposeEmail.js`                | `src/compose-email/OwcComposeEmail.rocket.md`                            | OK                                                                 |
+| `OwcCountUp.js`             | `src/count-up/OwcCountUp.js`                          | `src/count-up/OwcCountUp.rocket.md`                                      | OK                                                                 |
+| `OwcDataDetail.js`          | `src/data-detail/OwcDataDetail.js`                    | `src/data-detail/OwcDataDetail.rocket.md`                                | OK                                                                 |
+| `OwcDataDetail.types.ts`    | `src/data-detail/OwcDataDetail.types.ts`              | `src/data-detail/OwcDataDetail.rocket.md`                                | OK                                                                 |
+| `OwcDetailCard.js`          | `src/detail-card/OwcDetailCard.js`                    | `src/detail-card/OwcDetailCard.rocket.md`                                | OK                                                                 |
+| `OwcFileUpload.js`          | `src/file-upload/OwcFileUpload.js`                    | `src/file-upload/OwcFileUpload.rocket.md`                                | OK                                                                 |
+| `OwcGrapeTemplateEditor.js` | `src/template-editor/OwcGrapeTemplateEditor.js`       | `src/template-editor/OwcTemplateEditor.rocket.md`                        | OK                                                                 |
+| `OwcIconButton.js`          | `src/icon-button/OwcIconButton.js`                    | `src/icon-button/OwcIconButton.rocket.md`                                | OK                                                                 |
+| `OwcInputAutofill.js`       | `src/input-autofill/OwcInputAutofill.js`              | `src/input-autofill/OwcInputAutofill.rocket.md`                          | OK                                                                 |
+| `OwcInputSlider.js`         | `src/input-slider/OwcInputSlider.js`                  | `src/input-slider/OwcInputSlider.rocket.md`                              | OK                                                                 |
+| `OwcLayoutSidebar.js`       | `src/layout-sidebar/OwcLayoutSidebar.js`              | This audit                                                               | Follow-up: add component docs.                                     |
+| `OwcLayoutSidebar.types.ts` | `src/layout-sidebar/OwcLayoutSidebar.types.ts`        | This audit                                                               | OK                                                                 |
+| `OwcLoadingScreen.js`       | `src/loading-screen/OwcLoadingScreen.js`              | This audit                                                               | Follow-up: add component docs.                                     |
+| `OwcMultiCheckbox.js`       | `src/multi-checkbox/OwcMultiCheckbox.js`              | `src/multi-checkbox/OwcMultiCheckbox.demo.js`                            | OK                                                                 |
+| `OwcPieChartElement.js`     | `src/chart/OwcPieChartElement.js`                     | This audit                                                               | Follow-up: add pie chart docs and split matching export directory. |
+| `OwcPinboard.js`            | `src/pinboard/OwcPinboard.js`                         | `src/pinboard/OwcPinboard.rocket.md`                                     | OK                                                                 |
+| `OwcQuestionnaire.js`       | `src/questionnaire/OwcQuestionnaire.js`               | `src/questionnaire/OwcQuestionnaire.rocket.md`                           | OK                                                                 |
+| `OwcSeparator.js`           | `src/separator/OwcSeparator.js`                       | This audit                                                               | Follow-up: add component docs.                                     |
+| `OwcTable.js`               | `src/table/OwcTable.js`                               | `src/table/OwcTable.rocket.md`                                           | OK                                                                 |
+| `OwcTable.types.ts`         | `src/table/OwcTable.types.ts`, field-path table types | `src/table/OwcTable.rocket.md`                                           | OK                                                                 |
+| `OwcTableFilterBuilder.js`  | `src/table-filter/OwcTableFilterBuilder.js`           | `src/table-filter/OwcTableFilterBuilder.rocket.md`                       | OK                                                                 |
+| `OwcTableInfo.js`           | `src/table/OwcTableInfo.js`                           | `src/table/OwcTableInfo.rocket.md`                                       | OK                                                                 |
+| `OwcTableMassEdit.js`       | `src/table/OwcTableMassEdit.js`                       | This audit                                                               | Follow-up: add docs.                                               |
+| `OwcTabs.js`                | `src/tabs/OwcTabs.js`                                 | `src/tabs/OwcTabs.rocket.md`                                             | OK                                                                 |
+| `OwcTabs.types.ts`          | `src/tabs/OwcTabs.types.ts`                           | `src/tabs/OwcTabs.rocket.md`                                             | OK                                                                 |
+| `OwcTemplateEditor.js`      | `src/template-editor/OwcTemplateEditor.js`            | `src/template-editor/OwcTemplateEditor.rocket.md`                        | OK                                                                 |
+| `OwcTemplateEditorTypes.ts` | `src/template-editor/OwcTemplateEditorTypes.ts`       | `src/template-editor/OwcTemplateEditor.rocket.md`                        | OK                                                                 |
+| `OwcToast.js`               | `src/toast/OwcToast.js`                               | `src/toast/OwcToast.rocket.md`                                           | OK                                                                 |
+| `OwcTooltip.js`             | `src/tooltip/OwcTooltip.js`                           | `src/tooltip/OwcTooltip.rocket.md`                                       | OK                                                                 |
+| `RowClickEvent.js`          | `src/table/RowClickEvent.js`                          | `src/table/OwcTable.rocket.md`                                           | OK                                                                 |
+| `WaveController.js`         | `src/waves/`                                          | `src/waves/WaveController.rocket.md`, `src/waves/ReactiveObject.demo.js` | OK                                                                 |
+| `compress.js`               | `src/compress/`                                       | `src/compress/OwcCompress.rocket.md`, `src/compress/compress.demo.js`    | OK                                                                 |
+| `docsData.js`               | `exports/docsData.js`                                 | This audit                                                               | Public docs metadata.                                              |
+| `jsonFormHelpers.js`        | `src/json-form/`                                      | `src/json-form/README.md`                                                | OK                                                                 |
+| `templateHelpers.js`        | `src/template-editor/generateValueForData.js`         | `src/template-editor/OwcTemplateEditor.rocket.md`                        | OK                                                                 |
+
+## Owned Helper And Type Exports
+
+| Export file                        | Source module                                        | Ownership                 |
+| ---------------------------------- | ---------------------------------------------------- | ------------------------- |
+| `table/csv.js`                     | `src/table/csv.js`                                   | Table CSV export helpers  |
+| `table/excel.js`                   | `src/table/excel.js`                                 | Table Excel export helper |
+| `table/subListHelpers.js`          | `src/subListHelpers.js`                              | Table column rendering    |
+| `table/dateParserForJsonDecode.js` | `src/table/dateParserForJsonDecode.js`               | Table saved-state parsing |
+| `table/types.ts`                   | `src/table/OwcTable.types.ts`, field-path types      | Table configuration types |
+| `filter/jsonToFilter.js`           | `src/filter/jsonToFilter.js`                         | JSON Filter adapter       |
+| `filter/jsonToSqlFilter.js`        | `src/filter/jsonToSqlFilter.js`                      | SQL Filter adapter        |
+| `filter/types.ts`                  | `src/filter/filter.type.ts`                          | JSON Filter types         |
+| `text/highlightSearchTerms.js`     | `src/highlight-search-terms/highlightSearchTerms.js` | Text highlighting helper  |
+| `lit/litHtmlToString.js`           | `src/lit-helpers/litHtmlToString.js`                 | Lit test/helper utility   |
+
+`dateParserForJsonDecode` remains table-owned because current usage revives serialized table
+filter state. It is not part of the JSON Filter adapter namespace.
+
+## Removed Loose Exports
+
+These files are intentionally absent from `exports/` and must not be shipped as compatibility
+stubs:
+
+- `csv.js`
+- `excel.js`
+- `subListHelpers.js`
+- `filter.js`
+- `highlightSearchTerms.js`
+- `lit-helpers.js`
+- `types.ts`
 
 ## Define Exports
 
@@ -109,5 +139,3 @@ directories without changing their public package specifiers until a deprecation
 
 - Chart family: `OwcChartElement` and `OwcPieChartElement`.
 - Click-editable variants: input, autocomplete, textarea, and input-autofill.
-- Shared helper/type entry points: `types.ts`, `csv.js`, `excel.js`, `filter.js`,
-  `highlightSearchTerms.js`, `lit-helpers.js`, and `subListHelpers.js`.

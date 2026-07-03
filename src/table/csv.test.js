@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { convertToCsv } from './csv.js';
-import { renderSubListAsString } from '@open-wc/components/subListHelpers.js';
+import { renderSubListAsString } from '@open-wc/components/table/subListHelpers.js';
 
 const data = [
   {

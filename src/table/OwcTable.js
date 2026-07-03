@@ -16,10 +16,10 @@ import {
   getFieldPathContent,
   contentFormatterStyles,
 } from '../field-path-helper/getFieldPathContent.js';
-import { copyAsCsv, downloadAsCsv } from '@open-wc/components/csv.js';
+import { copyAsCsv, downloadAsCsv } from '@open-wc/components/table/csv.js';
 import { jsonToSorters } from './jsonToSorters.js';
 import { globalSearchField } from '../filter/jsonToFilter.js';
-import { copyAsExcel } from '@open-wc/components/excel.js';
+import { copyAsExcel } from '@open-wc/components/table/excel.js';
 import { filterFieldValue } from './filterFieldValue.js';
 import { OwcTableInfo } from './OwcTableInfo.js';
 import {

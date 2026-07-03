@@ -1,4 +1,5 @@
 export {
+  OwcDataDetailColumns,
   OwcDataDetailColumns as OwcDataDetailColumn,
   OwcDataDetailItem,
   OwcDataDetailOptions,
