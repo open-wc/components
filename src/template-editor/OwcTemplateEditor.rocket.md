@@ -208,8 +208,8 @@ export const templateWithOptions = () => {
 
 ### uiSchema
 
-Except for making one property visible, it's possible to arrange a group of properties. For further information, go
-to <a href="http://localhost:9000/json-form">Json-form</a>.
+Except for making one property visible, it's possible to arrange a group of properties. For further
+information, go to <a href="/components/json-form/">Json-form</a>.
 
 - **`type`:** Choose how you want to render your properties (VerticalLayout, HorizontalLayout, GroupLayout, CheckboxComboLayout).
 - **`elements`:** Match UI elements with a property from the schema

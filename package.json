@@ -12,6 +12,22 @@
       "default": "./exports/*"
     }
   },
+  "files": [
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "README.md",
+    "components.rocket.md",
+    "dist-types/**/*",
+    "docs/public-exports.md",
+    "docs/release-validation.md",
+    "exports/**/*",
+    "home.rocket.md",
+    "public/open-wc-components-logo.svg",
+    "src/**/*",
+    "!**/*.test.*",
+    "!dist-types/tsconfig.tsbuildinfo"
+  ],
   "scripts": {
     "build": "rocket build",
     "clear": "npm run clear:wireit && npm run clear:types && npm run clear:generated",
@@ -19,8 +35,8 @@
     "clear:types": "rm -rf dist-types",
     "clear:wireit": "rm -rf .wireit",
     "debug": "web-test-runner --watch",
-    "format": "eslint . --ignore-pattern .gitignore --fix && prettier \"**/*.{ts,js,json,md}\" --write --ignore-path .gitignore",
-    "lint": "eslint . --ignore-pattern .gitignore && prettier \"**/*.{ts,js,json,md}\" --check --ignore-path .gitignore",
+    "format": "eslint . --ignore-pattern .gitignore --fix && prettier \"**/*.{ts,js,json,md}\" --write --ignore-path .gitignore --ignore-path .prettierignore",
+    "lint": "eslint . --ignore-pattern .gitignore && prettier \"**/*.{ts,js,json,md}\" --check --ignore-path .gitignore --ignore-path .prettierignore",
     "postinstall": "patch-package",
     "start": "rocket start",
     "start:demo": "web-dev-server --node-resolve --watch --open src/index.html",
