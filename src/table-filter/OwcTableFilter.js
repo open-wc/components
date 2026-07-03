@@ -1,6 +1,6 @@
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { LitElement, css, html } from 'lit';
-import { OwcAutocomplete } from '../autocomplete/OwcAutocomplete.js';
+import { OwcAutocomplete } from '@open-wc/components/OwcAutocomplete.js';
 import { map } from 'lit/directives/map.js';
 import { choose } from 'lit/directives/choose.js';
 import {
@@ -18,8 +18,8 @@ import '@awesome.me/webawesome/dist/components/option/option.js';
 import '@awesome.me/webawesome/dist/components/select/select.js';
 import { spreadProps } from '@open-wc/lit-helpers';
 import { when } from 'lit/directives/when.js';
-import { OwcIconButton } from '../icon-button/OwcIconButton.js';
-import { OwcSeparator } from '../separator/OwcSeparator.js';
+import { OwcIconButton } from '@open-wc/components/OwcIconButton.js';
+import { OwcSeparator } from '@open-wc/components/OwcSeparator.js';
 import { classMap } from 'lit/directives/class-map.js';
 
 import {
@@ -54,7 +54,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
     super();
     this.handler = () => undefined;
     this.type = 'and';
-    /** @type {import('../OwcTable.types.js').Column<T>[]} */
+    /** @type {import('../table/OwcTable.types.js').Column<T>[]} */
     this.columns = [];
     /** @type {import('../filter/filter.type.js').JsonFilter} */
     // @ts-ignore
@@ -439,7 +439,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
       //       // let value = ev?.target?.value;
       //       // if (
       //       //   typeof (
-      //       //     /** @type {import('../OwcTable.types.js').MultiSelectOptions<unknown>[number]} */ (
+      //       //     /** @type {import('../table/OwcTable.types.js').MultiSelectOptions<unknown>[number]} */ (
       //       //       this.column.filterOptions?.at(0)
       //       //     )?.value
       //       //   ) === 'number'
@@ -452,7 +452,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
       //     }}
       //   >
       //     ${map(
-      //       /**@type {import("../OwcTable.types.js").MultiSelectOptions<unknown>} */
+      //       /**@type {import("../table/OwcTable.types.js").MultiSelectOptions<unknown>} */
       //       (this.column.filterOptions),
       //       option =>
       //         html`<wa-option .value=${/** @type {string} */ (option.value)}

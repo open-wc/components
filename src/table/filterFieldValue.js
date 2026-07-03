@@ -1,5 +1,5 @@
-import { getFieldPath } from './field-path-helper/getFieldPath.js';
-import { jsonToFilter } from './filter/jsonToFilter.js';
+import { getFieldPath } from '../field-path-helper/getFieldPath.js';
+import { jsonToFilter } from '../filter/jsonToFilter.js';
 import { jsonToSorters } from './jsonToSorters.js';
 
 /**
@@ -7,9 +7,9 @@ import { jsonToSorters } from './jsonToSorters.js';
  * For the given filters, gets all fieldFilteredReturn Objects that are filtered by field in which these filters evaluate to true.
  * @template {Record<string, unknown>} T
  * @param {T} row
- * @param {import('./field-path-helper/getFieldPathContent.types.js').Field<T>} field
- * @param {import('./field-path-helper/getFieldPathContent.types.js').Field<T>} fieldFilteredReturn
- * @param {import('./filter/filter.type.js').NestedJsonFilters} jsonFilters
+ * @param {import('../field-path-helper/getFieldPathContent.types.js').Field<T>} field
+ * @param {import('../field-path-helper/getFieldPathContent.types.js').Field<T>} fieldFilteredReturn
+ * @param {import('../filter/filter.type.js').NestedJsonFilters} jsonFilters
  * @param {import('./OwcTable.types.js').JsonSorter[]} [jsonSorters]
  * @returns {Array<T[field]>}
  */

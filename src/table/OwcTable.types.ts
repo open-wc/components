@@ -1,14 +1,14 @@
 import { CSSResult, TemplateResult } from 'lit';
 import { DirectiveResult } from 'lit/directive.js';
-import { Filter, JsonFilter, NestedJsonFilters } from './filter/filter.type.js';
-import { OwcMultiCheckboxOptions } from './multi-checkbox/OwcMultiCheckbox.types.js';
+import { Filter, JsonFilter, NestedJsonFilters } from '../filter/filter.type.js';
+import { OwcMultiCheckboxOptions } from '../multi-checkbox/OwcMultiCheckbox.types.js';
 import {
   Field,
   FieldPathLabel,
   handleUpdate,
-} from './field-path-helper/getFieldPathContent.types.js';
-import { EditableOptions } from './data-detail/OwcDataDetail.types.js';
-import { Tabs } from './tabs/OwcTabs.types.js';
+} from '../field-path-helper/getFieldPathContent.types.js';
+import { EditableOptions } from '../data-detail/OwcDataDetail.types.js';
+import { Tabs } from '../tabs/OwcTabs.types.js';
 
 export interface FormatterFunctionOptions<T> {
   index?: number;

@@ -2,7 +2,7 @@ import { OwcComposeEmail } from './OwcComposeEmail.js';
 import { OwcTable } from './OwcTable.js';
 import { OwcLayoutSidebar } from './OwcLayoutSidebar.js';
 import { OwcCardList } from './OwcCardList.js';
-export { OwcTableOptions, Column } from '../src/OwcTable.types.js';
+export { OwcTableOptions, Column } from '../src/table/OwcTable.types.js';
 export {
   OwcClickEditableOptions,
   OwcClickEditableAutocompleteOptions,

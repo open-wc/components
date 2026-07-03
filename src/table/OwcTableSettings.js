@@ -1,7 +1,7 @@
 import { css, html } from 'lit';
 
 import { live } from 'lit/directives/live.js';
-import { OwcAutocomplete } from './autocomplete/OwcAutocomplete.js';
+import { OwcAutocomplete } from '@open-wc/components/OwcAutocomplete.js';
 import '@awesome.me/webawesome/dist/components/checkbox/checkbox.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 import { createRef, ref } from 'lit/directives/ref.js';

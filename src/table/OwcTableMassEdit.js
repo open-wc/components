@@ -1,11 +1,11 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { OwcAutocomplete } from './autocomplete/OwcAutocomplete.js';
+import { OwcAutocomplete } from '@open-wc/components/OwcAutocomplete.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
-import { getFieldPathContent } from './field-path-helper/getFieldPathContent.js';
+import { getFieldPathContent } from '../field-path-helper/getFieldPathContent.js';
 
 import '@awesome.me/webawesome/dist/components/radio/radio.js';
 import '@awesome.me/webawesome/dist/components/radio-group/radio-group.js';
-import { setFieldPath } from './field-path-helper/setFieldPath.js';
+import { setFieldPath } from '../field-path-helper/setFieldPath.js';
 
 /**
  * @template {Record<string, unknown>} T

@@ -1,1 +1,1 @@
-export { OwcTableMassEdit } from '../src/OwcTableMassEdit.js';
+export { OwcTableMassEdit } from '../src/table/OwcTableMassEdit.js';

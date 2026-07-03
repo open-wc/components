@@ -24,7 +24,7 @@ export function resolveFieldPath(row, field) {
  * @param {T} row
  * @param {any} value
  * FIXME: Remove "id" after we removed hardcoded "id" field in csv.js
- * @param {import('./field-path-helper/getFieldPathContent.types.js').Field<T>} [field]
+ * @param {import('../field-path-helper/getFieldPathContent.types.js').Field<T>} [field]
  * @returns {string | number | boolean | Date | undefined | import('lit').TemplateResult | unknown[]}
  */
 export function deepInsertField(row, value, field) {

@@ -1,1 +1,1 @@
-export { convertToExcel, copyAsExcel } from '../src/excel.js';
+export { convertToExcel, copyAsExcel } from '../src/table/excel.js';

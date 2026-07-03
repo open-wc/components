@@ -1,5 +1,5 @@
 import { filterFieldValue } from './filterFieldValue.js';
-import { getFieldPathContent } from './field-path-helper/getFieldPathContent.js';
+import { getFieldPathContent } from '../field-path-helper/getFieldPathContent.js';
 
 /**
  * @template {unknown} T

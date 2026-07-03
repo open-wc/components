@@ -4,27 +4,29 @@ import { virtualize, virtualizerRef } from '@lit-labs/virtualizer/virtualize.js'
 
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { OwcTableHeaderCell } from './OwcTableHeaderCell.js';
-import { jsonToFilter } from './filter/jsonToFilter.js';
+import { jsonToFilter } from '../filter/jsonToFilter.js';
 
 import '@awesome.me/webawesome/dist/components/spinner/spinner.js';
 import '@awesome.me/webawesome/dist/components/checkbox/checkbox.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 import '@awesome.me/webawesome/dist/components/badge/badge.js';
 import { RowClickEvent } from './RowClickEvent.js';
-import { OwcTableFilterBuilder } from './table-filter/OwcTableFilterBuilder.js';
+import { OwcTableFilterBuilder } from '@open-wc/components/OwcTableFilterBuilder.js';
 import {
   getFieldPathContent,
   contentFormatterStyles,
-} from './field-path-helper/getFieldPathContent.js';
-import { copyAsCsv, downloadAsCsv } from './csv.js';
+} from '../field-path-helper/getFieldPathContent.js';
+import { copyAsCsv, downloadAsCsv } from '@open-wc/components/csv.js';
 import { jsonToSorters } from './jsonToSorters.js';
-import { globalSearchField } from './filter/jsonToFilter.js';
-import { copyAsExcel } from './excel.js';
+import { globalSearchField } from '../filter/jsonToFilter.js';
+import { copyAsExcel } from '@open-wc/components/excel.js';
 import { filterFieldValue } from './filterFieldValue.js';
 import { OwcTableInfo } from './OwcTableInfo.js';
-import { OwcClickEditableAutocomplete } from './click-editable/OwcClickEditableAutocomplete.js';
-import { OwcClickEditableInput } from './click-editable/OwcClickEditableInput.js';
-import { OwcClickEditableTextarea } from './click-editable/OwcClickEditableTextarea.js';
+import {
+  OwcClickEditableAutocomplete,
+  OwcClickEditableInput,
+  OwcClickEditableTextarea,
+} from '@open-wc/components/OwcClickEditable.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { dateParserForJsonDecode } from './dateParserForJsonDecode.js';
 
@@ -209,7 +211,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     this.saveStateToUrl = false;
     this.stickyHeader = false;
 
-    /**@type {import('./field-path-helper/getFieldPathContent.types.js').getFieldPathContentOptions<T>['renderType']} */
+    /**@type {import('../field-path-helper/getFieldPathContent.types.js').getFieldPathContentOptions<T>['renderType']} */
     this.renderType = 'html';
 
     /**@type {((row: T) => string) | undefined}*/
@@ -220,7 +222,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
     this.othersGroupActive = false;
 
-    /** @type {import('./tabs/OwcTabs.types.js').Tabs<import('./OwcTable.types.js').OwcTableActionTabsRenderOptions<T>> | undefined} */
+    /** @type {import('../tabs/OwcTabs.types.js').Tabs<import('./OwcTable.types.js').OwcTableActionTabsRenderOptions<T>> | undefined} */
     this.actionTabs = undefined;
     this.actionTabActive = '';
     /**
@@ -240,13 +242,13 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     this.sorters = [];
     /** @type {import('./OwcTable.types.js').JsonSorter[]} */
     this.jsonSorters = [];
-    /** @type {import('./filter/filter.type.js').NestedJsonFilters} */
+    /** @type {import('../filter/filter.type.js').NestedJsonFilters} */
     this.jsonFilters = [];
-    /** @type {import('./filter/filter.type.js').NestedJsonFilters} */
+    /** @type {import('../filter/filter.type.js').NestedJsonFilters} */
     this.highlightJsonFilters = [];
-    /** @type {import('./filter/filter.type.js').Filter<unknown> | null} */
+    /** @type {import('../filter/filter.type.js').Filter<unknown> | null} */
     this.filter = null;
-    /** @type {import('./filter/filter.type.js').Filter<unknown> | null} */
+    /** @type {import('../filter/filter.type.js').Filter<unknown> | null} */
     this.highlightFilter = null;
 
     /** @type {import('./OwcTable.types.js').Column<T>[]} */
@@ -275,7 +277,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     /** @type {import('./OwcTable.types.js').Overrides} */
     this.overrides = { visibility: {} };
 
-    /** @type {import('./field-path-helper/getFieldPathContent.types.js').handleUpdate<T> | undefined} */
+    /** @type {import('../field-path-helper/getFieldPathContent.types.js').handleUpdate<T> | undefined} */
     this.handleUpdate = undefined;
 
     /** @type {import('./OwcTable.types.js').RenderMode} */
@@ -484,7 +486,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   /**
    *
-   * @param {import('./filter/filter.type.js').NestedJsonFilters} filters
+   * @param {import('../filter/filter.type.js').NestedJsonFilters} filters
    * @param {string} prefix
    * @returns {string[]}
    */
@@ -517,7 +519,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * @param {{ jsonFilters?: import('./filter/filter.type.js').NestedJsonFilters }} [options]
+   * @param {{ jsonFilters?: import('../filter/filter.type.js').NestedJsonFilters }} [options]
    */
   callHandleData = async ({ jsonFilters = this.jsonFilters } = {}) => {
     this.loading = true;
@@ -531,7 +533,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   /**
    *
-   * @param {import('./filter/filter.type.js').NestedJsonFilters} [oldFilters]
+   * @param {import('../filter/filter.type.js').NestedJsonFilters} [oldFilters]
    */
   async #executeHandleData(oldFilters) {
     if (this.handleDataUseCache === false && typeof this.handleData === 'function') {
@@ -851,7 +853,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
    */
   #actionTabActiveChanged(ev) {
     const typedTarget =
-      /** @type {import('./tabs/OwcTabs.js').OwcTabs<import('./tabs/OwcTabs.types.js').Tabs<import('./OwcTable.types.js').OwcTableActionTabsRenderOptions<T>>>} */ (
+      /** @type {import('../tabs/OwcTabs.js').OwcTabs<import('../tabs/OwcTabs.types.js').Tabs<import('./OwcTable.types.js').OwcTableActionTabsRenderOptions<T>>>} */ (
         ev.target
       );
     this.actionTabActive = typedTarget.active;
@@ -1548,7 +1550,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   /**
    * @param {Set<string>} set
-   * @param {import('./filter/filter.type.js').NestedJsonFilters} value
+   * @param {import('../filter/filter.type.js').NestedJsonFilters} value
    */
   getUsedFilterFieldNames(set = new Set(), value = this.jsonFilters) {
     const valueArray = Array.isArray(value) ? value : [value];
@@ -1557,7 +1559,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         filter.forEach(f =>
           this.getUsedFilterFieldNames(
             set,
-            /** @type {import('./filter/filter.type.js').NestedJsonFilters} */ (f),
+            /** @type {import('../filter/filter.type.js').NestedJsonFilters} */ (f),
           ),
         );
       } else if (filter.enabled === undefined || filter.enabled === true) {

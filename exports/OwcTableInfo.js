@@ -1,1 +1,1 @@
-export { OwcTableInfo } from '../src/OwcTableInfo.js';
+export { OwcTableInfo } from '../src/table/OwcTableInfo.js';

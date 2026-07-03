@@ -1,10 +1,13 @@
 import { LitElement, html, css } from 'lit';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 
-import { OwcAutocomplete } from '../autocomplete/OwcAutocomplete.js';
-import { OwcClickEditableAutocomplete } from '../click-editable/OwcClickEditableAutocomplete.js';
-import { OwcClickEditableInput } from '../click-editable/OwcClickEditableInput.js';
-import { OwcTable } from '../OwcTable.js';
+import { OwcAutocomplete } from '@open-wc/components/OwcAutocomplete.js';
+import {
+  OwcClickEditableAutocomplete,
+  OwcClickEditableInput,
+  OwcClickEditableTextarea,
+} from '@open-wc/components/OwcClickEditable.js';
+import { OwcTable } from '@open-wc/components/OwcTable.js';
 
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 import '@awesome.me/webawesome/dist/components/badge/badge.js';
@@ -12,7 +15,6 @@ import {
   getFieldPathContent,
   contentFormatterStyles,
 } from '../field-path-helper/getFieldPathContent.js';
-import { OwcClickEditableTextarea } from '../click-editable/OwcClickEditableTextarea.js';
 
 /**
  * @template {Record<string, unknown>} T

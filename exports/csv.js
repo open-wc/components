@@ -1,1 +1,1 @@
-export { convertToCsv, copyAsCsv, downloadAsCsv } from '../src/csv.js';
+export { convertToCsv, copyAsCsv, downloadAsCsv } from '../src/table/csv.js';

@@ -1,1 +1,1 @@
-export { RowClickEvent } from '../src/RowClickEvent.js';
+export { RowClickEvent } from '../src/table/RowClickEvent.js';

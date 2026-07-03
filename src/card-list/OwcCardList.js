@@ -23,7 +23,7 @@ export class OwcCardList extends ScopedElementsMixin(LitElement) {
 
     /**
      * @param {T} _row
-     * @returns {import('../OwcTable.types.js').RowLinkSettings}
+     * @returns {import('../table/OwcTable.types.js').RowLinkSettings}
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     this.getCardLinkSettings = _row => ({ href: '' });

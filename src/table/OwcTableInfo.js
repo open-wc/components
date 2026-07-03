@@ -1,11 +1,11 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
-import { OwcTabs } from '../exports/OwcTabs.js';
+import { OwcTabs } from '@open-wc/components/OwcTabs.js';
 import { OwcTableMassEdit } from './OwcTableMassEdit.js';
 import { OwcTableSettings } from './OwcTableSettings.js';
-import { getFieldPathContent } from './field-path-helper/getFieldPathContent.js';
-import { getFieldPath } from './field-path-helper/getFieldPath.js';
-import { setFieldPath } from './field-path-helper/setFieldPath.js';
+import { getFieldPathContent } from '../field-path-helper/getFieldPathContent.js';
+import { getFieldPath } from '../field-path-helper/getFieldPath.js';
+import { setFieldPath } from '../field-path-helper/setFieldPath.js';
 
 /**
  * @template {Record<string, unknown>} T
@@ -63,13 +63,13 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
     `;
     /** @type {import('./OwcTable.types.js').Column<T>[]} */
     this.columns = [];
-    /** @type {import('./tabs/OwcTabs.types.js').Tabs<{ }>} */
+    /** @type {import('../tabs/OwcTabs.types.js').Tabs<{ }>} */
     this.actionTabs = {};
     this.getRenderOptions = () => ({});
     /** @type {import('./OwcTable.js').OwcTable<T> | undefined} */
     this.table = undefined;
     this.actionTabActive = '';
-    /** @type {import('./tabs/OwcTabs.types.js').Tabs<import('./OwcTable.types.js').OwcTableActionTabsRenderOptions<T>>} */
+    /** @type {import('../tabs/OwcTabs.types.js').Tabs<import('./OwcTable.types.js').OwcTableActionTabsRenderOptions<T>>} */
     this.builtInTabs = {
       calculateSums: {
         visible: false,
@@ -226,7 +226,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
    */
   #actionChanged(ev) {
     const typedTarget =
-      /** @type {import('./tabs/OwcTabs.js').OwcTabs<import('./tabs/OwcTabs.types.js').Tabs<import('./OwcTable.types.js').OwcTableActionTabsRenderOptions<T>>>} */ (
+      /** @type {import('../tabs/OwcTabs.js').OwcTabs<import('../tabs/OwcTabs.types.js').Tabs<import('./OwcTable.types.js').OwcTableActionTabsRenderOptions<T>>>} */ (
         ev.target
       );
     this.actionTabActive = typedTarget.active;

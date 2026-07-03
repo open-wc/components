@@ -3,7 +3,7 @@ import { LitElement, css, html, nothing } from 'lit';
 import { map } from 'lit/directives/map.js';
 
 import { OwcTableFilter } from './OwcTableFilter.js';
-import { OwcSeparator } from '../separator/OwcSeparator.js';
+import { OwcSeparator } from '@open-wc/components/OwcSeparator.js';
 import { classMap } from 'lit/directives/class-map.js';
 
 import '@awesome.me/webawesome/dist/components/details/details.js';
@@ -32,7 +32,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
     super();
     /** @type {import('../filter/filter.type.js').NestedJsonFilters} */
     this.value = [];
-    /** @type {import('../OwcTable.types.js').Column<T>[]} */
+    /** @type {import('../table/OwcTable.types.js').Column<T>[]} */
     this.columns = [];
     this.globalSearch = false;
     this.globalSearchOnly = false;
@@ -369,7 +369,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * @param {import('../OwcTable.types.js').Column<T>[]}  columns
+   * @param {import('../table/OwcTable.types.js').Column<T>[]}  columns
    * @returns {string | import('lit').TemplateResult}
    */
   renderColumnInfoText(columns) {

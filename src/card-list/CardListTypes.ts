@@ -16,5 +16,5 @@ export interface OwcCardListOptions<T> {
   title: string;
   viewAllUrl?: string;
   sorter?: (a: T, b: T) => number;
-  getCardLinkSettings?: (card: T) => import('../OwcTable.types.js').RowLinkSettings;
+  getCardLinkSettings?: (card: T) => import('../table/OwcTable.types.js').RowLinkSettings;
 }
