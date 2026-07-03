@@ -16,3 +16,7 @@ Domain docs use a single-context layout: root `CONTEXT.md` plus `docs/adr/`. See
 
 Commit messages should start with `feat:`, `fix:`, or `chore:`. If a commit targets a specific feature or area, include it in parentheses before the colon, for example `feat(table):`, `fix(json-form):`, or `chore(docs):`.
 If a commit targets a specific issue, reference that issue in the commit message.
+
+### Public package changes
+
+For public package changes, follow `CONTRIBUTING.md` for repo structure, validation, exports, docs, changelog, and dependency rules.
