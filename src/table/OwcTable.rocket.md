@@ -1453,7 +1453,7 @@ export const massEdit = () => {
         },
       ]}
       .data=${personData}
-    ></owc-table-mass-edit>
+    ></owc-table>
   `;
 };
 ```

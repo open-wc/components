@@ -80,6 +80,8 @@ export const view = () => html` <owc-table .columns=${columns} .data=${rows}></o
   [Autocomplete](/components/autocomplete), and [Input Autofill](/components/input-autofill).
 - Workflow UI components such as [Template Editor](/components/template-editor),
   [File Upload](/components/file-upload), and [Compose Email](/components/compose-email).
+- Charts and application shell pieces such as [Chart](/components/chart),
+  [Pie Chart](/components/pie-chart), and [Layout Sidebar](/components/layout-sidebar).
 
 ## Maintenance notes
 

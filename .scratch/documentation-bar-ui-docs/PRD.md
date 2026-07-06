@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: ready-for-human
 
 # Public UI Documentation Bar Completion
 
@@ -107,3 +107,22 @@ This PRD does not redesign confusing component interfaces. Confusing public surf
 - The agreed second-pass helper documentation handoff is stored at `/tmp/documentation-bar-second-pass-handoff-20260703-180058.md`.
 - The architecture report that led to this PRD is stored at `/tmp/architecture-review-20260703-174807.html`.
 - After this PRD, the domain glossary should clarify that Documentation Bar evidence belongs in owning modules and that the public export audit is an index.
+
+## Comments
+
+2026-07-06 (agent): Implemented. Added colocated Rocket docs for all six target UI exports:
+`src/chart/OwcChartElement.rocket.md` (/components/chart),
+`src/chart/OwcPieChartElement.rocket.md` (/components/pie-chart),
+`src/layout-sidebar/OwcLayoutSidebar.rocket.md` (/components/layout-sidebar),
+`src/loading-screen/OwcLoadingScreen.rocket.md` (/components/loading-screen),
+`src/separator/OwcSeparator.rocket.md` (/components/separator), and
+`src/table/OwcTableMassEdit.rocket.md` (/components/table-mass-edit). All pages follow the
+existing pattern, use only public import paths and `define` entries, and are linked from the
+component index (`components.rocket.md`). `docs/public-exports.md` now points at the owning-module
+docs instead of "This audit" for these entries. Confusing public surface was captured in
+`follow-up-notes.md` in this directory, not changed. All pages verified rendering in the built
+site (demos draw, including live charts). One implementation fix was required and changelogged:
+the chart components imported the ApexCharts UMD dist for its window global, which the docs
+bundler converts to a module — charts could not render at all; switched both chart components to
+a proper `import ApexCharts from 'apexcharts'`. Also fixed a pre-existing typo in the
+`OwcTable.rocket.md` mass-edit demo (mismatched closing tag).

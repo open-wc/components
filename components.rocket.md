@@ -38,7 +38,10 @@ copyable demos.
 
 - [Table](/components/table): sortable, filterable tabular data with optional selection and settings.
 - [Table Info](/components/table-info): summary metadata around table state or results.
+- [Table Mass Edit](/components/table-mass-edit): bulk edits applied to selected table rows.
 - [Table Filter Builder](/components/filter-builder): standalone table-style query rules.
+- [Chart](/components/chart): line and bar charts from data series.
+- [Pie Chart](/components/pie-chart): proportional slices with an optional "other" slice.
 - [Data Detail](/components/data-detail): structured detail view for one record.
 - [Detail Card](/components/detail-card): compact record card.
 - [Card](/components/card): generic card shell.
@@ -55,6 +58,12 @@ copyable demos.
 - [Click Editable Textarea](/components/click-editable-textarea): inline editable long text.
 - [Click Editable Autocomplete](/components/click-editable-autocomplete): inline editable option selection.
 - [Click Editable Input Autofill](/components/click-editable-input-autofill): inline editable values with autofill behavior.
+
+## Layout and application shell
+
+- [Layout Sidebar](/components/layout-sidebar): application layout with a resizable navigation sidebar.
+- [Loading Screen](/components/loading-screen): centered spinner with progress for application startup.
+- [Separator](/components/separator): horizontal or vertical divider with optional label.
 
 ## Workflow components
 
