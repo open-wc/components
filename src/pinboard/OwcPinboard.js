@@ -505,7 +505,6 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
     this.#hideNonDropColsDisabled();
     const typedTarget = /**@type {HTMLElement}*/ (ev.currentTarget);
     if (typedTarget !== this.draggedFrom || typedTarget.classList.contains('dropzone')) {
-      // console.log(typedTarget);
       // @ts-ignore
       await this.draggedFrom?.onLiftCallback?.(this.dragged.data, this.draggedFrom.name);
       // @ts-ignore

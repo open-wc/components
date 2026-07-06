@@ -106,9 +106,6 @@ export function getFieldPathContent(row, column, options = {}) {
         options.requiredFields.every(required => getFieldPath(data, required));
       const autoSetData = (data = row) => setFieldPath(data, field, value);
       if (handleUpdateUserFunction) {
-        // console.log('email', getFieldPath(row, 'email'));
-        // console.log('type', getFieldPath(row, 'type'));
-        // console.log('allRequiredFieldsAreFilled', options.requiredFields.every(required => getFieldPath(row, required)));
         handleUpdateUserFunction({
           field,
           data: row,

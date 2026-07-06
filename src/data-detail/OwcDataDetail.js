@@ -84,7 +84,6 @@ export class OwcDataDetail extends ScopedElementsMixin(LitElement) {
    * @param {import('lit').PropertyValues} changedProperties
    */
   update(changedProperties) {
-    // console.log('update owcDetail:', this, changedProperties);
     super.update(changedProperties);
   }
 

@@ -43,6 +43,19 @@ const rows = [
 export const view = () => html`<owc-table .columns=${columns} .data=${rows}></owc-table>`;
 ```
 
+## Documentation
+
+Component reference pages with live demos are colocated with the source as `*.rocket.md` files.
+Run the documentation site locally:
+
+```sh
+npm install
+npm start
+```
+
+Then open the components index to browse reference pages with copyable demos for every public UI
+export.
+
 ## Project Status
 
 `@open-wc/components` is preparing its first public release as `0.1.0`. Public exports are expected

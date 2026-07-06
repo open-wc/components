@@ -355,7 +355,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
    * @param {import('lit').PropertyValues} changedProperties
    */
   update(changedProperties) {
-    // console.log('update owctable', this, changedProperties);
     if (changedProperties.has('data')) {
       this.processedData = [...this.data];
       if (this.#hasDetailRows()) {

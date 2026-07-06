@@ -278,7 +278,6 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
         // @ts-ignore
         renderer = this.processedRenderers[schema.type];
       }
-      // console.log('renderer', renderer, typedUiSchema);
 
       const ruleOptions = { disabled: false, hidden: false };
       if (this.uiSchema.rule && this.mode !== 'schema') {
