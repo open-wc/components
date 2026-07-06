@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/card',
+  path: '/card',
   title: 'Card',
   menu: {
-    order: 20,
+    parent: 'data',
+    order: 90,
+    iconName: 'card-text',
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';

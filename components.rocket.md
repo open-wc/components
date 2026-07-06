@@ -34,47 +34,60 @@ export const layout = pageData => docLayout(pageData, docsData);
 Find the component by the interface problem you are solving. The reference pages contain the
 copyable demos.
 
-## Core data views
+## Data
 
-- [Table](/components/table): sortable, filterable tabular data with optional selection and settings.
-- [Table Info](/components/table-info): summary metadata around table state or results.
-- [Table Mass Edit](/components/table-mass-edit): bulk edits applied to selected table rows.
-- [Table Filter Builder](/components/filter-builder): standalone table-style query rules.
-- [Chart](/components/chart): line and bar charts from data series.
-- [Pie Chart](/components/pie-chart): proportional slices with an optional "other" slice.
-- [Data Detail](/components/data-detail): structured detail view for one record.
-- [Detail Card](/components/detail-card): compact record card.
-- [Card](/components/card): generic card shell.
-- [Card List](/components/card-list): repeated cards backed by data.
-- [Pinboard](/components/owc-pinboard): pinboard-style collection view.
+Tables, charts, and record views for displaying application data.
 
-## Forms and inputs
+- [Table](/table): sortable, filterable tabular data with optional selection and settings.
+- [Table Info](/table-info): summary metadata around table state or results.
+- [Table Mass Edit](/table-mass-edit): bulk edits applied to selected table rows.
+- [Filter Builder](/filter-builder): standalone table-style query rules.
+- [Chart](/chart): line and bar charts from data series.
+- [Pie Chart](/pie-chart): proportional slices with an optional "other" slice.
+- [Data Detail](/data-detail): structured detail view for one record.
+- [Detail Card](/detail-card): compact record card.
+- [Card](/card): generic card shell.
+- [Card List](/card-list): repeated cards backed by data.
+- [Pinboard](/pinboard): pinboard-style collection view.
 
-- [Json Form](/components/json-form): schema-driven form rendering.
-- [Autocomplete](/components/autocomplete): searchable option selection.
-- [Input Autofill](/components/input-autofill): text input with suggestions or fill behavior.
-- [Input Slider](/components/input-slider): numeric input with slider interaction.
-- [Click Editable Input](/components/click-editable-input): inline editable text.
-- [Click Editable Textarea](/components/click-editable-textarea): inline editable long text.
-- [Click Editable Autocomplete](/components/click-editable-autocomplete): inline editable option selection.
-- [Click Editable Input Autofill](/components/click-editable-input-autofill): inline editable values with autofill behavior.
+## Forms
 
-## Layout and application shell
+Schema-driven forms and the input controls that compose them.
 
-- [Layout Sidebar](/components/layout-sidebar): application layout with a resizable navigation sidebar.
-- [Loading Screen](/components/loading-screen): centered spinner with progress for application startup.
-- [Separator](/components/separator): horizontal or vertical divider with optional label.
+- [Json Form](/json-form): schema-driven form rendering.
+- [Autocomplete](/autocomplete): searchable option selection.
+- [Input Autofill](/input-autofill): text input with suggestions or fill behavior.
+- [Input Slider](/input-slider): numeric input with slider interaction.
+- [Click Editable Input](/click-editable-input): inline editable text.
+- [Click Editable Textarea](/click-editable-textarea): inline editable long text.
+- [Click Editable Autocomplete](/click-editable-autocomplete): inline editable option selection.
+- [Click Editable Input Autofill](/click-editable-input-autofill): inline editable values with autofill behavior.
 
-## Workflow components
+## Layout
 
-- [Template Editor](/components/template-editor): template editing and generated content workflows.
-- [Compose Email](/components/compose-email): email composition surfaces.
-- [File Upload](/components/file-upload): upload controls.
-- [Tabs](/components/tabs): tabbed content.
-- [Tooltip](/components/tooltip): contextual hover or focus help.
-- [Toast](/components/toast): transient status messages.
-- [Icon Button](/components/icon-button): compact icon-only actions.
-- [Count Up](/components/count-up): animated numeric display.
-- [Compress](/components/compress): string compression helpers documented with demos.
-- [Questionnaire](/components/owc-questionnaire): questionnaire-style UI flows.
-- [WaveController](/components/WaveController): reactive controller documentation for wave-style state flows.
+Application shell and page structure.
+
+- [Layout Sidebar](/layout-sidebar): application layout with a resizable navigation sidebar.
+- [Tabs](/tabs): tabbed content.
+- [Loading Screen](/loading-screen): centered spinner with progress for application startup.
+- [Separator](/separator): horizontal or vertical divider with optional label.
+
+## Workflow
+
+Larger task-oriented surfaces.
+
+- [Template Editor](/template-editor): template editing and generated content workflows.
+- [Compose Email](/compose-email): email composition surfaces.
+- [File Upload](/file-upload): upload controls.
+- [Questionnaire](/questionnaire): questionnaire-style UI flows.
+
+## Utilities
+
+Small helpers, feedback elements, and controllers.
+
+- [Toast](/toast): transient status messages.
+- [Tooltip](/tooltip): contextual hover or focus help.
+- [Icon Button](/icon-button): compact icon-only actions.
+- [Count Up](/count-up): animated numeric display.
+- [Compress](/compress): string compression helpers documented with demos.
+- [Wave Controller](/wave-controller): reactive controller documentation for wave-style state flows.

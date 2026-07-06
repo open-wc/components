@@ -1,7 +1,12 @@
 ```js server
 export const config = {
-  path: '/components/owc-questionnaire',
+  path: '/questionnaire',
   title: 'Questionnaire',
+  menu: {
+    parent: 'workflow',
+    order: 40,
+    iconName: 'patch-question',
+  },
 };
 
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';

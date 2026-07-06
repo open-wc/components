@@ -1,7 +1,12 @@
 ```js server
 export const config = {
-  path: '/components/tooltip',
+  path: '/tooltip',
   title: 'Tooltip',
+  menu: {
+    parent: 'utilities',
+    order: 20,
+    iconName: 'info-circle',
+  },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
 export const components = atlasDocComponents;

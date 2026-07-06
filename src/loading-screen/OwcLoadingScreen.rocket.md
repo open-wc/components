@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/loading-screen',
+  path: '/loading-screen',
   title: 'Loading Screen',
   menu: {
+    parent: 'layout',
     order: 30,
+    iconName: 'hourglass-split',
   },
 };
 

@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/click-editable-input-autofill',
+  path: '/click-editable-input-autofill',
   title: 'Click Editable Input Autofill',
   menu: {
-    order: 30,
+    parent: 'forms',
+    order: 80,
+    iconName: 'input-cursor-text',
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';

@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/icon-button',
+  path: '/icon-button',
   title: 'Icon Button',
   menu: {
-    order: 20,
+    parent: 'utilities',
+    order: 30,
+    iconName: 'hand-index',
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';

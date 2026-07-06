@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/compose-email',
+  path: '/compose-email',
   title: 'Compose Email',
   menu: {
-    order: 30,
+    parent: 'workflow',
+    order: 20,
+    iconName: 'envelope',
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
@@ -373,4 +375,4 @@ export const formatterCompose = () => {
 
 ## File Upload
 
-See [OwcTemplateEditor](/components/template-editor#file-upload), properties are drilled without change.
+See [OwcTemplateEditor](/template-editor#file-upload), properties are drilled without change.

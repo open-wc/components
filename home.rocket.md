@@ -5,55 +5,22 @@ export const config = {
   metadata: {
     title: '@open-wc/components',
     description:
-      'Developer documentation for Open Web Components data, form, and workflow components.',
-    custom: {
-      atlasDoc: {
-        asideTip: {
-          iconName: 'clipboard-check',
-          title: 'Fast path',
-          description:
-            'Start from /components, pick the component, then copy the smallest demo that matches your use case.',
-        },
-      },
-    },
+      'Open Web Components for data-heavy interfaces: tables, forms, charts, and workflow UI shipped as unbundled ESM.',
   },
-  menu: {
-    iconName: 'house',
-    order: 0,
-  },
+  menu: false,
 };
 
-import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
-import { docsData } from '@open-wc/components/docsData.js';
+import { atlasHeroLayout as heroLayout } from '@rocket/js/layouts/atlasHero.js';
+import { heroData } from '@open-wc/components/docsData.js';
 
-export const components = atlasDocComponents;
-export const layout = pageData => docLayout(pageData, docsData);
+export { atlasHeroComponents as components } from '@rocket/js/layouts/atlasHero.js';
+export const layout = pageData => heroLayout(pageData, heroData);
 ```
 
-# @open-wc/components
+## Copy, paste, render
 
-Open Web Components for data-heavy interfaces: tables, detail views, form controls, workflow UI,
-and the helper utilities around them.
-
-This documentation is written for application developers and package maintainers. The main job is
-practical: get from "I need this UI" to a working component example quickly.
-
-## Start here
-
-1. Open [Components](/components).
-2. Pick the component by UI pattern.
-3. Copy the smallest working demo from the reference page.
-4. Replace the demo data with application data.
-
-## Basic usage
-
-Register the component through its `define` export:
-
-```js
-import '@open-wc/components/define/owc-table.js';
-```
-
-Use it with concrete data. This example is intentionally complete enough to paste into a Lit view:
+Register a component through its `define` entry point and pass data as properties. This example is
+complete enough to paste into any Lit view:
 
 ```js
 import { html } from 'lit';
@@ -69,22 +36,9 @@ const rows = [
   { id: '2', firstName: 'Grace', lastName: 'Hopper' },
 ];
 
-export const view = () => html` <owc-table .columns=${columns} .data=${rows}></owc-table> `;
+export const view = () => html`<owc-table .columns=${columns} .data=${rows}></owc-table>`;
 ```
 
-## What is documented
-
-- Data-heavy components such as [Table](/components/table), [Data Detail](/components/data-detail),
-  and [Card List](/components/card-list).
-- Form and input helpers such as [Json Form](/components/json-form),
-  [Autocomplete](/components/autocomplete), and [Input Autofill](/components/input-autofill).
-- Workflow UI components such as [Template Editor](/components/template-editor),
-  [File Upload](/components/file-upload), and [Compose Email](/components/compose-email).
-- Charts and application shell pieces such as [Chart](/components/chart),
-  [Pie Chart](/components/pie-chart), and [Layout Sidebar](/components/layout-sidebar).
-
-## Maintenance notes
-
-Component reference pages live next to the component source where possible. Keep examples small,
-copyable, and close to real application usage. Prefer static Markdown pages with `js demo` blocks
-unless a page truly needs request-time behavior.
+Every reference page follows the same pattern: pick a component from
+[the component index](/components), copy the smallest demo that matches your use case, and replace
+the demo data with application data.

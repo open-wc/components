@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/toast',
+  path: '/toast',
   title: 'Toast',
   menu: {
-    order: 30,
+    parent: 'utilities',
+    order: 10,
+    iconName: 'chat-left-text',
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';

@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/count-up',
+  path: '/count-up',
   title: 'Count Up',
   menu: {
-    order: 30,
+    parent: 'utilities',
+    order: 40,
+    iconName: '123',
   },
 };
 

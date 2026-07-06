@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/autocomplete',
+  path: '/autocomplete',
   title: 'Autocomplete',
   menu: {
-    order: 10,
+    parent: 'forms',
+    order: 20,
+    iconName: 'search',
   },
 };
 

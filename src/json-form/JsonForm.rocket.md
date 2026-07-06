@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/json-form',
+  path: '/json-form',
   title: 'Json Form',
   menu: {
+    parent: 'forms',
     order: 10,
+    iconName: 'ui-checks',
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
@@ -18,7 +20,7 @@ import { html } from 'lit';
 import '@open-wc/components/define/json-form.js';
 ```
 
-# Json-form
+# Json Form
 
 An Implementation of [JsonForms](https://jsonforms.io/) with built with [lit](https://lit.dev/) and [Shoelace](https://shoelace.style)
 

@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/owc-pinboard',
+  path: '/pinboard',
   title: 'Pinboard',
   menu: {
-    order: 30,
+    parent: 'data',
+    order: 110,
+    iconName: 'pin-angle',
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';

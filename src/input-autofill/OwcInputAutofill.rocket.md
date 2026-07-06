@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/input-autofill',
-  title: 'Input-Autofill',
+  path: '/input-autofill',
+  title: 'Input Autofill',
   menu: {
-    order: 10,
+    parent: 'forms',
+    order: 30,
+    iconName: 'magic',
   },
 };
 
@@ -20,7 +22,7 @@ import { html } from 'lit';
 import '@open-wc/components/define/owc-input-autofill.js';
 ```
 
-# Input-Autofill
+# Input Autofill
 
 Simple example:
 

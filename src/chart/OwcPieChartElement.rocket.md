@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/pie-chart',
+  path: '/pie-chart',
   title: 'Pie Chart',
   menu: {
-    order: 30,
+    parent: 'data',
+    order: 60,
+    iconName: 'pie-chart',
   },
 };
 

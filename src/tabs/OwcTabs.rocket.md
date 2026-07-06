@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/tabs',
+  path: '/tabs',
   title: 'Tabs',
   menu: {
-    order: 30,
+    parent: 'layout',
+    order: 20,
+    iconName: 'segmented-nav',
   },
 };
 

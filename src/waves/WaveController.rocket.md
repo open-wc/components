@@ -1,7 +1,12 @@
 ```js server
 export const config = {
-  path: '/components/WaveController',
-  title: 'WaveController',
+  path: '/wave-controller',
+  title: 'Wave Controller',
+  menu: {
+    parent: 'utilities',
+    order: 60,
+    iconName: 'water',
+  },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
 export const components = atlasDocComponents;
@@ -17,7 +22,7 @@ import { ref } from 'lit/directives/ref.js';
 import { WaveController, ReactiveObject } from '@open-wc/components/WaveController.js';
 ```
 
-# WaveController
+# Wave Controller
 
 A reactivity tool for deeply nested object instances.
 

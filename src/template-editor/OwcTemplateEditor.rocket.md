@@ -1,9 +1,12 @@
 ```js server
 export const config = {
-  path: '/components/template-editor',
+  path: '/template-editor',
   title: 'Template Editor',
   menu: {
-    order: 30,
+    parent: 'workflow',
+    order: 10,
+    linkText: 'Template Editor',
+    iconName: 'file-earmark-richtext',
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
@@ -209,7 +212,7 @@ export const templateWithOptions = () => {
 ### uiSchema
 
 Except for making one property visible, it's possible to arrange a group of properties. For further
-information, go to <a href="/components/json-form/">Json-form</a>.
+information, go to <a href="/json-form">Json-form</a>.
 
 - **`type`:** Choose how you want to render your properties (VerticalLayout, HorizontalLayout, GroupLayout, CheckboxComboLayout).
 - **`elements`:** Match UI elements with a property from the schema
@@ -555,7 +558,7 @@ export const hyperLinksVariable = () => {
 You can implement attachments by using the integrated file upload field. You can display it by setting the `showFileUpload` property to true.
 Note: `showSubject` must also be true for the fileUpload to show.
 
-By setting the `renderFileContent` property to a function returning html you can change how the uploaded files look. The returned content can be any valid innerHmtl of the OwcCard component. See [OwcCard](/components/template-editor) for more information.
+By setting the `renderFileContent` property to a function returning html you can change how the uploaded files look. The returned content can be any valid innerHmtl of the OwcCard component. See [OwcCard](/card) for more information.
 
 On it's own the file upload does not do much. You can however add an uploadHandler which has the a of new files a list of all files and the function to insert text at the current caret location as parameters. The upload handler also gets passed a `requestUpdate` function parameter. Use this if you make any updates to the passed files which would change the output of the `renderFileContent` function.
 

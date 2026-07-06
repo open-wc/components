@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/click-editable-textarea',
+  path: '/click-editable-textarea',
   title: 'Click Editable Textarea',
   menu: {
-    order: 30,
+    parent: 'forms',
+    order: 60,
+    iconName: 'textarea-t',
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
@@ -19,7 +21,7 @@ import { html } from 'lit';
 import '@open-wc/components/define/owc-click-editable-textarea.js';
 ```
 
-# Click Editable TextArea
+# Click Editable Textarea
 
 A text-area that is editable through double clicking.
 

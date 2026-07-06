@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/table-mass-edit',
+  path: '/table-mass-edit',
   title: 'Table Mass Edit',
   menu: {
+    parent: 'data',
     order: 30,
+    iconName: 'pencil-square',
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
@@ -67,7 +69,7 @@ There is however **no** `define` entry (no `@open-wc/components/define/owc-table
 }}
 ```
 
-which renders an `owc-table-mass-edit` element with `.columns`, `.data` (selected rows), `.allData` and `.table` already wired up (see the [Table docs](/components/table/) "Mass Editing" section).
+which renders an `owc-table-mass-edit` element with `.columns`, `.data` (selected rows), `.allData` and `.table` already wired up (see the [Table docs](/table) "Mass Editing" section).
 
 > If you want to use the element standalone you have to register the class yourself, e.g. with `customElements.define('owc-table-mass-edit', OwcTableMassEdit)` or via your own scoped registry.
 

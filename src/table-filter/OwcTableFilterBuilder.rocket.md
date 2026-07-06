@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/filter-builder',
+  path: '/filter-builder',
   title: 'Table Filter Builder',
   menu: {
-    order: 30,
+    parent: 'data',
+    order: 40,
+    iconName: 'funnel',
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';

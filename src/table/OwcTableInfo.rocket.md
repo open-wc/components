@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/table-info',
+  path: '/table-info',
   title: 'Table Info',
   menu: {
-    order: 30,
+    parent: 'data',
+    order: 20,
+    iconName: 'info-square',
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';

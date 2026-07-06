@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/chart',
+  path: '/chart',
   title: 'Chart',
   menu: {
-    order: 30,
+    parent: 'data',
+    order: 50,
+    iconName: 'graph-up',
   },
 };
 

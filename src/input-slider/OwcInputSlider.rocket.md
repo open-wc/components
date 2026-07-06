@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/input-slider',
-  title: 'Input-Slider',
+  path: '/input-slider',
+  title: 'Input Slider',
   menu: {
-    order: 10,
+    parent: 'forms',
+    order: 40,
+    iconName: 'sliders',
   },
 };
 
@@ -20,7 +22,7 @@ import { html } from 'lit';
 import '@open-wc/components/define/owc-input-slider.js';
 ```
 
-# Input-Slider
+# Input Slider
 
 Simple example:
 

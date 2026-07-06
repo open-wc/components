@@ -1,9 +1,11 @@
 ```js server
 export const config = {
-  path: '/components/file-upload',
+  path: '/file-upload',
   title: 'File Upload',
   menu: {
-    order: 40,
+    parent: 'workflow',
+    order: 30,
+    iconName: 'cloud-upload',
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
