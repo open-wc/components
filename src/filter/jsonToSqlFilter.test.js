@@ -127,6 +127,28 @@ describe('jsonToSqlFilter', () => {
     });
   });
 
+  it('throws on operators without SQL support', () => {
+    /** @type {import('./filter.type.js').operator[]} */
+    const inMemoryOnlyOperators = [
+      'notIncludes',
+      'equalNoYear',
+      'notEqualNoYear',
+      'greaterEqualNoYear',
+      'lessEqualNoYear',
+      'betweenNoYear',
+    ];
+
+    for (const operator of inMemoryOnlyOperators) {
+      assert.throws(
+        () => {
+          jsonToSqlFilter([{ field: 'name', operator, value: 'John' }], allowedFields);
+        },
+        new Error(`Unsupported operator: ${operator}`),
+        `expected operator "${operator}" to be rejected`,
+      );
+    }
+  });
+
   it('preserves parameter order across nested structure', () => {
     const { params } = jsonToSqlFilter(
       [

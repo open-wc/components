@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: ready-for-human
 
 # Shared JSON Filter Semantics
 
@@ -100,3 +100,16 @@ UI labels and localization stay out of this first pass. The table UI can keep it
 - The chosen design is “JSON Filter with adapters”: JSON Filters are edited by table UI and adapted into Filter Functions or SQL Filters.
 - The rejected design was a normalization-first module. That may become useful later, but the current adapters can consume the straight JSON Filter shape, and adding another model is not justified for the first pass.
 - ADR-0005 already records the core decision.
+
+## Comments
+
+2026-07-06 (agent): Implemented. `src/filter/operatorSemantics.js` now owns per-operator in-memory
+evaluation (`evaluateOperator`) and SQL capability (`getSqlOperator`), with in-memory-only
+operators carrying an explicit `toSql: null`. `jsonToFilter.js` and `jsonToSqlFilter.js` delegate
+to it; `compare.js` remains as a compatibility adapter with its existing tests. Public exports and
+the JSON Filter shape are unchanged. Added one targeted test at the SQL adapter seam asserting all
+six in-memory-only operators (`notIncludes`, `equalNoYear`, `notEqualNoYear`,
+`greaterEqualNoYear`, `lessEqualNoYear`, `betweenNoYear`) throw `Unsupported operator: ...`.
+Known in-memory vs SQL mismatches (isEmpty truthiness vs IS NULL, case-insensitive includes vs
+LIKE, PostgreSQL-specific some/every) are documented in the module header as current behavior,
+not changed. Full release gate passes.

@@ -1,78 +1,4 @@
-/**@type {Record<import("./filter.type.js").operator,  undefined | ((field: string, value: import("./filter.type.js").SqlPrimitive , params: import("./filter.type.js").SqlPrimitive[]) => string)>} */
-const OPERATOR_SQL_MAP = {
-  equal: (field, value, params) => {
-    params.push(value);
-    return `"${field}" = ?`;
-  },
-
-  notEqual: (field, value, params) => {
-    params.push(value);
-    return `"${field}" <> ?`;
-  },
-
-  greaterThan: (field, value, params) => {
-    params.push(value);
-    return `"${field}" > ?`;
-  },
-
-  greaterThanOrEqual: (field, value, params) => {
-    params.push(value);
-    return `"${field}" >= ?`;
-  },
-
-  lessThan: (field, value, params) => {
-    params.push(value);
-    return `"${field}" < ?`;
-  },
-
-  lessThanOrEqual: (field, value, params) => {
-    params.push(value);
-    return `"${field}" <= ?`;
-  },
-
-  includes: (field, value, params) => {
-    params.push(`%${value}%`);
-    return `"${field}" LIKE ?`;
-  },
-
-  startsWith: (field, value, params) => {
-    params.push(`${value}%`);
-    return `"${field}" LIKE ?`;
-  },
-
-  endsWith: (field, value, params) => {
-    params.push(`%${value}`);
-    return `"${field}" LIKE ?`;
-  },
-
-  isEmpty: field => {
-    return `("${field}" IS NULL)`;
-  },
-
-  between: (field, value, params) => {
-    if (!(typeof value === 'object' && 'from' in value && 'to' in value)) {
-      throw new Error(`Invalid between filter on field "${field}" with value ${value}`);
-    }
-    params.push(value.from, value.to);
-    return `"${field}" BETWEEN ? AND ?`;
-  },
-
-  some: (field, value, params) => {
-    params.push(value);
-    return `"${field}" && ?`; // PostgreSQL array overlap
-  },
-
-  every: (field, value, params) => {
-    params.push(value);
-    return `"${field}" @> ?`; // PostgreSQL contains
-  },
-  notIncludes: undefined,
-  equalNoYear: undefined,
-  notEqualNoYear: undefined,
-  greaterEqualNoYear: undefined,
-  lessEqualNoYear: undefined,
-  betweenNoYear: undefined,
-};
+import { getSqlOperator } from './operatorSemantics.js';
 
 /**
  * Entry point
@@ -136,7 +62,7 @@ function buildLeaf(filter, params, allowedFields) {
     throw new Error(`Disallowed field ${filter.field}`);
   }
 
-  const handler = OPERATOR_SQL_MAP[filter.operator];
+  const handler = getSqlOperator(filter.operator);
 
   if (!handler) {
     throw new Error(`Unsupported operator: ${filter.operator}`);

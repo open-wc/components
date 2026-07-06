@@ -1,4 +1,4 @@
-import { compare } from './compare.js';
+import { evaluateOperator } from './operatorSemantics.js';
 
 export const globalSearchField = '::globalField::';
 
@@ -67,7 +67,7 @@ function singleFilter(row, filterObj) {
   // Handle single normal filter
   const value = getValue(row, filterObj.field);
   // @ts-ignore
-  const result = compare(value, filterObj.value, filterObj.operator);
+  const result = evaluateOperator(value, filterObj.value, filterObj.operator);
   return !filterObj.negated ? result : !result;
 }
 /**
