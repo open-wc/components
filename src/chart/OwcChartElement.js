@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 
-import 'apexcharts/dist/apexcharts.js';
+import ApexCharts from 'apexcharts';
 import { roundPretty } from './roundPretty.js';
 
 const de = {
@@ -98,7 +98,6 @@ export class OwcChartElement extends LitElement {
 
   firstUpdated() {
     let chartDiv = this.shadowRoot?.querySelector('div');
-    // eslint-disable-next-line no-undef
     this.chart = /** @type {import('apexcharts')} */ (new ApexCharts(chartDiv, this.apexOptions));
     this.chart.render();
   }

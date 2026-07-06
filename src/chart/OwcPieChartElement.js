@@ -1,5 +1,5 @@
 import { LitElement, html } from 'lit';
-import 'apexcharts/dist/apexcharts.js';
+import ApexCharts from 'apexcharts';
 
 const de = {
   name: 'de',
@@ -116,7 +116,6 @@ export class OwcPieChartElement extends LitElement {
 
   firstUpdated() {
     let chartDiv = this.shadowRoot?.querySelector('div');
-    // eslint-disable-next-line no-undef
     this.chart = /** @type {import('apexcharts')} */ (new ApexCharts(chartDiv, this.apexOptions));
     this.chart.render();
   }

@@ -10,6 +10,19 @@ All notable changes to this project will be documented in this file.
   surface is owned by table, filter, text, Lit, and component namespaces.
 - Target MIT licensing for the public package.
 
+### Fixed
+
+- `OwcChartElement` / `OwcPieChartElement`: ApexCharts is now imported as a proper ES module
+  instead of relying on the UMD build to set a `window.ApexCharts` global. Charts previously
+  failed to render under bundlers that convert the UMD file to a module (no global was set).
+- `OwcClickEditable`: the input now actually blurs when submitting an unchanged value (the blur
+  call was previously a no-op).
+- `OwcToast`: the progress timer is cleared when the toast is removed from the DOM, so dismissed
+  toasts no longer keep a timer running.
+- `OwcLoadingScreen`: the `autofill` progress timer is started and stopped with the element's
+  lifecycle instead of being rescheduled from `render()`, so removed loading screens no longer keep
+  re-rendering in the background.
+
 ### Migration notes
 
 | Removed import path                                               | Replacement import path                                |

@@ -154,6 +154,11 @@ export class OwcToastComponent extends ScopedElementsMixin(LitElement) {
     clearInterval(this.progressInterval);
   }
 
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.#stopProgress();
+  }
+
   firstUpdated() {
     this.state = 'visible';
     this.addEventListener('mouseleave', () => this.#startProgress());

@@ -123,7 +123,7 @@ export class OwcClickEditable extends LitElement {
 
     if (this.lastValue === nextValue) {
       this.editable = false;
-      this.inputElement.blur;
+      this.inputElement.blur();
       return;
     }
 
