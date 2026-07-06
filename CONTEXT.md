@@ -41,8 +41,8 @@ A public export kept for the first release even though it may be cleaned up or r
 _Avoid_: Accidental private API, immediate release blocker
 
 **Documentation Bar**:
-The minimum documentation required before an export is acceptable in the open source release: UI exports need colocated component or demo documentation in the same change, and helper exports need a README or API note in the same change.
-_Avoid_: Best-effort docs, post-release cleanup
+The minimum documentation required before an export is acceptable in the open source release: UI exports need colocated component or demo documentation in the owning module, and helper exports need an owning-module README or API note. Export audits can index this evidence, but should not be the documentation source.
+_Avoid_: Best-effort docs, post-release cleanup, central audit as documentation
 
 **Release Gate**:
 The validation commands that must pass from a clean checkout before publication after formatting has been applied: `npm run lint`, `npm run test`, `npm run types`, and `npm run build`.
