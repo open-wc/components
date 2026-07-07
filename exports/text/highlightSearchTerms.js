@@ -1,1 +1,1 @@
-export { highlightSearchTerms } from '../../src/highlight-search-terms/highlightSearchTerms.js';
+export { highlightSearchTerms } from '../../src/table/highlightSearchTerms.js';

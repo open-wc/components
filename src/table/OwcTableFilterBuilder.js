@@ -8,7 +8,7 @@ import { classMap } from 'lit/directives/class-map.js';
 
 import '@awesome.me/webawesome/dist/components/details/details.js';
 import '@awesome.me/webawesome/dist/components/input/input.js';
-import { globalSearchField } from '../filter/jsonToFilter.js';
+import { globalSearchField } from './jsonToFilter.js';
 
 /**
  * @template {Record<string, unknown>} T
@@ -21,22 +21,20 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
 
   static properties = {
     value: { type: Array },
-    columns: { type: Object },
+    columns: { type: Array },
     globalSearch: { type: Boolean, attribute: 'global-search', reflect: true },
     globalSearchOnly: { type: Boolean, attribute: 'global-search-only' },
-    isVertical: { type: Boolean, attribute: 'is-vertical' },
     hideInfoDetail: { type: Boolean, attribute: 'hide-info-detail' },
   };
 
   constructor() {
     super();
-    /** @type {import('../filter/filter.type.js').NestedJsonFilters} */
+    /** @type {import('./filter.type.js').NestedJsonFilters} */
     this.value = [];
-    /** @type {import('../table/OwcTable.types.js').Column<T>[]} */
+    /** @type {import('./OwcTable.types.js').Column<T>[]} */
     this.columns = [];
     this.globalSearch = false;
     this.globalSearchOnly = false;
-    this.isVertical = false;
     this.hideInfoDetail = false;
   }
 
@@ -79,9 +77,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
     if (!this.globalSearch) {
       return nothing;
     }
-    const globalSearch = /** @type {import('../filter/filter.type.js').JsonFilter} */ (
-      this.value[0]
-    );
+    const globalSearch = /** @type {import('./filter.type.js').JsonFilter} */ (this.value[0]);
 
     return html`
       <wa-input
@@ -106,8 +102,8 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * @param {import('../filter/filter.type.js').NestedJsonFilters} filterList
-   * @param {{ isOr?: boolean, root?: boolean, parentList?: import('../filter/filter.type.js').NestedJsonFilters, parentListIndex?: number }} [options]
+   * @param {import('./filter.type.js').NestedJsonFilters} filterList
+   * @param {{ isOr?: boolean, root?: boolean, parentList?: import('./filter.type.js').NestedJsonFilters, parentListIndex?: number }} [options]
    * @returns {import('lit').TemplateResult}
    */
   renderFilterList(filterList, options = {}) {
@@ -177,9 +173,9 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * @param {import('../filter/filter.type.js').NestedJsonFilters} filterList
+   * @param {import('./filter.type.js').NestedJsonFilters} filterList
    * @param {number} index
-   * @param {{ showSeparator?: boolean; parentList?: import('../filter/filter.type.js').NestedJsonFilters, parentListIndex?: number }} [options]
+   * @param {{ showSeparator?: boolean; parentList?: import('./filter.type.js').NestedJsonFilters, parentListIndex?: number }} [options]
    * @returns {import('lit').TemplateResult}
    */
   renderExistingOr(filterList, index, options = {}) {
@@ -204,7 +200,12 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
           @delete=${() => {
             filterList.splice(index, 1);
             if (filterList.length <= 1 && parentList && parentListIndex !== undefined) {
-              parentList[parentListIndex] = filterList[0];
+              if (filterList.length === 0) {
+                // remove the empty group instead of writing undefined into the parent
+                parentList.splice(parentListIndex, 1);
+              } else {
+                parentList[parentListIndex] = filterList[0];
+              }
             }
             this.requestUpdate();
             this.#fireChangeEvent();
@@ -216,9 +217,9 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * @param {import('../filter/filter.type.js').NestedJsonFilters} filterList
+   * @param {import('./filter.type.js').NestedJsonFilters} filterList
    * @param {number} index
-   * @param {{ parentList?: import('../filter/filter.type.js').NestedJsonFilters, parentListIndex?: number }} [options]
+   * @param {{ parentList?: import('./filter.type.js').NestedJsonFilters, parentListIndex?: number }} [options]
    * @returns {import('lit').TemplateResult}
    */
   renderExistingAnd(filterList, index, options = {}) {
@@ -247,7 +248,12 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
               parentList.length > 0 &&
               parentListIndex !== undefined
             ) {
-              parentList[parentListIndex] = filterList[0];
+              if (filterList.length === 0) {
+                // remove the empty group instead of writing undefined into the parent
+                parentList.splice(parentListIndex, 1);
+              } else {
+                parentList[parentListIndex] = filterList[0];
+              }
             }
             this.requestUpdate();
             this.#fireChangeEvent();
@@ -259,7 +265,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * @param {import('../filter/filter.type.js').NestedJsonFilters} filterList
+   * @param {import('./filter.type.js').NestedJsonFilters} filterList
    * @returns {import('lit').TemplateResult}
    */
   renderAdditionalOr(filterList) {
@@ -289,7 +295,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * @param {import('../filter/filter.type.js').NestedJsonFilters} filterList
+   * @param {import('./filter.type.js').NestedJsonFilters} filterList
    * @param {number} index
    * @returns {import('lit').TemplateResult}
    */
@@ -319,7 +325,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * @param {import('../filter/filter.type.js').NestedJsonFilters} filterList
+   * @param {import('./filter.type.js').NestedJsonFilters} filterList
    * @returns {import('lit').TemplateResult}
    */
   renderNewAnd(filterList) {
@@ -345,23 +351,19 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
               }
             ></owc-table-filter>
           </div>
-          ${!this.hideInfoDetail ? html`<div>${this.renderColumInfoDetail()}</div>` : ''}
+          ${!this.hideInfoDetail ? html`<div>${this.renderColumnInfoDetail()}</div>` : ''}
         </div>
       </div>
     `;
   }
 
-  renderColumInfoDetail() {
+  renderColumnInfoDetail() {
     if (this.columns.filter(col => col.description).length > 0) {
       return html`<wa-details class="custom-icons">
         <wa-icon name="book" slot="expand-icon"></wa-icon>
         <wa-icon name="x-circle" slot="collapse-icon"></wa-icon>
         <h2 class="reduced-margin">Filter Lexikon</h2>
-        ${
-          this.renderColumnInfoText(this.columns) !== ''
-            ? html`${this.renderColumnInfoText(this.columns)}`
-            : ''
-        }
+        ${this.renderColumnInfoText(this.columns)}
       </wa-details> `;
     } else {
       return '';
@@ -369,7 +371,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * @param {import('../table/OwcTable.types.js').Column<T>[]}  columns
+   * @param {import('./OwcTable.types.js').Column<T>[]}  columns
    * @returns {string | import('lit').TemplateResult}
    */
   renderColumnInfoText(columns) {
@@ -403,7 +405,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * @param {import('../filter/filter.type.js').NestedJsonFilters} filterList
+   * @param {import('./filter.type.js').NestedJsonFilters} filterList
    * @param {number} index
    * @returns {import('lit').TemplateResult}
    */
@@ -486,7 +488,6 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
         font-size: 1.3rem;
         border-radius: 8px;
         padding: 20px;
-        //box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         max-width: 600px;
         margin: auto;
       }
@@ -512,7 +513,6 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
         margin-left: 20px;
         padding-left: 10px;
         border-left: 3px solid #14446c;
-        // background: #e8f8f5;
         background: rgba(186, 230, 253, 0.1);
         border-radius: 4px;
         padding: 10px;

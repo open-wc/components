@@ -36,7 +36,7 @@ export class SmallEventTarget {
 
     const typedListeners = this.listeners.get(type) || [];
 
-    for (let i = typedListeners.length; i >= 0; i--) {
+    for (let i = typedListeners.length - 1; i >= 0; i--) {
       if (typedListeners[i] === listener) {
         typedListeners.splice(i, 1);
       }
@@ -60,5 +60,6 @@ export class SmallEventTarget {
     for (let listener of queue) {
       listener(event);
     }
+    return true;
   }
 }

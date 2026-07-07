@@ -1,4 +1,4 @@
-import { css, html, isServer, LitElement, nothing } from 'lit';
+import { css, html, LitElement, nothing } from 'lit';
 import { classMap } from 'lit/directives/class-map.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { HasSlotController } from './HasSlotController.js';
@@ -17,6 +17,8 @@ import { formControlStyles } from './form-control.styles.js';
 import { selectStyles } from './select.styles.js';
 import { sizeStyles } from './size.styles.js';
 import { optionStyles } from './option.style.js';
+import { filterOptionsByLabel } from './filterOptionsByLabel.js';
+import { matchFillInput } from './fillInput.js';
 
 /**
  * @template {Record<string, unknown>} T
@@ -130,7 +132,7 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
             remove-button__base:tag__remove-button__base
           "
           ?pill=${this.pill}
-          size=${this.size}
+          size=${{ small: 's', medium: 'm', large: 'l' }[this.size] || 'm'}
           with-remove
           .tagId=${this.getOptionValue(option)}
           @wa-remove=${this.handleTagRemove}
@@ -142,8 +144,6 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
   }
 
   #selectedSet = new Set();
-  /**@type {null | string | string[]} */
-  defaultValue = null;
   hasSlotController = new HasSlotController(this, 'help-text', 'label');
   localize = new LocalizeController(this);
 
@@ -287,7 +287,15 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
         ev.key === 'Home' ||
         ev.key === 'End'
       ) {
-        const index = this.processedData.findIndex(option => option.value === this.currentValue);
+        if (ev.key === 'Home' || ev.key === 'End') {
+          ev.preventDefault();
+        }
+        if (this.processedData.length === 0) {
+          return;
+        }
+        const index = this.processedData.findIndex(
+          option => this.getOptionValue(option) === this.currentValue,
+        );
         let newIndex = index;
         if (ev.key === 'ArrowDown') {
           newIndex = index < this.processedData.length - 1 ? index + 1 : 0;
@@ -296,32 +304,33 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
           newIndex = index > 0 ? index - 1 : this.processedData.length - 1;
         }
         if (ev.key === 'Home') {
-          ev.preventDefault();
           newIndex = 0;
         }
         if (ev.key === 'End') {
-          ev.preventDefault();
           newIndex = this.processedData.length - 1;
         }
-        this.currentValue = this.processedData[newIndex].value;
+        this.currentValue = this.getOptionValue(this.processedData[newIndex]);
       } else if (ev.key === 'Enter') {
         ev.stopPropagation();
         if (this.processedData.length === 1) {
-          this.currentValue = this.processedData[0].value;
+          this.currentValue = this.getOptionValue(this.processedData[0]);
         }
-        if (this.currentValue && this.processedData.find(opt => opt.value === this.currentValue)) {
+        if (
+          this.currentValue &&
+          this.processedData.find(opt => this.getOptionValue(opt) === this.currentValue)
+        ) {
           this.handleOptionAction(this.currentValue);
         }
       }
+      return;
     }
 
-    if (this.open === false) {
-      if (ev.key !== 'Tab') {
-        if (ev.key === ' ') {
-          ev.preventDefault();
-        }
-        this.focus();
+    // Closed: only reached via keydown on the combobox itself - open on any typing key
+    if (ev.key !== 'Tab' && ev.key !== 'Escape') {
+      if (ev.key === ' ') {
+        ev.preventDefault();
       }
+      this.focus();
     }
   };
 
@@ -337,44 +346,13 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
         return;
       }
 
-      const data =
-        value === ''
-          ? this.data
-          : this.data.filter(row => {
-              const label = /** @type {string} */ (row.label);
-              return label.toLocaleLowerCase().includes(value.toLocaleLowerCase());
-            });
-      this.processedData = data;
+      this.processedData = filterOptionsByLabel(this.data, value);
 
       this.#updatePopoverWidth();
     } else {
       this.#selectedSet.clear();
-      const possibilities = [
-        (() => {
-          try {
-            return JSON.parse(value);
-          } catch (error) {
-            return [];
-          }
-        })(),
-        value.split(','),
-        value.split(';'),
-        value.split('\t'),
-        value.split('\n'),
-        value.split(' '),
-      ];
-      const valueList =
-        possibilities[0].length > 0
-          ? possibilities[0]
-          : possibilities.reduce((longest, current) => {
-              return current.length > longest.length ? current : longest;
-            }, []);
-      for (const valueItem of valueList) {
-        for (const entry of this.data) {
-          if (valueItem === entry.label || valueItem === entry.value) {
-            this.#selectedSet.add(entry.value);
-          }
-        }
+      for (const id of matchFillInput(value, this.data, this.getOptionValue)) {
+        this.#selectedSet.add(id);
       }
       this.dispatchEvent(new Event('change'));
       this.requestUpdate();
@@ -511,14 +489,9 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
     const typedTarget = /** @type {HTMLElement & { tagId: unknown }} */ (event.target);
     const id = typedTarget.tagId;
 
-    if (!this.disabled && id) {
-      if (this.#selectedSet.has(id)) {
-        this.#selectedSet.delete(id);
-        this.requestUpdate();
-      } else {
-        this.#selectedSet.add(id);
-        this.requestUpdate();
-      }
+    if (!this.disabled && id && this.#selectedSet.has(id)) {
+      this.#selectedSet.delete(id);
+      this.requestUpdate();
 
       // Dispatch after updating
       this.updateComplete.then(() => {
@@ -528,17 +501,12 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
     }
   }
 
-  // Gets the first `<wa-option>` element
-  getFirstOption() {
-    return this.querySelector('wa-option');
-  }
-
   get tags() {
     if (Array.isArray(this.value)) {
       return this.value.map((value, index) => {
         if (index < this.maxOptionsVisible || this.maxOptionsVisible <= 0) {
           const option = /** @type {T} */ (
-            this.processedData.find(opt => this.getOptionValue(opt) === value)
+            this.data.find(opt => this.getOptionValue(opt) === value)
           );
           if (option) {
             const tag = this.getTag(option);
@@ -629,8 +597,9 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
     }
 
     for (const entry of this.processedData) {
-      if (!this.#selectedSet.has(entry.value)) {
-        this.#selectedSet.add(entry.value);
+      const id = this.getOptionValue(entry);
+      if (!this.#selectedSet.has(id)) {
+        this.#selectedSet.add(id);
       }
     }
     this.requestUpdate();
@@ -678,8 +647,11 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
 
   /** Shows the listbox. */
   async show() {
-    if (this.open || this.disabled) {
+    if (this.disabled) {
       this.open = false;
+      return undefined;
+    }
+    if (this.open) {
       return undefined;
     }
 
@@ -724,7 +696,6 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
     const hasLabel = this.label ? true : !!hasLabelSlot;
     const hasHint = this.hint ? true : !!hasHintSlot;
     const hasClearIcon =
-      (this.hasUpdated || isServer) &&
       this.withClear &&
       !this.disabled &&
       this.value &&
@@ -764,7 +735,7 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
             placement=${this.placement}
             flip
             shift
-            sync=${this.fixedTrigger ? '' : 'width'}
+            sync=${this.fixedTrigger || !this.syncWidth ? '' : 'width'}
             auto-size="vertical"
             auto-size-padding="10"
           >
@@ -822,7 +793,9 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
                       type="text"
                       ?disabled=${this.disabled}
                       ?required=${this.required}
-                      .value=${Array.isArray(this.value) ? this.value.join(', ') : this.value}
+                      .value=${
+                        Array.isArray(this.value) ? this.value.join(', ') : String(this.value ?? '')
+                      }
                       tabindex="-1"
                       aria-hidden="true"
                       @focus=${() => this.focus()}

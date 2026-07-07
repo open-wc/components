@@ -3,24 +3,33 @@ import '@awesome.me/webawesome/dist/components/input/input.js';
 import { HasSlotController } from '../autocomplete/HasSlotController.js';
 import '@awesome.me/webawesome/dist/components/format-date/format-date.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
+import { parseValueForType, toInputDateString } from './valueHelpers.js';
 
 export class OwcClickEditable extends LitElement {
   static properties = {
     value: { type: String },
-    formatter: { type: Function },
+    formatter: { attribute: false },
     editable: { type: Boolean, attribute: 'editable', reflect: true },
     formAlign: { type: String, attribute: 'form-align' },
     type: { type: String },
-    validator: { type: Function },
+    validator: { attribute: false },
     readOnly: { type: Boolean, attribute: 'read-only', reflect: true },
     showCopyButton: { type: Boolean, attribute: 'show-copy-button', reflect: true },
     fallbackValue: { type: String },
   };
 
   /**
+   * The value in the format of the form element, captured when editing starts
+   * (used to detect unchanged submits).
    * @type {any}
    */
   lastValue;
+
+  /**
+   * The untouched value captured when editing starts (used to restore on Escape).
+   * @type {any}
+   */
+  valueBeforeEdit;
 
   constructor() {
     super();
@@ -48,7 +57,7 @@ export class OwcClickEditable extends LitElement {
    */
   defaultFormatter(value) {
     if (['date', 'datetime-local'].includes(this.type)) {
-      if (value) {
+      if (value instanceof Date && !Number.isNaN(value.valueOf())) {
         return html` <wa-format-date
           day="2-digit"
           month="2-digit"
@@ -59,6 +68,7 @@ export class OwcClickEditable extends LitElement {
           lang="de"
         ></wa-format-date>`;
       }
+      return html`<span>${this.fallbackValue}</span>`;
     }
     return html`<span>${value?.toString() || this.fallbackValue}</span>`;
   }
@@ -83,9 +93,9 @@ export class OwcClickEditable extends LitElement {
 
     if (inputElement.setCustomValidity) {
       inputElement.setCustomValidity('');
-      const validation = this.validator(this.getParsedValue(inputElement?.value || ''));
+      const validation = this.validator(this.getParsedValue(inputElement?.value ?? ''));
       if (!validation.valid) {
-        inputElement.setCustomValidity(validation.error);
+        inputElement.setCustomValidity(validation.error || 'Ungültig');
       }
     }
   }
@@ -110,11 +120,11 @@ export class OwcClickEditable extends LitElement {
 
   reportValidity() {
     this.validate();
-    return this.inputElement.reportValidity ? this.inputElement.reportValidity() : true;
+    return this.inputElement?.reportValidity ? this.inputElement.reportValidity() : true;
   }
 
   async _submit() {
-    let nextValue = this.inputElement?.value || '';
+    let nextValue = this.inputElement?.value ?? '';
     if (Array.isArray(nextValue)) {
       nextValue = nextValue.filter(Boolean);
     } else if (nextValue && this.type === 'number') {
@@ -138,7 +148,7 @@ export class OwcClickEditable extends LitElement {
   }
 
   async _change() {
-    let nextValue = this.inputElement?.value || '';
+    let nextValue = this.inputElement?.value ?? '';
     if (Array.isArray(nextValue)) {
       nextValue = nextValue.filter(Boolean);
     }
@@ -156,47 +166,22 @@ export class OwcClickEditable extends LitElement {
    * @returns
    */
   getParsedValue(value) {
-    switch (this.type) {
-      case 'number':
-        return value ? Number.parseFloat(value) : undefined;
-      case 'date':
-      case 'datetime-local':
-        return value ? new Date(value) : undefined;
-      default:
-        return value;
-    }
+    return parseValueForType(value, this.type);
   }
 
   get parsedValue() {
-    switch (this.type) {
-      case 'number':
-        // @ts-ignore
-        return this.value ? Number.parseFloat(this.value) : undefined;
-      case 'date':
-      case 'datetime-local':
-        // @ts-ignore
-        return this.value ? new Date(this.value) : undefined;
-      default:
-        return this.value;
-    }
+    return parseValueForType(this.value, this.type);
   }
 
   _handleEditClick() {
     if (!this.inputElement || this.readOnly) {
       return;
     }
-    const valueDate =
-      (this.type === 'datetime-local' || this.type === 'date') && this.value
-        ? // @ts-ignore
-          new Date(this.value)
-        : undefined;
-    valueDate?.setMinutes(valueDate.getMinutes() - valueDate.getTimezoneOffset());
-    // Slice off timezone seconds and millis from iso-date
-    const valueDateFormatted = valueDate?.toISOString().slice(0, this.type === 'date' ? -14 : -8);
+    const inputDateString = toInputDateString(this.value, this.type);
 
-    const targetValue = this.value;
-    this.lastValue = valueDate ? valueDateFormatted : targetValue;
-    this.inputElement.value = valueDate ? valueDateFormatted : targetValue || '';
+    this.valueBeforeEdit = this.value;
+    this.lastValue = inputDateString ?? this.value;
+    this.inputElement.value = inputDateString ?? this.value ?? '';
     this.editable = true;
     this.focus();
   }
@@ -211,8 +196,10 @@ export class OwcClickEditable extends LitElement {
         this.focus();
       }
       if (ev.key === 'Escape') {
-        if (this.value !== this.lastValue) {
-          this.value = this.lastValue;
+        // Restore the untouched value (not the input-formatted lastValue,
+        // which would e.g. turn a Date value into a string)
+        if (this.value !== this.valueBeforeEdit) {
+          this.value = this.valueBeforeEdit;
           this.dispatchEvent(new Event('change'));
         }
         this.editable = false;
@@ -232,8 +219,8 @@ export class OwcClickEditable extends LitElement {
   update(changedProperties) {
     if (changedProperties.has('readOnly') && this.readOnly) {
       // readOnly changed from false to true
-      if (this.editable && this.value !== this.lastValue) {
-        this.value = this.lastValue;
+      if (this.editable && this.value !== this.valueBeforeEdit) {
+        this.value = this.valueBeforeEdit;
       }
       this.editable = false;
     }

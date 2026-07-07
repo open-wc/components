@@ -5,7 +5,7 @@ import '@awesome.me/webawesome/dist/components/input/input.js';
 import '@awesome.me/webawesome/dist/components/slider/slider.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 
-/** @typedef {{ label: string, value: string }} Option */
+import { adjustRangeForValue, clampRangeToAbsolute } from './sliderRange.js';
 
 export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
   static scopedElements = {};
@@ -27,7 +27,6 @@ export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
     super();
     this.value = 0;
     this.label = '';
-    this.open = false;
     /**@type {'start' | 'end'} */
     this.inputPosition = 'start';
     this.stacked = false;
@@ -43,28 +42,32 @@ export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
     this.max = 100;
   }
 
+  get #rangeState() {
+    return {
+      value: this.value,
+      min: this.min,
+      max: this.max,
+      absoluteMin: this.absoluteMin,
+      absoluteMax: this.absoluteMax,
+    };
+  }
+
+  /**
+   * @param {import('./sliderRange.js').SliderRangeState} state
+   */
+  #applyRangeState({ value, min, max }) {
+    this.value = value;
+    this.min = min;
+    this.max = max;
+  }
+
   /**
    * @param {import('lit').PropertyValues} changedProperties
    */
   update(changedProperties) {
-    if (changedProperties.has('absoluteMin') && this.absoluteMin) {
-      if (this.min < this.absoluteMin) {
-        this.min = this.absoluteMin;
-        if (this.value < this.min) {
-          this.value = this.min;
-        }
-      }
+    if (changedProperties.has('absoluteMin') || changedProperties.has('absoluteMax')) {
+      this.#applyRangeState(clampRangeToAbsolute(this.#rangeState));
     }
-
-    if (changedProperties.has('absoluteMax') && this.absoluteMax) {
-      if (this.max > this.absoluteMax) {
-        this.max = this.absoluteMax;
-        if (this.value > this.max) {
-          this.value = this.max;
-        }
-      }
-    }
-
     if (changedProperties.has('value')) {
       this.adjustValueForMinMax();
     }
@@ -72,38 +75,32 @@ export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
   }
 
   adjustValueForMinMax() {
-    if (this.absoluteMax && this.value > this.absoluteMax) {
-      this.value = this.absoluteMax;
-    }
-    if (this.absoluteMin && this.value < this.absoluteMin) {
-      this.value = this.absoluteMin;
-    }
-    if (this.value > this.max) {
-      this.max = Math.min(this.value, this.absoluteMax ?? Number.MAX_SAFE_INTEGER);
-    }
-
-    if (this.value < this.min) {
-      this.min = Math.max(this.value, this.absoluteMin ?? Number.MIN_SAFE_INTEGER);
-    }
+    this.#applyRangeState(adjustRangeForValue(this.#rangeState));
   }
 
   /**
-   * @param {{ target: { value: string; }; }} ev
+   * @param {Event & { target: { value: string; } }} ev
    */
   adjustInput(ev) {
+    // The inner change event does not cross the shadow boundary (it is not
+    // composed) - stop the inner event and re-dispatch on the host instead
+    ev.stopPropagation();
     const nextValue = Number.parseFloat(ev.target.value);
     if (!Number.isFinite(nextValue)) {
       return;
     }
     this.value = nextValue;
     this.adjustValueForMinMax();
+    this.dispatchEvent(new Event(ev.type, { bubbles: true, composed: true }));
   }
 
   /**
-   * @param {{ target: { value: number; }; }} ev
+   * @param {Event & { target: { value: number; } }} ev
    */
   adjustSlider(ev) {
+    ev.stopPropagation();
     this.value = ev.target.value;
+    this.dispatchEvent(new Event(ev.type, { bubbles: true, composed: true }));
   }
 
   render() {
@@ -155,6 +152,7 @@ export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
         max=${this.max}
         step=${this.step}
         @input=${this.adjustSlider}
+        @change=${this.adjustSlider}
         .value=${this.value}
       ></wa-slider>
       ${

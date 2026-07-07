@@ -31,7 +31,7 @@ Simple example:
 Select a single option from the `.data` property with autocomplete functionality.
 
 ```js demo
-export const singeSelect = () => {
+export const singleSelect = () => {
   return html`
     <owc-autocomplete
       .data=${[
@@ -70,7 +70,7 @@ export const multiSelect = () => {
 
 For Autocompletes with multiple you can enter a special "fill mode" in which you can paste space, comma, newline, tab formatted entries and those will be selected if they match the label or value of an option. (This also works copying from excel)
 
-Try clicking the "Search Icon" and write/paste "100 104 102". You will see VAV, UNIQA and Shellhammer be selected.
+Try clicking the "Search Icon" and write/paste "100 104 102". You will see VAV, Helvetia and UNIQA be selected.
 You can do the same by pasting for example "VAV,Helvetia,UNIQA" or "["100","104","102"]".
 
 ```js demo
@@ -181,7 +181,9 @@ export const placeholder = () => {
 
 ## Accent Bar
 
-The text of the `placeholder` attribute is shown if no option is selected.
+The `accent-bar` attribute renders a small colored bar in front of each option (and the selected
+option). The color is taken from the option's `accentBarColor` field - customize this by
+setting the `.getAccentBarColor` property.
 
 ```js demo
 export const accentBar = () => {
@@ -250,13 +252,15 @@ export const disabled = () => {
 
 ## Clear button
 
-The `clearable` attribute adds a button that clears the selected options.
+The `with-clear` attribute adds a button that clears the selected options. It is only shown
+while at least one option is selected.
 
 ```js demo
-export const clearable = () => {
+export const withClear = () => {
   return html`
     <owc-autocomplete
-      clearable
+      with-clear
+      value="101"
       .data=${[
         { label: 'VAV', value: '100' },
         { label: 'Standard Life', value: '101' },
@@ -307,7 +311,7 @@ export const helpText = () => {
 
 ## Fixed Trigger
 
-I you just want Autocomplete functionality but don't need to display the values in the form itself, you can use the `fixed-trigger` property to instead just display a slot.
+If you just want Autocomplete functionality but don't need to display the values in the form itself, you can use the `fixed-trigger` attribute to instead just display a slot.
 
 ```js demo
 export const fixedTrigger = () => {
@@ -382,3 +386,101 @@ export const number = () => {
   `;
 };
 ```
+
+## Events
+
+Listen to `change` to react to selections. The element's `value` property always holds the
+current selection - a single value, or an array of values when `multiple` is set.
+
+```js demo
+export const changeEvent = () => {
+  return html`
+    <owc-autocomplete
+      multiple
+      @change=${ev => {
+        const out = ev.currentTarget.parentElement.querySelector('#change-event-out');
+        out.textContent = `value: ${JSON.stringify(ev.currentTarget.value)}`;
+      }}
+      .data=${[
+        { label: 'VAV', value: '100' },
+        { label: 'Standard Life', value: '101' },
+        { label: 'UNIQA', value: '102' },
+      ]}
+    ></owc-autocomplete>
+    <pre id="change-event-out">value: []</pre>
+  `;
+};
+```
+
+| Event                    | Description                                                                                  |
+| ------------------------ | -------------------------------------------------------------------------------------------- |
+| `change`                 | Fired whenever the selection changes (select, deselect, clear, select all, fill mode paste). |
+| `input`                  | Fired when the selection is cleared via the clear button or a tag remove button.             |
+| `autocomplete-selection` | Fired when an option is selected. `detail` is the selected option object. Bubbles/composed.  |
+| `wa-show`                | Fired after the dropdown opened via `show()`.                                                |
+| `wa-hide`                | Fired after the dropdown closed via `hide()`.                                                |
+
+## Keyboard interaction
+
+While the dropdown is open:
+
+- `ArrowDown` / `ArrowUp` move the highlighted option (wrapping around)
+- `Home` / `End` jump to the first / last option
+- `Enter` selects the highlighted option - if the search filters down to a single option, `Enter` selects it directly
+- `Escape` or `Tab` close the dropdown
+
+While the combobox is focused and closed, any typing key opens the dropdown and focuses the search input.
+
+## API
+
+### Attributes & properties
+
+| Attribute             | Property                    | Type                              | Default              | Description                                                                                                |
+| --------------------- | --------------------------- | --------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------- |
+| -                     | `data`                      | `Array<T>`                        | `[]`                 | The options. Each option needs a `label` and a `value` field (see `getOptionValue`).                       |
+| `value`               | `value`                     | `unknown \| unknown[]`            | -                    | The selected value(s). As an attribute: a space separated list. As a property: a single value or an array. |
+| `multiple`            | `multiple`                  | `boolean`                         | `false`              | Allow selecting multiple options; selections are rendered as removable tags.                               |
+| `open`                | `open`                      | `boolean`                         | `false`              | Whether the dropdown is open.                                                                              |
+| `disabled`            | `disabled`                  | `boolean`                         | `false`              | Disables the control.                                                                                      |
+| `required`            | `required`                  | `boolean`                         | `false`              | Marks the internal form input as required.                                                                 |
+| `label`               | `label`                     | `string`                          | `''`                 | Label rendered above the control (alternative: `label` slot).                                              |
+| `hint`                | `hint`                      | `string`                          | `''`                 | Help text rendered below the control (alternative: `hint` slot).                                           |
+| `placeholder`         | `placeholder`               | `string`                          | `''`                 | Text shown while nothing is selected.                                                                      |
+| `placement`           | `placement`                 | `'top' \| 'bottom'`               | `'bottom'`           | Preferred dropdown placement.                                                                              |
+| `size`                | `size`                      | `'small' \| 'medium' \| 'large'`  | `'medium'`           | Size of the control.                                                                                       |
+| `with-clear`          | `withClear`                 | `boolean`                         | `false`              | Show a clear button while at least one option is selected.                                                 |
+| `accent-bar`          | `accentBar`                 | `boolean`                         | `false`              | Render a colored accent bar per option (see `getAccentBarColor`).                                          |
+| `max-options-visible` | `maxOptionsVisible`         | `number`                          | `3`                  | Max number of tags shown when `multiple`; further selections collapse into a `+N` tag. `0` shows all.      |
+| `hide-select-all`     | `hideSelectAll`             | `boolean`                         | `false`              | Hide the select all/deselect all button (only rendered when `multiple`).                                   |
+| `fill-mode`           | `fillMode`                  | `boolean`                         | `false`              | Paste mode: the search input selects all options matching the pasted values/labels.                        |
+| `fixed-trigger`       | `fixedTrigger`              | `boolean`                         | `false`              | Render the default slot as trigger instead of the form control.                                            |
+| -                     | `maxDropdownOptionsVisible` | `number`                          | `200`                | Max number of options rendered in the dropdown list.                                                       |
+| -                     | `syncWidth`                 | `boolean`                         | `true`               | Sync the dropdown width with the trigger width.                                                            |
+| -                     | `currentValue`              | `unknown`                         | `''`                 | Value of the keyboard-highlighted option.                                                                  |
+| -                     | `getOptionValue`            | `(row: T) => unknown`             | `row.value`          | Extracts the value of an option.                                                                           |
+| -                     | `getAccentBarColor`         | `(row: T) => string \| undefined` | `row.accentBarColor` | Extracts the accent bar color of an option.                                                                |
+| -                     | `getTag`                    | `(option: T) => TemplateResult`   | -                    | Customizes the tag rendered per selection when `multiple`.                                                 |
+| -                     | `footer`                    | `() => TemplateResult`            | -                    | Renders extra content at the bottom of the dropdown.                                                       |
+
+### Methods
+
+| Method             | Description                                      |
+| ------------------ | ------------------------------------------------ |
+| `show()`           | Opens the dropdown (no-op when already open).    |
+| `hide()`           | Closes the dropdown.                             |
+| `toggle()`         | Toggles the dropdown.                            |
+| `focus()`          | Opens the dropdown and focuses the search input. |
+| `clear()`          | Deselects all options (does not fire `change`).  |
+| `toggleFillMode()` | Switches between search filtering and fill mode. |
+
+### Slots
+
+| Slot          | Description                                                   |
+| ------------- | ------------------------------------------------------------- |
+| `label`       | The label (alternative to the `label` attribute).             |
+| `hint`        | The help text (alternative to the `hint` attribute).          |
+| `start`       | Content placed before the selected value inside the combobox. |
+| `end`         | Content placed after the selected value inside the combobox.  |
+| `clear-icon`  | Replaces the default clear icon.                              |
+| `expand-icon` | Replaces the default chevron icon.                            |
+| (default)     | The trigger content when `fixed-trigger` is set.              |

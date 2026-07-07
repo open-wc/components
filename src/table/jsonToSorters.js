@@ -41,14 +41,15 @@ export function jsonToSorters(jsonSorter) {
       sortType: jsonSorter.sortType,
     });
 
-    let aArray = /** @type {any[]} */ (resolveFieldPath(a, before))
+    // copy before sorting so the rows' own arrays stay untouched
+    let aArray = [.../** @type {any[]} */ (resolveFieldPath(a, before))]
       .sort(subSorter)
       .map(v => resolveFieldPath(v, after))
       .filter(Boolean);
 
     let aValue = aArray.at(0);
 
-    let bArray = /** @type {any[]} */ (resolveFieldPath(b, before))
+    let bArray = [.../** @type {any[]} */ (resolveFieldPath(b, before))]
       .sort(subSorter)
       .map(v => resolveFieldPath(v, after))
       .filter(Boolean);

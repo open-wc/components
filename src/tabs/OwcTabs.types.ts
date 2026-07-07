@@ -1,4 +1,4 @@
-import { TemplateResult, CSSResult } from 'lit';
+import { TemplateResult } from 'lit';
 
 export interface Tab<T> {
   label?: string | TemplateResult;
@@ -7,7 +7,6 @@ export interface Tab<T> {
   content?: (options: T & { open: boolean }) => string | TemplateResult;
   visible?: boolean | ((data: T) => boolean);
   order?: number;
-  customStyle?: CSSResult;
 }
 
 export type Tabs<T> = Record<string, Tab<T>>;

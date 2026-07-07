@@ -24,7 +24,9 @@ import '@open-wc/components/define/owc-input-slider.js';
 
 # Input Slider
 
-Simple example:
+A slider paired with a number input that both edit the same value. The slider covers the
+common range (`min`/`max`), while the input allows breaking out of it - the slider range
+grows to follow. Hard limits are set with `absolute-min`/`absolute-max`.
 
 ```js demo
 export const simple = () => {
@@ -34,7 +36,7 @@ export const simple = () => {
 
 ## Set value
 
-Simple example:
+The `value` attribute (or property) sets the current value of both controls.
 
 ```js demo
 export const value = () => {
@@ -58,15 +60,23 @@ export const label = () => {
 
 ## Events
 
-A `change` and an `input` event gets fired.
+An `input` event fires while the value changes (typing, dragging the slider) and a `change`
+event fires when a change is committed. Read the current value from `ev.target.value`.
 
 ```js demo
 export const events = () => {
   return html`
     <owc-input-slider
-      @change=${() => console.log('change')}
-      @input=${() => console.log('input')}
+      @change=${ev => {
+        const out = ev.currentTarget.parentElement.querySelector('#slider-event-out');
+        out.textContent = `value: ${ev.target.value}`;
+      }}
+      @input=${ev => {
+        const out = ev.currentTarget.parentElement.querySelector('#slider-event-out');
+        out.textContent = `value: ${ev.target.value}`;
+      }}
     ></owc-input-slider>
+    <pre id="slider-event-out">value: 0</pre>
   `;
 };
 ```
@@ -125,3 +135,55 @@ export const absoluteMinMax = () => {
   `;
 };
 ```
+
+## Stacked
+
+With `input-position="end"` and the `stacked` attribute the label and input share the first
+row and the slider spans the full width below.
+
+```js demo
+export const stacked = () => {
+  return html`
+    <owc-input-slider stacked input-position="end" label="Give me some number"></owc-input-slider>
+  `;
+};
+```
+
+## Disabled
+
+```js demo
+export const disabled = () => {
+  return html` <owc-input-slider disabled value="30" label="Not editable"></owc-input-slider> `;
+};
+```
+
+## API
+
+### Attributes & properties
+
+| Attribute        | Property        | Type               | Default   | Description                                                                          |
+| ---------------- | --------------- | ------------------ | --------- | ------------------------------------------------------------------------------------ |
+| `value`          | `value`         | `number`           | `0`       | The current value.                                                                   |
+| `label`          | `label`         | `string`           | `''`      | Label shown above the controls.                                                      |
+| `min`            | `min`           | `number`           | `0`       | Lower end of the slider range; shrinks if the input goes below it.                   |
+| `max`            | `max`           | `number`           | `100`     | Upper end of the slider range; grows if the input goes above it.                     |
+| `step`           | `step`          | `number`           | `1`       | Step for both the slider and the input.                                              |
+| `absolute-min`   | `absoluteMin`   | `number`           | -         | Hard lower bound - values are clamped to it.                                         |
+| `absolute-max`   | `absoluteMax`   | `number`           | -         | Hard upper bound - values are clamped to it.                                         |
+| `input-position` | `inputPosition` | `'start' \| 'end'` | `'start'` | Whether the number input renders before or after the slider.                         |
+| `stacked`        | `stacked`       | `boolean`          | `false`   | With `input-position="end"`: label+input on top, full-width slider below. Reflected. |
+| `disabled`       | `disabled`      | `boolean`          | `false`   | Disables both controls. Reflected.                                                   |
+
+### Events
+
+| Event    | Description                                                          |
+| -------- | -------------------------------------------------------------------- |
+| `input`  | Fired while the value changes (typing or dragging).                  |
+| `change` | Fired when a change is committed (input blur/enter, slider release). |
+
+### Styling
+
+The grid layout can be tuned with the CSS custom properties `--owc-input-width` (default
+`8ch`) and `--owc-input-slider-gap` (default `20px`). The inner Web Awesome input and slider
+parts are re-exported with `input-*` and `slider-*` prefixes (e.g. `input-control`,
+`slider-track`, `slider-thumb`), and the label is exposed as part `label`.

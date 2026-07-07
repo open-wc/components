@@ -23,11 +23,13 @@ import '@open-wc/components/define/owc-click-editable-input.js';
 
 # Click Editable Input
 
-A input field that is editable through double clicking.
+An input field that is editable through double clicking: it renders as plain text until the
+user double clicks (or presses Enter/Space on the focused text), then turns into an input in
+place. Enter or blur submits, Escape cancels and restores the previous value.
 
 Example:
 
-The `<owc-click-editable-input>` element is the input field. Set an `id` and and use `type` to set an input type like `text`. Use the `value` attribute to set a default text.
+Use `type` to set an input type like `text` and the `value` attribute to set a default text.
 
 ```js demo
 export const sampleField = () => {
@@ -77,7 +79,7 @@ export const copyButtonField = () => {
 
 ## Align
 
-Set the `formAlign` attribute to `start` or `center` to align the text in the field while editing.
+Set the `form-align` attribute to `start`, `center` or `end` to align the text in the field while editing.
 
 ```js demo
 export const alignField = () => {
@@ -270,3 +272,40 @@ export const buttonField = () => {
   `;
 };
 ```
+
+## API
+
+This API is shared by the whole click-editable family:
+[Input](/click-editable-input/), [Textarea](/click-editable-textarea/),
+[Autocomplete](/click-editable-autocomplete/) and
+[Input Autofill](/click-editable-input-autofill/).
+
+### Attributes & properties
+
+| Attribute          | Property         | Type                                                  | Default   | Description                                                                          |
+| ------------------ | ---------------- | ----------------------------------------------------- | --------- | ------------------------------------------------------------------------------------ |
+| `value`            | `value`          | `string \| number \| Date \| Array`                   | `''`      | The current value. For `date`/`datetime-local` a `Date` instance works best.         |
+| `type`             | `type`           | input types like `text`, `number`, `date`, ...        | `'text'`  | Type of the inner input; also controls parsing (`parsedValue`) and formatting.       |
+| `editable`         | `editable`       | `boolean`                                             | `false`   | Whether the field is currently in edit mode. Reflected.                              |
+| `read-only`        | `readOnly`       | `boolean`                                             | `false`   | Prevents entering edit mode via click/keyboard. Reflected.                           |
+| `fallbackValue`    | `fallbackValue`  | `string`                                              | `'-'`     | Shown (muted) when there is no value.                                                |
+| `show-copy-button` | `showCopyButton` | `boolean`                                             | `false`   | Adds a copy button next to the value. Reflected.                                     |
+| `form-align`       | `formAlign`      | `'start' \| 'center' \| 'end'`                        | `'start'` | Text alignment of the input while editing.                                           |
+| -                  | `formatter`      | `(parsedValue) => TemplateResult`                     | built-in  | Renders the display value. Return `undefined`/`null`/`nothing` to show the fallback. |
+| -                  | `validator`      | `(parsedValue) => { valid: boolean, error?: string }` | -         | Blocks submitting while invalid; `error` is shown as validation message.             |
+
+### Events & methods
+
+| Member        | Description                                                                                    |
+| ------------- | ---------------------------------------------------------------------------------------------- |
+| `submit`      | Event fired when an edit is committed with a changed, valid value (Enter or blur).             |
+| `change`      | Event fired while the value changes during editing, and when Escape restores a modified value. |
+| `focus()`     | Focuses the input (edit mode) or the display text.                                             |
+| `parsedValue` | The value parsed according to `type` (number, `Date`, ...).                                    |
+
+### Slots
+
+| Slot        | Description                         |
+| ----------- | ----------------------------------- |
+| `label`     | Label rendered above the value.     |
+| `help-text` | Help text rendered below the value. |

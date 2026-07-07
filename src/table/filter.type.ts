@@ -1,10 +1,5 @@
 import { globalSearchField } from './jsonToFilter.js';
-import {
-  DATE_OPERATORS,
-  NUMBER_OPERATORS,
-  OPERATORS,
-  TEXT_OPERATORS,
-} from '../table-filter/operators.js';
+import { DATE_OPERATORS, NUMBER_OPERATORS, OPERATORS, TEXT_OPERATORS } from './operators.js';
 
 export type Filter<T> = (row: T) => boolean;
 

@@ -2,6 +2,18 @@
  * @typedef {import('lit').ReactiveController} ReactiveController
  */
 
+/**
+ * The structural contract a wave host has to fulfill: registering controllers,
+ * dispatching wave events, and (optionally) being re-renderable. `ReactiveElement`
+ * and `ReactiveObject` both satisfy it.
+ *
+ * @typedef {{
+ *   addController: (controller: ReactiveController) => void,
+ *   dispatchEvent: (event: Event) => boolean,
+ *   requestUpdate?: (name?: PropertyKey, oldValue?: unknown) => void,
+ * }} WaveHost
+ */
+
 import { SmallEventTarget } from './SmallEventTarget.js';
 
 /**
@@ -14,12 +26,12 @@ export class WaveController {
 
   static _finalized = false;
 
-  recieveEvents = true;
+  receiveEvents = true;
   /**
    *
-   * @param {import('lit').ReactiveElement | import('./ReactiveObject.js').ReactiveObject} host
+   * @param {import('lit').ReactiveElement | import('./ReactiveObject.js').ReactiveObject | WaveHost} host
    * @param {Record<string, import('./WaveControllerTypes.js').ListenerMode>} [reactiveProperties] listenToSelfUpdate defaults to true
-   * @param {{mode?: import('./WaveControllerTypes.js').ControllerMode}} [options]
+   * @param {{mode?: import('./WaveControllerTypes.js').ControllerMode} | import('./WaveControllerTypes.js').ControllerMode} [options]
    */
   constructor(host, reactiveProperties, options) {
     const reactivePropertiesActual = reactiveProperties || {};
@@ -44,9 +56,11 @@ export class WaveController {
 
   /**
    *
-   * @param {{mode?: import('./WaveControllerTypes.js').ControllerMode}} [options]
+   * @param {{mode?: import('./WaveControllerTypes.js').ControllerMode} | import('./WaveControllerTypes.js').ControllerMode} [rawOptions]
    */
-  applyOptions(options) {
+  applyOptions(rawOptions) {
+    // Allow passing the mode directly as a string shorthand
+    const options = typeof rawOptions === 'string' ? { mode: rawOptions } : rawOptions;
     if (!options?.mode) {
       this.waveTriggersUpdate = false;
       this.forwardWave = true;
@@ -140,8 +154,15 @@ export class WaveController {
     }
   }
 
+  hostConnected() {
+    // Re-attach the listeners after a disconnect/reconnect cycle. On the very
+    // first connect this is a no-op (an update is already pending).
+    // @ts-ignore ReactiveObject has no types
+    this.host.requestUpdate?.();
+  }
+
   hostDisconnected() {
-    for (const [, property] of Object.entries(this.propertyValueMap)) {
+    for (const [propertyName, property] of Object.entries(this.propertyValueMap)) {
       if (Array.isArray(property)) {
         property.forEach(elm =>
           elm.listeners?.forEach(listener => this.#removeEventListeners(elm.value, listener)),
@@ -151,6 +172,9 @@ export class WaveController {
           this.#removeEventListeners(property.value, listener),
         );
       }
+      // Reset so the next hostUpdate re-attaches listeners instead of
+      // early-returning on an unchanged value
+      this.propertyValueMap[propertyName] = { value: undefined, listeners: undefined };
     }
   }
 
@@ -159,9 +183,9 @@ export class WaveController {
    * @param {'selfUpdate' | 'childUpdate' | 'parentUpdate'} dispatchedName
    */
   dispatchRequestUpdateEvent(dispatchedName) {
-    this.recieveEvents = false;
+    this.receiveEvents = false;
     this.host.dispatchEvent(new Event(dispatchedName));
-    this.recieveEvents = true;
+    this.receiveEvents = true;
   }
 
   /**
@@ -171,7 +195,7 @@ export class WaveController {
    */
   addReDispatchListener(source, dispatchedName, listendedNames) {
     const eventFunction = () => {
-      if (this.recieveEvents && WaveController._finalized) {
+      if (this.receiveEvents && WaveController._finalized) {
         this.dispatchRequestUpdateEvent(dispatchedName);
       }
     };
@@ -188,7 +212,7 @@ export class WaveController {
    */
   addRequestUpdateListener(source, property, listendedNames) {
     const eventFunction = () => {
-      if (this.recieveEvents) {
+      if (this.receiveEvents) {
         // TODO: I dont get why we need ts-ignore here, probably because ReactiveObject has no types
         // @ts-ignore
         this.host.requestUpdate(property.name, property.oldValue);

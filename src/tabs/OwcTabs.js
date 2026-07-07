@@ -1,6 +1,9 @@
 import { LitElement, html, css, nothing } from 'lit';
 
 import '@awesome.me/webawesome/dist/components/details/details.js';
+import '@awesome.me/webawesome/dist/components/button/button.js';
+
+import { getTabList } from './getTabList.js';
 
 /**
  * @template {Record<string, unknown>} T
@@ -8,7 +11,8 @@ import '@awesome.me/webawesome/dist/components/details/details.js';
 export class OwcTabs extends LitElement {
   static properties = {
     active: { type: String, reflect: true },
-    tabs: { type: Array },
+    tabs: { type: Object },
+    customStyles: { attribute: false },
   };
 
   constructor() {
@@ -24,17 +28,7 @@ export class OwcTabs extends LitElement {
 
   render() {
     const options = this.getRenderOptions();
-    const tabList = Object.entries(this.tabs)
-      .filter(([, tab]) =>
-        typeof tab.visible === 'function'
-          ? tab.visible(options)
-          : tab.visible || tab.visible === undefined,
-      )
-      .sort((a, b) => {
-        const aOrder = a[1].order || 0;
-        const bOrder = b[1].order || 0;
-        return aOrder - bOrder;
-      });
+    const tabList = getTabList(this.tabs, options);
     return html`
       <div id="tab-list" @click=${this.handleTabClick} part="tab-list">
         <slot name="tab-list-prefix"></slot>
@@ -45,7 +39,7 @@ export class OwcTabs extends LitElement {
               <wa-button
                 class="tab"
                 panel="${key}"
-                size="small"
+                size="s"
                 variant=${key === this.active ? 'brand' : 'neutral'}
                 appearance=${key === this.active ? 'accent' : 'outlined'}
               >
@@ -65,7 +59,7 @@ export class OwcTabs extends LitElement {
                 ${
                   tab.content
                     ? tab.content({ ...options, open: this.active === key })
-                    : `Please define a content function  the tab "${key}"`
+                    : `Please define a content function for the tab "${key}"`
                 }
               </div>
             </wa-details>
@@ -88,18 +82,19 @@ export class OwcTabs extends LitElement {
    */
   handleTabClick(ev) {
     const target = /** @type {HTMLElement}  */ (ev.target);
-    if (target && target.classList.contains('tab')) {
-      const newActive = target.getAttribute('panel') || '';
+    const button = target?.closest?.('[panel]');
+    if (button) {
+      const newActive = button.getAttribute('panel') || '';
       this.active = newActive === this.active ? '' : newActive;
     }
   }
 
   /**
-   * @param {MouseEvent} ev
+   * @param {Event} ev
    */
   handleDetailsShow(ev) {
     const target = /** @type {HTMLElement}  */ (ev.target);
-    if (target.tagName === 'wa-details') {
+    if (target.tagName.toLowerCase() === 'wa-details') {
       const newActive = target.getAttribute('summary') || '';
       if (newActive !== this.active) {
         this.active = newActive;
@@ -111,10 +106,11 @@ export class OwcTabs extends LitElement {
    * @param {import('lit').PropertyValues} changedProperties
    */
   updated(changedProperties) {
-    if (changedProperties.has('active')) {
+    super.updated(changedProperties);
+    // don't fire for the initialization on first render
+    if (changedProperties.has('active') && changedProperties.get('active') !== undefined) {
       this.dispatchEvent(new Event('active-changed', { bubbles: true }));
     }
-    super.updated(changedProperties);
   }
 
   static styles = [

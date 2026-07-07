@@ -1,7 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { OwcAutocomplete } from '@open-wc/components/OwcAutocomplete.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
-import { getFieldPathContent } from '../field-path-helper/getFieldPathContent.js';
 
 import '@awesome.me/webawesome/dist/components/radio/radio.js';
 import '@awesome.me/webawesome/dist/components/radio-group/radio-group.js';
@@ -89,7 +88,9 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
     if (!this.table || !this.column) {
       return;
     }
-    if (this.table && this.column && !this.table.visibleColumns.includes(this.column)) {
+    // compare by field: visibility-overridden columns are clones of the originals
+    const isVisible = this.table.visibleColumns.some(col => col.field === this.column?.field);
+    if (this.table && this.column && !isVisible) {
       this.table.overrides.visibility[this.column.field] = 'always';
       this.table.requestUpdate('overrides');
       this.resetLastColumn = true;
@@ -138,7 +139,7 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
                       @click=${() => {
                         this.preview = true;
                       }}
-                      >Preview</wa-button
+                      >Vorschau</wa-button
                     >`
                   : html`<wa-button
                         @click=${() => {
@@ -156,21 +157,6 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
     `;
   }
 
-  get needChangeCount() {
-    const column = this.columns.find(column => column.field === this.value.field);
-    if (!column) {
-      return 0;
-    }
-    let counter = 0;
-    for (const row of this.data) {
-      const value = getFieldPathContent(row, column);
-      if (value !== this.value.value) {
-        counter += 1;
-      }
-    }
-    return counter;
-  }
-
   /**
    *
    * @param {MouseEvent} event
@@ -182,36 +168,20 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
     }
     const field = this.column.field;
 
-    const handleUpdateTable = this.table?.handleUpdate;
-    if (!handleUpdateTable) {
-      if (this.handleUpdateExecute) {
-        for (const selectedData of this.data) {
-          this.handleUpdateExecute({
-            field: field,
-            data: selectedData,
-            event,
-            config: this.column,
-            value: this.value,
-            allRequiredFieldsAreFilled: () => true,
-            isNewInsert: false,
-            autoSetData: (data = selectedData) => setFieldPath(data, field, this.value),
-          });
-        }
+    const handleUpdate = this.table?.handleUpdate || this.handleUpdateExecute;
+    if (handleUpdate) {
+      for (const selectedData of this.data) {
+        handleUpdate({
+          field: field,
+          data: selectedData,
+          event,
+          config: this.column,
+          value: this.value,
+          allRequiredFieldsAreFilled: () => true,
+          isNewInsert: false,
+          autoSetData: (data = selectedData) => setFieldPath(data, field, this.value),
+        });
       }
-      return;
-    }
-
-    for (const selectedData of this.data) {
-      handleUpdateTable({
-        field: field,
-        data: selectedData,
-        event,
-        config: this.column,
-        value: this.value,
-        allRequiredFieldsAreFilled: () => true,
-        isNewInsert: false,
-        autoSetData: (data = selectedData) => setFieldPath(data, field, this.value),
-      });
     }
 
     this.preview = false;
@@ -254,9 +224,10 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
       clickEditableContent = html`
         <wa-checkbox
           @change=${(/** @type {{ target: any; }} */ ev) => {
-            this.value = ev.target.value;
+            // a checkbox carries its state in "checked", "value" is the static form value
+            this.value = ev.target.checked;
           }}
-          .value=${this.value || ''}
+          ?checked=${this.value === true}
         >
         </wa-checkbox>
       `;

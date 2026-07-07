@@ -23,11 +23,13 @@ import '@open-wc/components/define/owc-click-editable-input-autofill.js';
 
 # Click Editable Input Autofill
 
-A input field with inputAutofill options that is editable through double clicking.
+An input field with autofill suggestions that is editable through double clicking. See the
+[Click Editable Input API](/click-editable-input/#api) for the shared attributes, events and
+slots.
 
 Example:
 
-The `<owc-click-editable-input-autofill>` element is the input field with inputAutofill options. Add options with a `label` and `value` property in the `.data` attribute. Add a default option with the `value` attribute.
+The `<owc-click-editable-input-autofill>` element is the input field with autofill options. Add options with a `label` and `value` property in the `.data` property. Add a default option with the `value` attribute.
 
 ```js demo
 export const simpleInputAutofillField = () => {

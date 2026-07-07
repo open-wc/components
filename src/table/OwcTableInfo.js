@@ -154,7 +154,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
         order: 850,
       },
       settings: {
-        label: 'Settings',
+        label: 'Einstellungen',
         content: () => html`
           <owc-table-settings
             style="width: 400px"
@@ -202,7 +202,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
                     appearance="plain"
                     ?loading="${this.loading}"
                     @click="${this.#handleRefreshButtonClick}"
-                    ><wa-icon name="arrow-clockwise" label="Settings"></wa-icon
+                    ><wa-icon name="arrow-clockwise" label="Aktualisieren"></wa-icon
                   ></wa-button>
                 `
               : nothing
@@ -265,7 +265,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
       </div>`;
     }
     return html`<div id="info">
-      <span>Zeige ${this.dataCurrentSize} von ${this.dataFullSize} Einträge</span>
+      <span>Zeige ${this.dataCurrentSize} von ${this.dataFullSize} Einträgen</span>
       ${selectedInfo}
     </div>`;
   }

@@ -9,7 +9,9 @@ import '@awesome.me/webawesome/dist/components/select/select.js';
 
 import { processLabel } from '../label/label.js';
 import { inputListener } from './inputListener.js';
-import { dataPathSegments, resolveDataSchema } from '../resolve.js';
+import { resolveDataSchema } from '../resolve.js';
+import { getError } from '../helpers/getError.js';
+import { enumToOneOf } from '../helpers/enumToOneOf.js';
 import { when } from 'lit/directives/when.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 
@@ -41,7 +43,7 @@ export const enumRenderer = (state, ruleOptions, value) => {
       invalid: (userInteracted || state.forceErrors) && invalid,
     })}
     .label=${`${processLabel(state)}${state.required ? '*' : ''}`}
-    .value=${ifDefined(resolveDataSchema(value, state.uiSchema.scope)).toString()}
+    .value=${resolveDataSchema(value, state.uiSchema.scope)?.toString() ?? ''}
   >
     ${map(
       // @ts-ignore
@@ -139,34 +141,4 @@ export const multiEnumRenderer = (state, ruleOptions, value) => {
   >`;
 };
 
-/**
- * Transforms enums (["1", "2"]) to oneOf format ([{const: "1", title: "1"}, ...]) so there is just one format
- * @param {string[] | undefined} _enum
- * @returns {{const: string; title: string}[]}
- */
-export function enumToOneOf(_enum) {
-  if (_enum === undefined) {
-    return [];
-  }
-  return _enum.map((/** @type {any} */ entry) => ({ const: entry, title: entry }));
-}
-
-/**
- *
- * @param {import("@cfworker/json-schema").ValidationResult} validatorState
- * @param {import("@jsonforms/core").ControlElement} uiSchema
- * @returns {import("@cfworker/json-schema").OutputUnit | undefined}
- */
-function getError(uiSchema, validatorState) {
-  const path = '#/' + dataPathSegments(uiSchema.scope).join('/');
-  for (const error of validatorState.errors) {
-    if (error.keyword === 'required') {
-      const propertyName = error.error.match(/"(.*)"/)?.[1];
-      if (propertyName && path.startsWith(`${error.instanceLocation}/${propertyName}`)) {
-        return error;
-      }
-    } else if (error.instanceLocation === path) {
-      return error;
-    }
-  }
-}
+export { enumToOneOf } from '../helpers/enumToOneOf.js';

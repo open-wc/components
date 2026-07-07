@@ -11,10 +11,13 @@ import { OwcTable } from '@open-wc/components/OwcTable.js';
 
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 import '@awesome.me/webawesome/dist/components/badge/badge.js';
+import '@awesome.me/webawesome/dist/components/button/button.js';
+import '@awesome.me/webawesome/dist/components/details/details.js';
 import {
   getFieldPathContent,
   contentFormatterStyles,
 } from '../field-path-helper/getFieldPathContent.js';
+import { getVisibleColumns, getRowCount, getRequiredFields } from './columnHelpers.js';
 
 /**
  * @template {Record<string, unknown>} T
@@ -33,12 +36,12 @@ export class OwcDataDetail extends ScopedElementsMixin(LitElement) {
     data: { type: Object },
     openColumns: { type: Array },
     fallbackValue: { type: String },
-    handleUpdate: { type: Function },
-    currencyFormatter: { type: Object },
-    dateFormatter: { type: Object },
-    dateTimeFormatter: { type: Object },
-    numberFormatter: { type: Object },
-    percentFormatter: { type: Object },
+    handleUpdate: { attribute: false },
+    currencyFormatter: { attribute: false },
+    dateFormatter: { attribute: false },
+    dateTimeFormatter: { attribute: false },
+    numberFormatter: { attribute: false },
+    percentFormatter: { attribute: false },
   };
 
   constructor() {
@@ -77,31 +80,15 @@ export class OwcDataDetail extends ScopedElementsMixin(LitElement) {
   }
 
   get columnsRowCount() {
-    return Math.max(...this.visibleColumns.map(column => column.length));
-  }
-
-  /**
-   * @param {import('lit').PropertyValues} changedProperties
-   */
-  update(changedProperties) {
-    super.update(changedProperties);
+    return getRowCount(this.visibleColumns);
   }
 
   get requiredFields() {
-    return this.visibleColumns
-      .flatMap(col => col)
-      .filter(col => col.editableOptions?.required)
-      .map(col => col.field);
+    return getRequiredFields(this.visibleColumns);
   }
 
   get visibleColumns() {
-    return this.columns.map(col =>
-      col.filter(col => {
-        const v = col.visible;
-        const isVisible = typeof v === 'function' ? v(this.data) : (v ?? true);
-        return isVisible;
-      }),
-    );
+    return getVisibleColumns(this.columns, this.data);
   }
 
   /**
@@ -147,6 +134,7 @@ export class OwcDataDetail extends ScopedElementsMixin(LitElement) {
       <div class="grid-cell">
         <div class="label">
           ${typeof detailItem.label === 'function' ? detailItem.label(this.data) : detailItem.label}
+          ${labelBadge ? html`<wa-badge variant="neutral" pill>${labelBadge}</wa-badge>` : ''}
         </div>
       </div>
     `;

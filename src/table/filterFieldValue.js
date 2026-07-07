@@ -1,5 +1,5 @@
 import { getFieldPath } from '../field-path-helper/getFieldPath.js';
-import { jsonToFilter } from '../filter/jsonToFilter.js';
+import { jsonToFilter } from './jsonToFilter.js';
 import { jsonToSorters } from './jsonToSorters.js';
 
 /**
@@ -9,7 +9,7 @@ import { jsonToSorters } from './jsonToSorters.js';
  * @param {T} row
  * @param {import('../field-path-helper/getFieldPathContent.types.js').Field<T>} field
  * @param {import('../field-path-helper/getFieldPathContent.types.js').Field<T>} fieldFilteredReturn
- * @param {import('../filter/filter.type.js').NestedJsonFilters} jsonFilters
+ * @param {import('./filter.type.js').NestedJsonFilters} jsonFilters
  * @param {import('./OwcTable.types.js').JsonSorter[]} [jsonSorters]
  * @returns {Array<T[field]>}
  */
@@ -53,8 +53,9 @@ export function filterFieldValue(row, field, fieldFilteredReturn, jsonFilters, j
       field: sorter?.field.replace(fieldFilteredReturn + '.', ''),
     };
     const sorterFunction = jsonToSorters(sorterCopy);
+    // copy before sorting so the row's own array stays untouched
     // @ts-ignore
-    data.sort(sorterFunction);
+    data = [...data].sort(sorterFunction);
   }
   return data;
 }

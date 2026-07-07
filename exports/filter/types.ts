@@ -7,4 +7,4 @@ export {
   numberOperator,
   operator,
   textOperator,
-} from '../../src/filter/filter.type.js';
+} from '../../src/table/filter.type.js';

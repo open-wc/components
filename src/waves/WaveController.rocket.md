@@ -26,6 +26,20 @@ import { WaveController, ReactiveObject } from '@open-wc/components/WaveControll
 
 A reactivity tool for deeply nested object instances.
 
+Lit components only re-render when a property _reference_ changes. When your data is a graph
+of objects ("the client's third invoice changed its amount"), that means manual
+`requestUpdate()` calls or defensive copying. Waves solve this: plain data classes extend
+`ReactiveObject` (a DOM-less `ReactiveElement`), and `WaveController`s propagate update
+events - "waves" - through object properties, arrays, and up into Lit components.
+
+Every wave has a direction seen from a host: `selfUpdate` (the object itself changed),
+`childUpdate` (something in an array property changed), and `parentUpdate` (an object
+property changed). Controllers decide which waves they listen to per property, and what they
+do with them: re-render (`waveTriggersUpdate`), pass them on (`forwardWave`), or emit them
+when the host updates (`updateSendsWave`).
+
+Call `WaveController.finalize()` once after your classes are defined to start the wave flow.
+
 ## Kitchen Sink
 
 ```js demo
@@ -120,7 +134,7 @@ export const simpleTable = () => {
 
 With WaveControllers we can propagate property updates from deep within a class structure.
 For example take a client object with a name. Usually we would make a component to display the client,
-and add the client as a property. However the Lit will only rerender the component if the reference to client changes, not it's name.
+and add the client as a property. However Lit will only re-render the component if the reference to the client changes, not its name.
 You can try this in this example!
 
 ```js demo
@@ -331,3 +345,59 @@ export const clientTestReactivePlus = () => {
 ```
 
 We can see that reacting to changes in the sub-property are abstracted away. Our component now reacts to everything it may concern but not everything at all.
+
+## API
+
+```js
+import { WaveController, ReactiveObject } from '@open-wc/components/WaveController.js';
+```
+
+### `new WaveController(host, reactiveProperties, options)`
+
+A [Lit Reactive Controller](https://lit.dev/docs/composition/controllers/). Attach it to a
+`LitElement` or a `ReactiveObject`.
+
+| Argument             | Type                                          | Description                                                                            |
+| -------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `host`               | `ReactiveElement \| ReactiveObject`           | The host whose update cycle drives the controller.                                     |
+| `reactiveProperties` | `Record<string, ListenerMode>`                | Which host properties to watch, and which wave names to listen to on their values.     |
+| `options`            | `{ mode?: ControllerMode } \| ControllerMode` | What the controller does with waves. The mode can also be passed directly as a string. |
+
+**`ListenerMode`** (per property): a `+`-combination of `self`, `parent`, and `child`,
+suffixed with `Update` - e.g. `'selfUpdate'`, `'self+childUpdate'`,
+`'self+parent+childUpdate'`. It names the wave events the controller listens to on the
+property's value(s). Property values must be `EventTarget`s (e.g. `ReactiveObject`
+instances) or arrays of them; other values are ignored.
+
+**`ControllerMode`**: a `+`-combination of
+
+| Mode flag            | Effect                                                                                                                  |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `waveTriggersUpdate` | An incoming wave calls `host.requestUpdate()` - use this on components that render the data.                            |
+| `forwardWave`        | An incoming wave is re-dispatched on the host (`parentUpdate` for object properties, `childUpdate` for array elements). |
+| `updateSendsWave`    | Every host update dispatches a `selfUpdate` wave - use this on data objects others react to.                            |
+
+When no mode is given, the default is `forwardWave+updateSendsWave`.
+
+### `WaveController.finalize()`
+
+Waves only flow after `WaveController.finalize()` has been called once (globally). This lets
+you construct your object graph without triggering premature update cascades.
+
+### `ReactiveObject`
+
+A DOM-less port of Lit's `ReactiveElement`: `static properties`, `requestUpdate()`,
+`update()`, `updateComplete`, and controller support - but instantiable with `new` and usable
+for plain data classes. Extend it, declare `static properties`, and call
+`this.constructor.finalize()` in the constructor (this is `ReactiveElement.finalize()`, which
+sets up the property accessors - not the same as `WaveController.finalize()`).
+
+### Lifecycle notes
+
+- Listeners are attached and re-wired during the host's update cycle - assigning new values,
+  adding/removing array elements, and swapping arrays for single values all clean up after
+  themselves.
+- When a component host disconnects, all wave listeners are removed; on reconnect they are
+  re-attached automatically (the host re-renders once to catch up).
+- A controller ignores waves that arrive while it is dispatching, preventing echo loops in
+  cyclic object graphs.

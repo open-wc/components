@@ -2,10 +2,19 @@ import { LitElement, html, css } from 'lit';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { OwcAutocomplete } from '@open-wc/components/OwcAutocomplete.js';
 
+import { findOptionByValue, isSelectableOption } from './optionHelpers.js';
+
 import '@awesome.me/webawesome/dist/components/input/input.js';
 
-/** @typedef {{ label: string, value: string }} Option */
+/** @typedef {import('./OwcInputAutofill.types.js').OwcInputAutofillOption} Option */
 
+/**
+ * A free-text input paired with an autocomplete dropdown: typing stays free text,
+ * picking an option replaces the input with the option's value.
+ *
+ * @fires input - while the user types free text (relayed from the inner input)
+ * @fires change - when an option is picked from the dropdown or typed text is committed
+ */
 export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
   static scopedElements = {
     'owc-autocomplete': OwcAutocomplete,
@@ -22,7 +31,7 @@ export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
   constructor() {
     super();
     /** @type {Option[]} */
-    (this.data = []);
+    this.data = [];
     this.value = '';
     this.label = '';
     this.placeholder = '';
@@ -39,27 +48,27 @@ export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
   }
 
   /**
+   * Mirror the value into the dropdown so a matching option shows as selected;
+   * free text that matches no option clears the dropdown selection.
+   *
    * @param {import('lit').PropertyValues} changedProperties
    */
   updated(changedProperties) {
+    super.updated(changedProperties);
     if (
       (changedProperties.has('value') || changedProperties.has('data')) &&
       this._owcAutocomplete
     ) {
-      if (this.data.find(elm => elm.value === this.value)) {
-        this._owcAutocomplete.value = this.value;
-      } else {
-        this._owcAutocomplete.value = '';
-      }
+      const option = findOptionByValue(this.data, this.value);
+      this._owcAutocomplete.value = option ? option.value : '';
     }
-    super.update(changedProperties);
   }
 
   focus() {
     this._waInput?.focus();
   }
 
-  /** Sync input → state, reset active selection */
+  /** Sync input → state while typing */
   _onInput() {
     const el = this._waInput;
     if (!el) {
@@ -73,15 +82,12 @@ export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
    * @param {Option} opt
    */
   _applySelection(opt) {
-    if (!opt) {
-      return;
-    }
     this.value = opt.value;
     if (this._waInput) {
       this._waInput.value = opt.value;
       this._waInput.focus?.({ preventScroll: true });
     }
-    this.dispatchEvent(new Event('change'));
+    this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
   }
 
   /**
@@ -89,7 +95,7 @@ export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
    */
   _onAutocompleteChange(event) {
     const selectedOption = event.detail;
-    if (selectedOption && selectedOption.label && typeof selectedOption.label === 'string') {
+    if (isSelectableOption(selectedOption)) {
       this._applySelection(selectedOption);
     }
   }
@@ -115,9 +121,6 @@ export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
             class="form"
             .label=${this.label ? ' ' : ''}
             .data=${this.data}
-            @change=${(/** @type {{ preventDefault: () => void; }} */ ev) => {
-              ev.preventDefault();
-            }}
             @autocomplete-selection=${this._onAutocompleteChange}
             ?open=${this.open}
           >
@@ -136,11 +139,6 @@ export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
       grid-template-columns: 1fr auto;
       gap: 5px;
       align-items: end;
-    }
-    .label {
-      margin-inline-start: 2px;
-      margin-block-end: 6px;
-      display: inline-block;
     }
     .col.input-col {
       min-width: 220px;

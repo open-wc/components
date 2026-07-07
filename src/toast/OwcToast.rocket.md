@@ -25,6 +25,17 @@ import { toast } from '@open-wc/components/OwcToast.js';
 
 # Toast
 
+Show a temporary notification. Call the `toast()` function and it takes care of everything:
+it creates (and reuses) a fixed position container, stacks multiple toasts, counts down a
+progress bar and removes the toast after `duration` seconds. Hovering a toast pauses the
+countdown.
+
+```js
+import { toast } from '@open-wc/components/OwcToast.js';
+
+toast({ title: 'Saved', text: 'Your changes have been saved.', variant: 'success' });
+```
+
 ## Simple toast
 
 ```js demo
@@ -49,7 +60,10 @@ export const simpleToast = () => {
 };
 ```
 
-## Positon
+## Position
+
+The `position` option controls which of the six screen edges/corners the toast stacks into.
+Top positions stack new toasts downwards, bottom positions upwards.
 
 ```js demo
 export const positionToast = () => {
@@ -125,3 +139,33 @@ export const removeDismissibleToast = () => {
   `;
 };
 ```
+
+## API
+
+### `toast(options)`
+
+Creates a toast, appends it to the matching position container and returns the
+`owc-toast-component` element (e.g. to listen for its `removed` event or to call
+`remove()` yourself).
+
+| Option        | Type                                                                                            | Default             | Description                                                            |
+| ------------- | ----------------------------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------- |
+| `text`        | `string`                                                                                        | `''`                | The message; `\n` renders as line breaks.                              |
+| `title`       | `string`                                                                                        | `''`                | Bold title above the text.                                             |
+| `variant`     | `'brand' \| 'neutral' \| 'success' \| 'warning' \| 'danger'`                                    | `'brand'`           | Color scheme; also picks the default icon.                             |
+| `appearance`  | `'accent' \| 'filled' \| 'outlined' \| 'plain' \| 'filled-outlined'`                            | `'filled-outlined'` | Visual style of the callout.                                           |
+| `duration`    | `number`                                                                                        | `4`                 | Seconds until the toast removes itself. Hovering pauses the countdown. |
+| `icon`        | `string`                                                                                        | variant icon        | Icon name, overrides the variant default.                              |
+| `position`    | `'top-center' \| 'top-start' \| 'top-end' \| 'bottom-center' \| 'bottom-start' \| 'bottom-end'` | `'top-center'`      | Where the toast stacks on screen.                                      |
+| `dismissible` | `boolean`                                                                                       | `true`              | Show an ✕ button to close the toast early.                             |
+
+### `owc-toast-component`
+
+| Member     | Description                                                                         |
+| ---------- | ----------------------------------------------------------------------------------- |
+| `remove()` | Fades the toast out, fires `removed`, and detaches it. Safe to call multiple times. |
+| `progress` | Remaining time in percent (100 → 0).                                                |
+| `removed`  | Event fired once the toast has been removed (after the fade-out).                   |
+
+The element pauses its countdown on `mouseenter` and resumes on `mouseleave`. When the last
+toast of a position is removed, its container is cleaned up automatically.

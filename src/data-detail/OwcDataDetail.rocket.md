@@ -42,6 +42,11 @@ const PLANET_LIST = [
 
 # Data Detail
 
+Show the details of a single record as a compact label/value grid - the detail view
+companion to the Table. Columns are defined as arrays of items with a `label` and a `field`
+(field paths like `client.firstName` and getters work too). Items can be formatted, made
+click-editable, hidden per data, or expanded into arbitrary content such as a nested table.
+
 ## Kitchen sink
 
 A demo showcasing most features of Data Detail.
@@ -142,7 +147,6 @@ const kitchenSinkOptions = {
     console.log({ field, value });
     autoSetData();
   },
-  handleDelete: () => {},
   columns: [
     [
       {
@@ -228,7 +232,7 @@ const kitchenSinkOptions = {
               // autoSetData();
             }}
             .columns=${[
-              { label: 'E-Mail', field: 'email', type: 'editable' },
+              { title: 'E-Mail', field: 'email', type: 'editable' },
               {
                 title: 'Type',
                 field: 'type',
@@ -666,3 +670,32 @@ export const visibleFunctionDemo = () => html`
   <owc-data-detail .data=${{ ...data, age: 40 }} .columns=${visibleFunctionItems}></owc-data-detail>
 `;
 ```
+
+## API
+
+### Attributes & properties
+
+| Attribute       | Property                                                                                         | Type                      | Default       | Description                                                                                |
+| --------------- | ------------------------------------------------------------------------------------------------ | ------------------------- | ------------- | ------------------------------------------------------------------------------------------ |
+| -               | `data`                                                                                           | `T`                       | `{}`          | The record to display.                                                                     |
+| -               | `columns`                                                                                        | `OwcDataDetailColumns<T>` | `[]`          | Array of columns; each column is an array of items (see below).                            |
+| -               | `openColumns`                                                                                    | `Array<Field<T>>`         | `[]`          | Fields whose expandable content is open. Managed on label clicks (single open).            |
+| `fallbackValue` | `fallbackValue`                                                                                  | `string`                  | `'-'`         | Fallback shown in editable cells without a value.                                          |
+| -               | `handleUpdate`                                                                                   | `handleUpdate<T>`         | -             | Called when an editable cell is submitted (`{ data, field, value, config, autoSetData }`). |
+| -               | `dateFormatter`, `dateTimeFormatter`, `currencyFormatter`, `numberFormatter`, `percentFormatter` | `Intl.*Format`            | German locale | Formatters used by the built-in `formatter` names.                                         |
+
+### Column item (`OwcDataDetailItem<T>`)
+
+| Field             | Type                                               | Description                                                                                                |
+| ----------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `label`           | `string \| (data: T) => TemplateResult \| string`  | The row label.                                                                                             |
+| `field`           | `Field<T>`                                         | Field path into `data` (dot paths like `client.firstName` work).                                           |
+| `type`            | `'html' \| 'string' \| 'editable' \| 'expandable'` | How the value renders; default is plain content.                                                           |
+| `formatter`       | built-in name or `(row, options) => ...`           | Built-ins: `date`, `datetime`, `currency`, `number`, `percent`, `email`, `tickCross`, `checkbox`.          |
+| `editableOptions` | `EditableOptions<T>`                               | For `type: 'editable'`: input type (`input`, `textarea`, `autocomplete`, `checkbox`), options, `required`. |
+| `contentExpanded` | `(data: T) => TemplateResult`                      | For `type: 'expandable'`: the expanded content (e.g. a nested `owc-table`).                                |
+| `labelBadge`      | `(data: T) => TemplateResult \| string \| number`  | Small badge rendered next to the label.                                                                    |
+| `contentSuffix`   | `(data: T) => TemplateResult \| string \| number`  | Content rendered after the value.                                                                          |
+| `visible`         | `boolean \| (data: T) => boolean`                  | Hide/show the item; defaults to visible.                                                                   |
+
+The types are importable from `@open-wc/components/OwcDataDetail.types.js`.

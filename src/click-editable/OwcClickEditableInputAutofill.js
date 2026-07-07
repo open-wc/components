@@ -124,7 +124,7 @@ export class OwcClickEditableInputAutofill extends ScopedElementsMixin(OwcClickE
 
       .form-container {
         white-space: nowrap;
-        // Give it a little extra space for dropdown
+        /* Give it a little extra space for the dropdown */
         margin-right: -25px;
       }
 
@@ -148,10 +148,6 @@ export class OwcClickEditableInputAutofill extends ScopedElementsMixin(OwcClickE
 
       .form-container-wrapper {
         width: calc(var(--anchor-width) + 75px);
-      }
-
-      owc-input-autofill {
-        width: calc();
       }
     `,
   ];

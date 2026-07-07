@@ -1,6 +1,12 @@
 import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { resolveSchema, resolveSubObject } from './resolve.js';
+import {
+  dataPathSegments,
+  isRequired,
+  resolveDataSchema,
+  resolveSchema,
+  resolveSubObject,
+} from './resolve.js';
 
 describe('resolveSchema', () => {
   it('01: resolves a simple schema', () => {
@@ -89,6 +95,106 @@ describe('resolveSchema', () => {
     const resolvedSchema2 = resolveSchema(schema, '#/properties/bar', value2);
     assert.deepEqual(resolvedSchema, { type: 'string', enum: ['foobar'] });
     assert.deepEqual(resolvedSchema2, { type: 'string', enum: ['foo', 'foobar'] });
+  });
+  it('05: resolves an allOf schema', () => {
+    const schema = {
+      type: 'object',
+      allOf: [
+        { properties: { foo: { type: 'string' } } },
+        { properties: { bar: { type: 'number' } } },
+      ],
+    };
+    // @ts-ignore
+    assert.deepEqual(resolveSchema(schema, '#/properties/foo'), { type: 'string' });
+    // @ts-ignore
+    assert.deepEqual(resolveSchema(schema, '#/properties/bar'), { type: 'number' });
+  });
+  it('06: resolves an if/then/else schema', () => {
+    const schema = {
+      type: 'object',
+      properties: { kind: { type: 'string' } },
+      if: { properties: { kind: { const: 'number' } }, required: ['kind'] },
+      then: { properties: { bar: { type: 'number' } } },
+      else: { properties: { bar: { type: 'string' } } },
+    };
+    // @ts-ignore
+    const thenSchema = resolveSchema(schema, '#/properties/bar', { kind: 'number' });
+    // @ts-ignore
+    const elseSchema = resolveSchema(schema, '#/properties/bar', { kind: 'text' });
+    assert.deepEqual(thenSchema, { type: 'number' });
+    assert.deepEqual(elseSchema, { type: 'string' });
+  });
+  it('07: returns null for unknown paths', () => {
+    const schema = { type: 'object', properties: { foo: { type: 'string' } } };
+    assert.equal(resolveSchema(schema, '#/properties/unknown'), null);
+  });
+});
+
+describe('dataPathSegments', () => {
+  it('01: strips the leading # and all "properties" segments', () => {
+    assert.deepEqual(dataPathSegments('#/properties/sub/properties/name'), ['sub', 'name']);
+  });
+  it('02: keeps array indices', () => {
+    assert.deepEqual(dataPathSegments('#/properties/arr/0/properties/name'), ['arr', '0', 'name']);
+  });
+});
+
+describe('resolveDataSchema', () => {
+  const data = { name: 'foo', sub: { city: 'Vienna' }, arr: ['a', 'b'] };
+  it('01: resolves top level properties', () => {
+    assert.equal(resolveDataSchema(data, '#/properties/name'), 'foo');
+  });
+  it('02: resolves nested properties', () => {
+    assert.equal(resolveDataSchema(data, '#/properties/sub/properties/city'), 'Vienna');
+  });
+  it('03: resolves array entries', () => {
+    assert.equal(resolveDataSchema(data, '#/properties/arr/1'), 'b');
+  });
+  it('04: returns null for missing paths', () => {
+    assert.equal(resolveDataSchema(data, '#/properties/missing'), null);
+  });
+});
+
+describe('isRequired', () => {
+  const schema = {
+    type: 'object',
+    properties: {
+      name: { type: 'string' },
+      age: { type: 'integer' },
+      address: {
+        type: 'object',
+        properties: { city: { type: 'string' }, street: { type: 'string' } },
+        required: ['city'],
+      },
+    },
+    required: ['name'],
+  };
+  it('01: detects required top level properties', () => {
+    // @ts-ignore
+    assert.equal(isRequired(schema, '#/properties/name'), true);
+    // @ts-ignore
+    assert.equal(isRequired(schema, '#/properties/age'), false);
+  });
+  it('02: detects required nested properties', () => {
+    // @ts-ignore
+    assert.equal(isRequired(schema, '#/properties/address/properties/city'), true);
+    // @ts-ignore
+    assert.equal(isRequired(schema, '#/properties/address/properties/street'), false);
+  });
+  it('03: honors required from a matching if/then branch', () => {
+    const conditional = {
+      type: 'object',
+      properties: { employed: { type: 'boolean' }, employer: { type: 'string' } },
+      if: { properties: { employed: { const: true } }, required: ['employed'] },
+      then: { required: ['employer'] },
+    };
+    // @ts-ignore
+    assert.equal(isRequired(conditional, '#/properties/employer', { employed: true }), true);
+    assert.equal(
+      // @ts-ignore
+      Boolean(isRequired(conditional, '#/properties/employer', { employed: false })),
+      false,
+    );
   });
 });
 

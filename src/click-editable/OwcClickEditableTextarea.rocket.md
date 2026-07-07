@@ -23,11 +23,13 @@ import '@open-wc/components/define/owc-click-editable-textarea.js';
 
 # Click Editable Textarea
 
-A text-area that is editable through double clicking.
+A text area that is editable through double clicking. Enter submits, Shift+Enter inserts a
+new line, Escape cancels. See the [Click Editable Input API](/click-editable-input/#api) for
+the shared attributes, events and slots.
 
 Example:
 
-The `<owc-click-editable-textarea>` element is the input field. Set an `id` and and use `type` to set an input type like `text`. Use the `value` attribute to set a default text.
+Use the `value` attribute to set a default text.
 
 ```js demo
 export const sampleField = () => {

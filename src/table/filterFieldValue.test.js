@@ -18,7 +18,7 @@ const data = {
     ],
   },
 };
-/** @type {import('../filter/filter.type.js').NestedJsonFilters} */
+/** @type {import('./filter.type.js').NestedJsonFilters} */
 const jsonFilters = [
   { field: 'className', operator: 'includes', value: '' },
   {

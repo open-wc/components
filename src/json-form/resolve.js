@@ -43,33 +43,6 @@ export const resolveSchema = (schema, schemaPath, value) => {
 };
 
 /**
- * Resolve the given schema path in order to find the last object before the given path node.
- * @param {import("@jsonforms/core").JsonSchema7} schema the root schema from which to start
- * @param {string} schemaPath the schema path to be resolved
- */
-export const resolveLastBlock = (schema, schemaPath) => {
-  const segments = schemaPath?.split('/');
-  let currentBlock = schema;
-  for (const index in segments.slice(0, -2)) {
-    const segment = segments[index];
-    if (segment === '#' && index === '0') {
-      continue;
-    }
-    // @ts-ignore
-    if (currentBlock[segment] !== undefined) {
-      // @ts-ignore
-      currentBlock = currentBlock[segment];
-    } else if (Number.isInteger(Number.parseInt(segment)) && currentBlock.items) {
-      // @ts-ignore
-      currentBlock = currentBlock.items;
-    } else {
-      return null;
-    }
-  }
-  return currentBlock;
-};
-
-/**
  * Resolve the given schema path in order to find out if the paths element is required.
  * @param {import("@jsonforms/core").JsonSchema7} schema the root schema from which to start
  * @param {string} schemaPath the schema path to be resolved

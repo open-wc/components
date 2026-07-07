@@ -85,7 +85,8 @@ export class OwcClickEditableAutocomplete extends ScopedElementsMixin(OwcClickEd
         .join(', ');
       return `${formattedValue.length > 0 ? formattedValue : ''}`;
     }
-    return `${this.data.find(elm => elm.value === value)?.label || ''}`;
+    // Loose comparison on purpose - matches defaultFormatter (e.g. '100' vs 100)
+    return `${this.data.find(elm => elm.value == value)?.label || ''}`;
   }
 
   render() {
@@ -118,7 +119,7 @@ export class OwcClickEditableAutocomplete extends ScopedElementsMixin(OwcClickEd
               <owc-autocomplete
                 .hideSelectAll=${this.hideSelectAll}
                 .multiple=${this.multiple || false}
-                .clearable=${this.clearable}
+                .withClear=${this.clearable}
                 .hasFocus=${this.hasFocus}
                 .syncWidth=${false}
                 id="form-element"
@@ -162,7 +163,7 @@ export class OwcClickEditableAutocomplete extends ScopedElementsMixin(OwcClickEd
 
       .form-container {
         white-space: nowrap;
-        // Give it a little extra space for dropdown
+        /* Give it a little extra space for the dropdown */
         margin-right: -25px;
       }
 

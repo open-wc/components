@@ -11,7 +11,7 @@ export {
   dateOperator,
   textOperator,
   numberOperator,
-} from '../src/filter/filter.type.js';
+} from '../src/table/filter.type.js';
 
 export { Column } from '../src/table/OwcTable.types.js';
 

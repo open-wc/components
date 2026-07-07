@@ -1,2 +1,2 @@
-export { OwcTableFilterBuilder } from '../src/table-filter/OwcTableFilterBuilder.js';
-export { OwcTableFilter } from '../src/table-filter/OwcTableFilter.js';
+export { OwcTableFilterBuilder } from '../src/table/OwcTableFilterBuilder.js';
+export { OwcTableFilter } from '../src/table/OwcTableFilter.js';

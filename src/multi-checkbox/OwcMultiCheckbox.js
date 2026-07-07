@@ -5,6 +5,8 @@ import { map } from 'lit/directives/map.js';
 import '@awesome.me/webawesome/dist/components/tag/tag.js';
 import '@awesome.me/webawesome/dist/components/checkbox/checkbox.js';
 
+import { getGroupState, toggleGroupSelection } from './selectionHelpers.js';
+
 export class OwcMultiCheckbox extends ScopedElementsMixin(LitElement) {
   static properties = {
     options: { type: Array },
@@ -26,7 +28,7 @@ export class OwcMultiCheckbox extends ScopedElementsMixin(LitElement) {
    */
   update(changedProperties) {
     if (changedProperties.has('options')) {
-      this.#hasGroupedOptions = this.options.some(option => Array.isArray(option));
+      this.#hasGroupedOptions = (this.options || []).some(option => Array.isArray(option));
     }
     super.update(changedProperties);
   }
@@ -38,9 +40,10 @@ export class OwcMultiCheckbox extends ScopedElementsMixin(LitElement) {
         this.value = {
           ...this.value,
           operator: 'equal',
+          // filter on checked (not on the value) so 0/false/'' stay selectable
           value: [...ev.target.querySelectorAll('.checkbox')]
-            .map(checkbox => (checkbox.checked ? checkbox.value : undefined))
-            .filter(Boolean),
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value),
         };
         this.dispatchEvent(new Event('change'));
       }}
@@ -63,14 +66,7 @@ export class OwcMultiCheckbox extends ScopedElementsMixin(LitElement) {
    * @returns
    */
   renderGroupCheckbox(group) {
-    const checked = group.every(checkbox => {
-      return this.value.value.includes(checkbox.value);
-    });
-    const indeterminate =
-      !checked &&
-      group.some(checkbox => {
-        return this.value.value.includes(checkbox.value);
-      });
+    const { checked, indeterminate } = getGroupState(group, this.value.value);
     return html`
       <div class="row">
         <wa-checkbox
@@ -79,14 +75,12 @@ export class OwcMultiCheckbox extends ScopedElementsMixin(LitElement) {
           ?checked=${checked}
           ?indeterminate=${indeterminate}
           @input=${() => {
-            if (checked) {
-              this.value.value = this.value.value.filter(
-                itemValue => !group.some(checkbox => checkbox.value === itemValue),
-              );
-            } else {
-              this.value.value = [...this.value.value, ...group.map(checkbox => checkbox.value)];
-            }
-            this.requestUpdate();
+            // Replace the value object instead of mutating it - consumers
+            // (e.g. the table filter) pass their own object by reference
+            this.value = {
+              ...this.value,
+              value: toggleGroupSelection(group, this.value.value),
+            };
             this.updateComplete.then(() => this.shadowRoot?.querySelector('form')?.requestSubmit());
           }}
         ></wa-checkbox>
@@ -106,7 +100,7 @@ export class OwcMultiCheckbox extends ScopedElementsMixin(LitElement) {
           <wa-checkbox
             class="checkbox"
             @input=${() => this.shadowRoot?.querySelector('form')?.requestSubmit()}
-            size="small"
+            size="s"
             name="value"
             .value=${checkbox.value}
             ?checked=${this.value.value.some(itemValue => itemValue === checkbox.value)}

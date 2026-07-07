@@ -43,20 +43,19 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
   };
 
   static properties = {
-    handler: { type: Object },
     type: { type: String, reflect: true },
     selectedIndex: { type: Number },
     value: { type: Object },
+    columns: { attribute: false },
     onlyButton: { type: Boolean, attribute: 'only-button', reflect: true },
   };
 
   constructor() {
     super();
-    this.handler = () => undefined;
     this.type = 'and';
-    /** @type {import('../table/OwcTable.types.js').Column<T>[]} */
+    /** @type {import('./OwcTable.types.js').Column<T>[]} */
     this.columns = [];
-    /** @type {import('../filter/filter.type.js').JsonFilter} */
+    /** @type {import('./filter.type.js').JsonFilter} */
     // @ts-ignore
     this.value = { field: 'OwcTableFilterButton' };
     this.selectedIndex = -1;
@@ -116,7 +115,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
       const fieldSelector = /** @type {OwcAutocomplete<T>} */ (
         this.shadowRoot?.querySelector('.field-selector')
       );
-      fieldSelector.focus();
+      fieldSelector?.focus();
     }, 50);
   }
 
@@ -316,14 +315,11 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
         () => {
           const renderer = this.column.filterRenderer;
           if (renderer) {
-            const value = /** @type {import('../filter/filter.type.js').JsonFilter} */ (this.value);
+            const value = /** @type {import('./filter.type.js').JsonFilter} */ (this.value);
             return html`<div class="field-filter">
-              ${renderer(
-                value,
-                (/** @type {import('../filter/filter.type.js').JsonFilter} */ filter) => {
-                  this.value = filter;
-                },
-              )}
+              ${renderer(value, (/** @type {import('./filter.type.js').JsonFilter} */ filter) => {
+                this.value = filter;
+              })}
             </div>`;
           }
           return html`<p>Kein Filter für ${this.value.field} gefunden</p>`;
@@ -383,9 +379,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
                 ev.stopPropagation();
                 this.requestUpdate();
                 const target = /** @type {HTMLSelectElement} */ (ev?.target);
-                const operator = /** @type {import('../filter/filter.type.js').operator} */ (
-                  target.value
-                );
+                const operator = /** @type {import('./filter.type.js').operator} */ (target.value);
                 this.value = { ...this.value, operator };
                 this.#fireChangeEvent();
               }}
@@ -426,41 +420,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
       ['number', () => this.renderDefaultFilter('number')],
       ['date', () => this.renderDefaultFilter('date')],
       ['datetime', () => this.renderDefaultFilter('datetime-local')],
-      // Note: it's disabled as it's probably better to use autocomplete for multiselect
-      // [
-      //   'multiselect',
-      //   () => html` <wa-select
-      //     class="field-filter"
-      //     multiple
-      //     clearable
-      //     .value=${(Array.isArray(this.value.value) ? this.value.value : []).map(String)}
-      //     @change=${(/** @type {InputEvent} */ ev) => {
-      //       // @ts-ignore
-      //       // let value = ev?.target?.value;
-      //       // if (
-      //       //   typeof (
-      //       //     /** @type {import('../table/OwcTable.types.js').MultiSelectOptions<unknown>[number]} */ (
-      //       //       this.column.filterOptions?.at(0)
-      //       //     )?.value
-      //       //   ) === 'number'
-      //       // ) {
-      //       //   value = value.map((/** @type {string} */ v) => parseInt(v));
-      //       // }
-      //       // this.value[index] = { ...filter, value };
-      //       // this.requestUpdate();
-      //       // this.#fireChangeEvent();
-      //     }}
-      //   >
-      //     ${map(
-      //       /**@type {import("../table/OwcTable.types.js").MultiSelectOptions<unknown>} */
-      //       (this.column.filterOptions),
-      //       option =>
-      //         html`<wa-option .value=${/** @type {string} */ (option.value)}
-      //           >${option.label}</wa-option
-      //         >`,
-      //     )}
-      //   </wa-select>`,
-      // ],
+      // there is intentionally no 'multiselect' filter type - use 'autocomplete' instead
     ]);
   }
 
@@ -470,7 +430,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
    * @returns
    */
   renderDefaultFilter(type) {
-    /** @type {Partial<Record<import("../filter/filter.type.js").operator, string>>} */
+    /** @type {Partial<Record<import("./filter.type.js").operator, string>>} */
     const operators = {
       ...OTHER_OPERATORS,
       ...(this.column?.filterType === 'number'
@@ -528,9 +488,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
           ev.stopPropagation();
           this.requestUpdate();
           const target = /** @type {HTMLSelectElement} */ (ev?.target);
-          const operator = /** @type {import('../filter/filter.type.js').operator} */ (
-            target.value
-          );
+          const operator = /** @type {import('./filter.type.js').operator} */ (target.value);
           this.value = { ...this.value, operator };
           if (this.value.operator.startsWith('between')) {
             this.value = {
@@ -551,7 +509,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
           operator =>
             html`<wa-option .value=${operator}
               >${
-                operators[/** @type {import('../filter/filter.type.js').operator} */ (operator)]
+                operators[/** @type {import('./filter.type.js').operator} */ (operator)]
               }</wa-option
             >`,
         )}
@@ -689,7 +647,9 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
                   }
 
                   if (this.column?.filterType === 'number') {
-                    const parsedNumber = Number.parseFloat(target.value);
+                    const n = Number.parseFloat(target.value);
+                    // guard against NaN while typing / clearing the input
+                    const parsedNumber = Number.isFinite(n) ? n : 0;
 
                     if (this.value.operator.startsWith('between')) {
                       const prev =
@@ -731,7 +691,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
                       ? toLocalDateTimeInputValue(to)
                       : isD
                         ? toLocalDateInputValue(to)
-                        : String(this.value.value);
+                        : String(to);
                   })()}
                   .type=${type}
                   @change=${(/** @type {Event} */ ev) => {
@@ -814,7 +774,9 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
                     }
 
                     const target = /** @type {HTMLInputElement} */ (ev?.target);
-                    const parsedNumber = Number.parseFloat(target.value);
+                    const n = Number.parseFloat(target.value);
+                    // guard against NaN while typing / clearing the input
+                    const parsedNumber = Number.isFinite(n) ? n : 0;
 
                     const prev =
                       typeof this.value.value === 'object'
@@ -825,7 +787,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
                       ...this.value,
                       value: /** @type {{from: number; to: number}} */ {
                         from: prev.from,
-                        to: parsedNumber ?? 0,
+                        to: parsedNumber,
                       },
                     };
 

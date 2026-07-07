@@ -22,12 +22,12 @@ import '@open-wc/components/define/json-form.js';
 
 # Json Form
 
-An Implementation of [JsonForms](https://jsonforms.io/) with built with [lit](https://lit.dev/) and [Shoelace](https://shoelace.style)
+An implementation of [JsonForms](https://jsonforms.io/) built with [lit](https://lit.dev/) and [Web Awesome](https://webawesome.com/).
 
-A Json From allows you to create forms using only JSON.
-Any form needs two schemas to Function:
+A Json Form allows you to create forms using only JSON.
+Every form needs two schemas to function:
 
-- schema: this is the [Json Schema](https://json-schema.org/) that defines you data, and the schema that the form will return
+- schema: this is the [Json Schema](https://json-schema.org/) that defines your data, and the schema that the form will return. It is also used to validate the form value.
 - uiSchema: defines the visuals and layout of the form
 
 All examples on this page will console-log their value every time they change.
@@ -139,8 +139,18 @@ Supported schema formats (type string):
 
 - date
 - time
+- datetime
 
 ## Array
+
+The `ArrayLayout` renders one card per entry of an array property, with buttons to add and remove entries.
+It takes a `scope` pointing to the array property and a single layout in `elements` that is repeated for every entry.
+Scopes inside that layout are written as if they pointed at the array itself — the entry index is inserted automatically.
+
+Supported `options`:
+
+- `hidePlus: {true}` hides the add button
+- `hideTrash: {true}` hides the remove buttons
 
 ```js demo
 export const array = () =>
@@ -722,6 +732,115 @@ export const separator = () =>
   ></json-form>`;
 ```
 
+## Rules
+
+Controls and layouts can be shown, hidden, enabled and disabled dynamically with
+[rules](https://jsonforms.io/docs/uischema/rules). A rule has an `effect` (`SHOW`, `HIDE`, `ENABLE` or `DISABLE`)
+and a `condition` with a `scope` pointing at a property of the form value and a `schema` that is validated
+against that property. The effect is applied while the condition matches.
+
+```js demo
+export const rules = () =>
+  html`<json-form
+    @formDataChange=${ev => console.log(ev.target.value)}
+    .schema=${{
+      type: 'object',
+      properties: {
+        employed: { type: 'boolean' },
+        employer: { type: 'string' },
+        salary: { type: 'number' },
+      },
+    }}
+    .uiSchema=${{
+      type: 'VerticalLayout',
+      elements: [
+        { type: 'Control', scope: '#/properties/employed', options: { toggle: true } },
+        {
+          type: 'Control',
+          scope: '#/properties/employer',
+          rule: {
+            effect: 'SHOW',
+            condition: { scope: '#/properties/employed', schema: { const: true } },
+          },
+        },
+        {
+          type: 'Control',
+          scope: '#/properties/salary',
+          rule: {
+            effect: 'ENABLE',
+            condition: { scope: '#/properties/employed', schema: { const: true } },
+          },
+        },
+      ],
+    }}
+  ></json-form>`;
+```
+
+## Validation
+
+The form value is validated against the `schema` on every change. Errors are shown on a control
+once the user has interacted with it — set `forceErrors` to show all errors immediately
+(e.g. when the user tries to submit an untouched form).
+
+```js demo
+export const validation = () =>
+  html`<json-form
+    @formDataChange=${ev => console.log(ev.target.validatorState)}
+    forceErrors
+    .schema=${{
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        email: { type: 'string', minLength: 5 },
+      },
+      required: ['name'],
+    }}
+    .uiSchema=${{
+      type: 'VerticalLayout',
+      elements: [
+        { type: 'Control', scope: '#/properties/name' },
+        { type: 'Control', scope: '#/properties/email' },
+      ],
+    }}
+    .value=${{ email: 'a@b' }}
+  ></json-form>`;
+```
+
+The form element also exposes:
+
+- `validatorState: {ValidationResult}` the current validation result (`{valid, errors}`). Managed by the form — read only.
+- `validate()` re-runs the validation and updates `validatorState`.
+- `getFirstInvalid(): {Element | undefined}` returns the first form element with an invalid control, e.g. to scroll it into view on submit.
+
+Note: empty strings, `null` and empty objects are stripped from the value before validation, so an
+empty required text field reports a "required" error instead of a type error.
+
+## Readonly
+
+Set the `readonly` attribute to disable all controls of a form. `ArrayLayout` add/remove buttons are hidden as well.
+
+```js demo
+export const readonly = () =>
+  html`<json-form
+    readonly
+    .schema=${{
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        age: { type: 'integer' },
+      },
+    }}
+    .uiSchema=${{
+      type: 'VerticalLayout',
+      elements: [
+        { type: 'Control', scope: '#/properties/name' },
+        { type: 'Control', scope: '#/properties/age' },
+      ],
+    }}
+    .value=${{ name: 'James Bond', age: 42 }}
+  ></json-form>`;
+```
+
 ## Getting the form data
 
 Every time the user changes the form, a `formDataChange` event is fired on the `json-form` element.
@@ -790,7 +909,11 @@ Next to `schema` and `uiSchema`, Json-Form also supports these properties:
 
 - `value: {any}`, allows you to set the value of the entire form.
 - `forceErrors: {boolean}`, makes the form emit errors for incorrect fields, even if the user has not touched them yet.
+- `readonly: {boolean}`, disables all controls, see [Readonly](#readonly).
+- `mode: {'form' | 'schema'}`, `schema` renders the field types instead of inputs, see [Displaying schemas](#displaying-schemas).
 - `renderers: {Record<string, Renderer>}`, allows you to overwrite renderers for certain types, see the next chapter.
+
+The `rootForm` and `validatorState` properties are managed internally by the form — don't set them.
 
 ## Overwriting and adding Renderers
 

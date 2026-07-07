@@ -1,91 +1,47 @@
-# Json-form
+# Json Form
 
-An Implementation of [JsonForms](https://jsonforms.io/) with built with [lit](https://lit.dev/) and [Shoelace](https://shoelace.style)
+An implementation of [JsonForms](https://jsonforms.io/) built with [Lit](https://lit.dev/) and [Web Awesome](https://webawesome.com/).
 
-## Usage:
+`<json-form>` renders a complete, validated form from two JSON objects:
 
-Import the Component and pass in the schema, uiSchema, and an optional value, which will initialize the form.
-Don't touch the rootForm and validatorState options
+- `schema`: a [JSON Schema](https://json-schema.org/) describing the data — it is also used to validate the form value
+- `uiSchema`: describes which controls to show and how to lay them out
 
-If the user enters data, the form will emit a "formDataChange" event, which holds internal information. The value property will hold the value of the form.
-For an example, please see the [demo](./src/form/JsonForm.rocket.md)
-
-## Supported Options
-
-- schema:
-  - Supported types:
-    - string
-    - boolean
-    - number
-    - integer
-  - Supported formats: (use string type)
-    - date
-    - time
-    - datetime
-  - Supported multiple choice options:
-    - enum
-    - oneOf
-    - array with items: {enum: ...}
-    - array with items: {oneOf: ...}
-- uiSchema:
-  - Supported types:
-    - Control: a form control element (with "scope" property)
-    - Label: just a label (with "text" property)
-    - HorizontalLayout
-    - VerticalLayout
-    - GroupLayout
-    - CheckboxComboLayout: all layouts with an "elements" property
-  - Supported options:
-    - toggle: (boolean) for booleans: renders checkbox as a toggle
-    - checkboxTag: (boolean) for booleans: renders the checkbox in a tag
-    - tagVariant: ("brand" | "neutral" | "warning" | "danger" | "neutral") for booleans: the color for the checkbox tag
-    - size: ("small" | "medium" | "large") for booleans: renders the checkbox in a different size
-    - slider: (boolean) for numbers: renders a slider. default from 0 to 100, set with minimum & maximum in schema
-    - multi: (boolean) for strings: renders a textarea instead of an input
-    - format: ("radio" | ) for single-select enums: renders a radio group
-
-## Adding your own renderer
-
-To add your own renderer, use the addRenderer method. Using the mode, specify if the renderer should trigger on a type,
-a format or an option. Options have priority over formats with have priority over types. The name is the property that the form finds the renderer.
-e.g.
+## Usage
 
 ```js
-const ratingRenderer(state, ...) => {
-  return html`...`;
-};
-
-addRenderer("option", "rating", ratingRenderer);
-
-uiSchema = {
-  ...,
-  {
-    type: "Control",
-    options: {
-      rating: true,
-    },
-  },
-}
+import '@open-wc/components/define/json-form.js';
 ```
-
-To add your own layouts, use the add Layout method. The name is the name of the layout used in the uiSchema.
-The tagName is the name for the tag used in html. The layout Parameter is the class of the Layout.
-e.g:
 
 ```js
-class GridLayout extends ScopedElementsMixin(LitElement) {
-  render() {
-    return html`...`;
-  }
-}
-
-addLayout("GridLayout", "grid-layout", GridLayout);
-
-uiSchema = {
-  ...,
-  {
-    type: "GridLayout",
-    elements: [...],
-  }
-}
+html`<json-form
+  @formDataChange=${ev => console.log(ev.target.value)}
+  .schema=${{
+    type: 'object',
+    properties: { name: { type: 'string' } },
+    required: ['name'],
+  }}
+  .uiSchema=${{
+    type: 'VerticalLayout',
+    elements: [{ type: 'Control', scope: '#/properties/name' }],
+  }}
+></json-form>`;
 ```
+
+Every user edit fires a `formDataChange` event and the form element's `value` property always
+holds the current form value. Validation against `schema` runs automatically on every change —
+see `validatorState`, `forceErrors`, `validate()` and `getFirstInvalid()`.
+
+The `rootForm` and `validatorState` properties are managed internally — don't set them.
+
+## Features
+
+- Controls: `string`, `boolean`, `number`, `integer` plus the string formats `date`, `time` and `datetime`
+- Single- and multi-select via `enum`/`oneOf` (autocomplete or radio group)
+- Layouts: `VerticalLayout`, `HorizontalLayout`, `GroupLayout`, `TabLayout`, `DetailsLayout`, `ArrayLayout`, `CheckboxComboLayout` and more
+- `Label` and `Separator` elements
+- Rules on controls and layouts: `SHOW`, `HIDE`, `ENABLE`, `DISABLE`
+- `readonly` forms, a `schema` display mode, custom renderers and click-editable renderers
+
+For the full documentation with live demos see [JsonForm.rocket.md](./JsonForm.rocket.md)
+(`/json-form` on the docs site).

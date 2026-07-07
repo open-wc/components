@@ -4,7 +4,8 @@ import { classMap } from 'lit/directives/class-map.js';
 import { when } from 'lit/directives/when.js';
 import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 import { processLabel } from '../label/label.js';
-import { dataPathSegments, resolveDataSchema } from '../resolve.js';
+import { resolveDataSchema } from '../resolve.js';
+import { getError } from '../helpers/getError.js';
 import { inputListener } from './inputListener.js';
 
 import '@awesome.me/webawesome/dist/components/button/button.js';
@@ -208,31 +209,4 @@ function renderInput(state, ruleOptions, value, options = {}) {
         : ''
     }
   </${staticTag} >`;
-}
-/**
- *
- * @param {import("@cfworker/json-schema").ValidationResult} validatorState
- * @param {import("@jsonforms/core").ControlElement} uiSchema
- * @returns {import("@cfworker/json-schema").OutputUnit | undefined}
- */
-function getError(uiSchema, validatorState) {
-  const path = '#/' + dataPathSegments(uiSchema.scope).join('/');
-  for (const error of validatorState.errors) {
-    if (error.keyword === 'required') {
-      const errorPropertyName = error.error.match(/"(.*)"/)?.[1];
-      const splittedLocation = error.instanceLocation.split('/');
-      const instanceLocationWithoutIf =
-        splittedLocation.at(-2) === 'then' || splittedLocation.at(-2) === 'else'
-          ? splittedLocation.slice(0, -2).join('/')
-          : error.instanceLocation;
-      if (
-        errorPropertyName &&
-        path.startsWith(`${instanceLocationWithoutIf}/${errorPropertyName}`)
-      ) {
-        return error;
-      }
-    } else if (error.instanceLocation === path) {
-      return error;
-    }
-  }
 }

@@ -1,1 +1,1 @@
-export { globalSearchField, jsonToFilter } from '../../src/filter/jsonToFilter.js';
+export { globalSearchField, jsonToFilter } from '../../src/table/jsonToFilter.js';

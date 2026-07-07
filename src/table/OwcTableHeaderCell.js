@@ -1,5 +1,12 @@
 import { LitElement, html, css, nothing } from 'lit';
 
+/**
+ * Sortable column header used by `OwcTable`.
+ *
+ * Clicking the cell toggles `order` between 'asc' and 'desc', writes the
+ * resulting `sorters` array, and fires a bubbling `sort-changed` event that
+ * the table listens for.
+ */
 export class OwcTableHeaderCell extends LitElement {
   static properties = {
     sortable: { type: Boolean },
@@ -16,6 +23,11 @@ export class OwcTableHeaderCell extends LitElement {
     this.field = '';
     /** @type {import('./OwcTable.types.js').JsonSorter[] | undefined} */
     this.customSorters = undefined;
+    /**
+     * Output state: set on click, read by `OwcTable` via the `sort-changed` event.
+     * @type {import('./OwcTable.types.js').JsonSorter[] | undefined}
+     */
+    this.sorters = undefined;
   }
 
   #clickHandler() {
@@ -30,7 +42,6 @@ export class OwcTableHeaderCell extends LitElement {
         sortType: sorter.sortType,
       }));
     } else {
-      /** @type {import('./OwcTable.types.js').JsonSorter[]} */
       this.sorters = [{ field: this.field, order: this.order }];
     }
     this.dispatchEvent(new Event('sort-changed', { bubbles: true }));
@@ -40,7 +51,7 @@ export class OwcTableHeaderCell extends LitElement {
     return html`
       <div @click=${this.#clickHandler} id="wrapper">
         <div id="slot-wrapper"><slot></slot></div>
-        ${this.sortable ? html`<button></button>` : nothing}
+        ${this.sortable ? html`<button aria-label="Sortieren"></button>` : nothing}
       </div>
     `;
   }

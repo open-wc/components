@@ -23,7 +23,9 @@ import '@open-wc/components/define/owc-click-editable-autocomplete.js';
 
 # Click Editable Autocomplete
 
-A input field with autocomplete options that is editable through double clicking.
+An input field with autocomplete options that is editable through double clicking. See the
+[Click Editable Input API](/click-editable-input/#api) for the shared attributes, events and
+slots.
 
 Example:
 
@@ -177,9 +179,9 @@ export const hideSelectAutocompleteField = () => {
 };
 ```
 
-## Hide Select All
+## Label
 
-Use the `label` slot attribute to add a label.
+Use the `label` slot to add a label.
 
 ```js demo
 export const labelAutocompleteField = () => {
@@ -194,7 +196,7 @@ export const labelAutocompleteField = () => {
         { label: 'Strawberry', value: '103' },
       ]}
     >
-      <div slot="label">Frut:</div>
+      <div slot="label">Fruit:</div>
     </owc-click-editable-autocomplete>
   `;
 };

@@ -52,4 +52,14 @@ export default tseslint.config([
       'no-console': 'off',
     },
   },
+  {
+    // browser tests run through web-test-runner which provides the mocha globals
+    files: ['**/*.test-browser.js'],
+
+    languageOptions: {
+      globals: {
+        ...globals.mocha,
+      },
+    },
+  },
 ]);

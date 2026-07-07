@@ -2,7 +2,9 @@
 
 import { html } from 'lit';
 import { inputListener } from './inputListener.js';
-import { dataPathSegments, resolveDataSchema } from '../resolve.js';
+import { resolveDataSchema } from '../resolve.js';
+import { getError } from '../helpers/getError.js';
+import { enumToOneOf } from '../helpers/enumToOneOf.js';
 import { processLabel } from '../label/label.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { classMap } from 'lit/directives/class-map.js';
@@ -313,36 +315,4 @@ function renderAutocomplete(state, ruleOptions, value, options = {}) {
  */
 function getFallbackValue(state, options) {
   return state.uiSchema.options?.fallbackValue ?? options.fallbackValue ?? '-';
-}
-
-/**
- *
- * @param {import("@cfworker/json-schema").ValidationResult} validatorState
- * @param {import("@jsonforms/core").ControlElement} uiSchema
- * @returns {import("@cfworker/json-schema").OutputUnit | undefined}
- */
-function getError(uiSchema, validatorState) {
-  const path = '#/' + dataPathSegments(uiSchema.scope).join('/');
-  for (const error of validatorState.errors) {
-    if (error.keyword === 'required') {
-      const propertyName = error.error.match(/"(.*)"/)?.[1];
-      if (propertyName && path.startsWith(`${error.instanceLocation}/${propertyName}`)) {
-        return error;
-      }
-    } else if (error.instanceLocation === path) {
-      return error;
-    }
-  }
-}
-
-/**
- * Transforms enums (["1", "2"]) to oneOf format ([{const: "1", title: "1"}, ...]) so there is just one format
- * @param {string[] | undefined} _enum
- * @returns {{const: string; title: string}[]}
- */
-function enumToOneOf(_enum) {
-  if (_enum === undefined) {
-    return [];
-  }
-  return _enum.map((/** @type {any} */ entry) => ({ const: entry, title: entry }));
 }

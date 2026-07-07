@@ -5,6 +5,7 @@ import '@awesome.me/webawesome/dist/components/callout/callout.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 import '@awesome.me/webawesome/dist/components/progress-bar/progress-bar.js';
 import { OwcIconButton } from '../icon-button/OwcIconButton.js';
+import { containerStyleFor, defaultIconForVariant } from './toastHelpers.js';
 
 /**
  *
@@ -31,16 +32,7 @@ export function toast(options) {
     container = document.createElement('div');
     container.classList.add(`owc-toast-${position}`);
     // @ts-ignore
-    container.style = `
-    position: fixed;
-    ${position.split('-')[0]}: 0;
-    z-index: 99999;
-    display: flex;
-    width: 100%;
-    align-items: ${position.split('-')[1]};
-    flex-direction: ${position.split('-')[0] === 'bottom' ? 'column-reverse' : 'column'};
-    pointer-events: none;
-    `;
+    container.style = containerStyleFor(position);
     document.body.appendChild(container);
   }
 
@@ -69,8 +61,8 @@ export class OwcToastComponent extends ScopedElementsMixin(LitElement) {
     appearance: { type: String, reflect: true },
     text: { type: String },
     title: { type: String },
-    customIcon: { type: String },
-    progress: { type: String },
+    icon: { type: String },
+    progress: { type: Number },
     size: { type: String },
     state: { type: String, reflect: true },
     dismissible: { type: Boolean },
@@ -86,17 +78,18 @@ export class OwcToastComponent extends ScopedElementsMixin(LitElement) {
    *   text?: OwcToastComponent['text'],
    *   title?: OwcToastComponent['title'],
    *   dismissible?: OwcToastComponent['dismissible'],
-   * }} options
+   * }} [options]
    */
-  constructor({
-    variant = 'brand',
-    appearance = 'filled-outlined',
-    icon = '',
-    duration = 4,
-    text = '',
-    title = '',
-    dismissible = true,
-  }) {
+  constructor(options = {}) {
+    const {
+      variant = 'brand',
+      appearance = 'filled-outlined',
+      icon = '',
+      duration = 4,
+      text = '',
+      title = '',
+      dismissible = true,
+    } = options;
     super();
     /**@type {'brand' | 'neutral' | 'success' | 'warning' | 'danger'} */
     this.variant = variant;
@@ -121,29 +114,45 @@ export class OwcToastComponent extends ScopedElementsMixin(LitElement) {
   }
 
   remove() {
-    this.addEventListener('animationend', () => {
+    if (this.state === 'fade-out') {
+      return;
+    }
+    this.state = 'fade-out';
+    let finished = false;
+    const finish = () => {
+      if (finished) {
+        return;
+      }
+      finished = true;
       this.dispatchEvent(new Event('removed'));
       super.remove();
-    });
-    this.state = 'fade-out';
+    };
+    this.addEventListener('animationend', finish, { once: true });
+    // Fallback in case the fade-out animation never fires (e.g. reduced motion, hidden element)
+    setTimeout(finish, 400);
   }
 
   #startProgress() {
+    this.#stopProgress();
+    if (this.progress <= 0) {
+      return;
+    }
     this.progressInterval = setInterval(
-      async () => {
+      () => {
         this.progress -= 1;
 
         if (this.progress <= 0) {
           clearInterval(this.progressInterval);
-          // Wait for progress bar being at 0
-          const progressBar =
-            /**@type {import('@awesome.me/webawesome/dist/components/progress-bar/progress-bar.js').default}*/ (
-              this.shadowRoot?.querySelector('wa-progress-bar')
-            );
-          const progressBarBar = progressBar.shadowRoot?.querySelector('.indicator');
-          progressBarBar?.addEventListener('transitionend', () => {
+          // Wait for the progress bar transition reaching 0 before fading out
+          const progressBar = this.shadowRoot?.querySelector('wa-progress-bar');
+          const progressBarBar = progressBar?.shadowRoot?.querySelector('.indicator');
+          if (progressBarBar) {
+            progressBarBar.addEventListener('transitionend', () => this.remove(), { once: true });
+            // Fallback in case the transition never fires (e.g. hidden tab)
+            setTimeout(() => this.remove(), 1000);
+          } else {
             this.remove();
-          });
+          }
         }
       },
       (this.duration / 100) * 1000,
@@ -167,29 +176,21 @@ export class OwcToastComponent extends ScopedElementsMixin(LitElement) {
   }
 
   get defaultIcon() {
-    switch (this.variant) {
-      case 'brand':
-        return 'info-circle';
-      case 'neutral':
-        return 'gear';
-      case 'success':
-        return 'check-circle';
-      case 'warning':
-        return 'exclamation-triangle';
-      case 'danger':
-        return 'exclamation-circle';
-    }
-    return '';
+    return defaultIconForVariant(this.variant);
   }
 
   render() {
     return html`
-      <wa-callout variant=${this.variant} appearance=${this.appearance} size=${this.size}>
+      <wa-callout
+        variant=${this.variant}
+        appearance=${this.appearance}
+        size=${{ small: 's', medium: 'm', large: 'l' }[this.size] || 'm'}
+      >
         <wa-icon slot="icon" .name=${this.icon || this.defaultIcon}></wa-icon>
         <div class="callout-content">
           <span>
             ${this.title ? html`<strong>${this.title}</strong><br />` : ''}
-            ${join(this.text.split('\n'), html`<br />`)}
+            ${join(String(this.text ?? '').split('\n'), html`<br />`)}
           </span>
           ${
             this.dismissible

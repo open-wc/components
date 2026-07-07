@@ -1,6 +1,6 @@
 import { CSSResult, TemplateResult } from 'lit';
 import { DirectiveResult } from 'lit/directive.js';
-import { Filter, JsonFilter, NestedJsonFilters } from '../filter/filter.type.js';
+import { Filter, JsonFilter, NestedJsonFilters } from './filter.type.js';
 import { OwcMultiCheckboxOptions } from '../multi-checkbox/OwcMultiCheckbox.types.js';
 import {
   Field,
@@ -17,6 +17,7 @@ export interface FormatterFunctionOptions<T> {
   dateFormatter: Intl.DateTimeFormat;
   dateTimeFormatter: Intl.DateTimeFormat;
   numberFormatter: Intl.NumberFormat;
+  percentFormatter?: Intl.NumberFormat;
   fieldValueFiltered?: Array<unknown>; // TODO: this is OwcTable specific, should be moved to OwcTable
   override?: Partial<T>;
 }
@@ -111,7 +112,7 @@ export type FilterRenderer = (
   updateFilter: (filter: JsonFilter) => void,
 ) => TemplateResult;
 
-type SorterParam = Record<string, string | number | boolean | Array<unknown>>;
+type SorterParam = Record<string, unknown>;
 
 export type Sorter = (a: SorterParam, b: SorterParam) => number;
 
@@ -134,7 +135,8 @@ export interface OwcTableOptions<T> {
   storeNamePrefix?: string;
   columns?: Array<Column<T>>;
   filter?: Filter<Record<string, T>>;
-  sorters?: Array<JsonSorter>;
+  /** compare functions applied to the data - use `jsonSorters` for the declarative form */
+  sorters?: Array<Sorter>;
   jsonFilters?: NestedJsonFilters;
   jsonSorters?: Array<JsonSorter>;
   filterMode?: 'hidden' | 'global-search' | 'global-search-with-builder' | 'builder';
@@ -208,11 +210,12 @@ export interface HandleDataOptions {
     | ((options: { jsonFilters: NestedJsonFilters; oldFilters?: NestedJsonFilters }) => boolean);
 
   /**
-   * A refresh button that fetches the data aagain when clicked
+   * A refresh button that fetches the data again when clicked
    */
   refreshButton?: boolean;
 }
 
+// NOTE: 'initiallyAndAnyFilterChange' is not implemented yet in OwcTable
 export type DataOptionsMode = 'initiallyOnce' | 'initiallyAndAnyFilterChange' | 'anyFilterChange';
 
 export type renderDetail<T> = (

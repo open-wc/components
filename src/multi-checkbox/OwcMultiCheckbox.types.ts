@@ -1,6 +1,6 @@
 export interface Checkbox {
   value: string | number | boolean;
-  label?: string; // default to value with first letter capitalized
+  label?: string; // defaults to the value
   color?: 'brand' | 'success' | 'warning' | 'danger' | 'neutral'; // default to 'brand'
 }
 

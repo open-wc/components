@@ -21,16 +21,6 @@ export interface OwcDataDetailOptions<T> {
 export type openColumns<T> = Array<Field<T>>;
 export type OwcDataDetailColumns<T> = Array<Array<OwcDataDetailItem<T>>>;
 
-// export type handleUpdate<T> = (options: HandleUpdateOptions<T>) => Promise<void>;
-// export interface HandleUpdateOptions<T> {
-//   data: T;
-//   field: Field<T>;
-//   value: unknown;
-//   config: OwcDataDetailItem<T>;
-//   event: { target: HTMLInputElement };
-//   autoSetData: () => void;
-// }
-
 export interface OwcDataDetailItem<T> {
   label: FieldPathLabelDynamic<T>;
   field: Field<T>;

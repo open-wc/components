@@ -26,6 +26,7 @@
     "public/open-wc-components-logo.svg",
     "src/**/*",
     "!**/*.test.*",
+    "!**/*.test-browser.*",
     "!dist-types/tsconfig.tsbuildinfo"
   ],
   "scripts": {

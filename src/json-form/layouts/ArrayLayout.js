@@ -2,7 +2,8 @@ import { LitElement, css } from 'lit';
 import { html } from 'lit/static-html.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { OwcCard } from '@open-wc/components/OwcCard.js';
-import { dataPathSegments, resolveDataSchema, resolveSchema } from '../resolve.js';
+import { resolveDataSchema, resolveSchema } from '../resolve.js';
+import { getError } from '../helpers/getError.js';
 import { inputListener } from '../renderers/inputListener.js';
 import { OwcIconButton } from '../../icon-button/OwcIconButton.js';
 import { OwcTooltip } from '../../tooltip/OwcTooltip.js';
@@ -224,24 +225,4 @@ export class ArrayLayout extends ScopedElementsMixin(LitElement) {
       }
     `,
   ];
-}
-
-/**
- *
- * @param {import("@cfworker/json-schema").ValidationResult} validatorState
- * @param {import("@jsonforms/core").ControlElement} uiSchema
- * @returns {import("@cfworker/json-schema").OutputUnit | undefined}
- */
-function getError(uiSchema, validatorState) {
-  const path = '#/' + dataPathSegments(uiSchema.scope).join('/');
-  for (const error of validatorState.errors) {
-    if (error.keyword === 'required') {
-      const propertyName = error.error.match(/"(.*)"/)?.[1];
-      if (propertyName && path.startsWith(`${error.instanceLocation}/${propertyName}`)) {
-        return error;
-      }
-    } else if (error.instanceLocation === path) {
-      return error;
-    }
-  }
 }

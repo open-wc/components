@@ -10,10 +10,6 @@ export class OwcClickEditableTextarea extends OwcClickEditable {
     ...super.properties,
   };
 
-  constructor() {
-    super();
-  }
-
   render() {
     const classes = {
       display: true,

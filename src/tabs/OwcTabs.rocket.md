@@ -17,14 +17,19 @@ export const layout = pageData => docLayout(pageData, docsData);
 ```
 
 ```js client
-import { html } from 'lit';
+import { html, css } from 'lit';
 
 import '@open-wc/components/define/owc-tabs.js';
 ```
 
 # Tabs
 
-Define multiple content section that share a display area below.
+Define multiple content sections that share a display area below. Clicking a tab shows its
+content; clicking the active tab again closes the display area.
+
+Tabs are defined via the `.tabs` property - an object whose keys identify the tabs and whose
+values configure `label`, `content`, and optionally `visible`, `order`, `labelPrefix` and
+`labelSuffix`.
 
 ```js demo
 export const tabs = () => {
@@ -74,7 +79,9 @@ export const tabsOpen = () => {
 
 ## Active Changed Event
 
-You can set the tab that should be open via the `active` property or attribute.
+Whenever the active tab changes (by clicking a tab or setting `active`), an `active-changed`
+event fires. Read the new value from `ev.target.active` - it is an empty string when all tabs
+are closed. The event does not fire for the initial value on first render.
 
 ```js demo
 export const tabsChangeEvent = ({ wrapperRef }) => {
@@ -146,3 +153,77 @@ export const tabsWithCustomStyle = () => {
   `;
 };
 ```
+
+## Visibility and Order
+
+Each tab can define `visible` (a boolean or a function of the render options) and `order`.
+Hidden tabs are skipped, and tabs render sorted by `order` (missing orders count as `0`).
+The render options come from the `.getRenderOptions` property and are also passed to every
+tab's `content` function, together with an `open` flag.
+
+```js demo
+export const tabsVisibilityOrder = () => {
+  return html`
+    <owc-tabs
+      .getRenderOptions=${() => ({ isAdmin: false })}
+      .tabs=${{
+        admin: {
+          label: 'Admin',
+          visible: options => options.isAdmin,
+          content: () => html`<p>Admin only</p>`,
+        },
+        last: {
+          label: 'Last',
+          order: 100,
+          content: () => html`<p>Ordered last</p>`,
+        },
+        first: {
+          label: 'First',
+          order: -10,
+          content: () => html`<p>Ordered first</p>`,
+        },
+      }}
+    >
+    </owc-tabs>
+  `;
+};
+```
+
+## API
+
+### Attributes & properties
+
+| Attribute | Property           | Type                  | Default      | Description                                                                |
+| --------- | ------------------ | --------------------- | ------------ | -------------------------------------------------------------------------- |
+| `active`  | `active`           | `string`              | `''`         | Key of the open tab; an empty string means all tabs are closed. Reflected. |
+| -         | `tabs`             | `Tabs<T>`             | `{}`         | The tab definitions, keyed by tab id (see below).                          |
+| -         | `getRenderOptions` | `() => T`             | `() => ({})` | Provides the options passed to `visible` and `content` functions.          |
+| -         | `customStyles`     | `CSSResult \| string` | empty        | Extra CSS applied inside the shadow root (e.g. to style tab content).      |
+
+### Tab definition (`Tab<T>`)
+
+| Field         | Type                                                 | Description                                                       |
+| ------------- | ---------------------------------------------------- | ----------------------------------------------------------------- |
+| `label`       | `string \| TemplateResult`                           | The tab button label.                                             |
+| `content`     | `(options: T & { open: boolean }) => TemplateResult` | Renders the tab content; receives the render options plus `open`. |
+| `visible`     | `boolean \| ((options: T) => boolean)`               | Hide/show the tab; defaults to visible.                           |
+| `order`       | `number`                                             | Sort key for the tab list; missing orders count as `0`.           |
+| `labelPrefix` | `string \| TemplateResult`                           | Content rendered before the tab button.                           |
+| `labelSuffix` | `string \| TemplateResult`                           | Content rendered after the tab button.                            |
+
+The types are importable from `@open-wc/components/OwcTabs.types.js`.
+
+### Events
+
+| Event            | Description                                                                                            |
+| ---------------- | ------------------------------------------------------------------------------------------------------ |
+| `active-changed` | Fired when the active tab changes (bubbles). Not fired for the initial value. Read `ev.target.active`. |
+
+### Slots & parts
+
+| Name                   | Description                                   |
+| ---------------------- | --------------------------------------------- |
+| Slot `tab-list-prefix` | Content rendered before the tab buttons.      |
+| Part `tab-list`        | The row of tab buttons.                       |
+| Part `content-wrapper` | The wrapper around each tab's content.        |
+| Part `bottom-shadow`   | The decorative shadow below the content area. |

@@ -1,1 +1,1 @@
-export { jsonToSqlFilter } from '../../src/filter/jsonToSqlFilter.js';
+export { jsonToSqlFilter } from '../../src/table/jsonToSqlFilter.js';

@@ -580,7 +580,7 @@ export const overrideBuiltinFormatter = () => {
 
 ## Selectable rows
 
-The `selectable` attribute makes rows selectable and adds a checkbox to select all rows. To work with the selected data use the `.actionTemplate` property to create buttons next to the column filter to export the data. `selectedData` is an array with the information of the selected rows. In this example it is logged in the console. IDs are required when using selectable rows.
+The `selectable` attribute makes rows selectable and adds a checkbox to select all rows. To work with the selected data add a custom tab via the `.actionTabs` property - its `content` callback receives `selectedData`, an array with the information of the selected rows. In this example it is logged in the console. IDs are required when using selectable rows.
 
 ```js demo
 export const selectableTable = () => {
@@ -601,21 +601,27 @@ export const selectableTable = () => {
           field: 'lastName',
         },
       ]}
-      .actionTemplate=${selectedData => html`
-        <wa-button
-          size="small"
-          @click=${async () => {
-            console.log(
-              'Selected Data: ' +
-                selectedData
-                  .map(data => data.firstName + ' ' + data.lastName + ' (' + data.id + ')')
-                  .join(', '),
-            );
-          }}
-        >
-          Show Selected
-        </wa-button>
-      `}
+      .actionTabs=${{
+        showSelected: {
+          label: 'Auswahl',
+          visible: true,
+          content: ({ selectedData }) => html`
+            <wa-button
+              size="small"
+              @click=${async () => {
+                console.log(
+                  'Selected Data: ' +
+                    selectedData
+                      .map(data => data.firstName + ' ' + data.lastName + ' (' + data.id + ')')
+                      .join(', '),
+                );
+              }}
+            >
+              Show Selected
+            </wa-button>
+          `,
+        },
+      }}
       .data=${personData}
     ></owc-table>
   `;
@@ -928,7 +934,6 @@ Use the `sticky-header` attribute to make the header fixed at the top of the tab
 export const stickyHeaderTable = () => {
   return html`
     <owc-table
-      .actionTemplate=${generateDataButton} // required for the generate more data button
       sticky-header
       .columns=${[
         {
@@ -952,56 +957,6 @@ export const stickyHeaderTable = () => {
     ></owc-table>
   `;
 };
-
-// the following code is only for demo purposes to generate more data and is not required for using the `sticky-header` attribute
-
-const generateMoreDataSticky = () => {
-  const data = [...testTableData];
-  for (let i = 0; i < 50; i++) {
-    const randomIndex = Math.floor(Math.random() * data.length);
-    const newEntry = JSON.parse(JSON.stringify(data[randomIndex]));
-    newEntry.id = crypto.randomUUID();
-    data.push(newEntry);
-  }
-  testTableData = data;
-  updateTestTable();
-};
-
-const updateTestTable = () => {
-  const table = document
-    .querySelector('[demo-name=stickyHeaderTable]')
-    ?.shadowRoot?.querySelector('owc-table');
-  if (table) {
-    table.data = testTableData;
-  }
-};
-
-const generateDataButton = () => html`
-  <wa-button size="small" @click=${generateMoreDataSticky}> Generate More Data </wa-button>
-`;
-
-let testTableData = [
-  {
-    firstName: 'Robert',
-    lastName: 'Lombart',
-    profession: 'Teacher',
-  },
-  {
-    firstName: 'Ada',
-    lastName: 'Lovelace',
-    profession: 'Lawyer',
-  },
-  {
-    firstName: 'Sarah',
-    lastName: 'Arlon',
-    profession: 'Developer',
-  },
-  {
-    firstName: 'Brian',
-    lastName: 'Arlon',
-    profession: 'Developer',
-  },
-];
 ```
 
 ## Save state to URL

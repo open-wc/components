@@ -3,6 +3,7 @@ import { OwcClickEditable } from './OwcClickEditable.js';
 import '@awesome.me/webawesome/dist/components/input/input.js';
 import { classMap } from 'lit/directives/class-map.js';
 import '@awesome.me/webawesome/dist/components/copy-button/copy-button.js';
+import { isReasonableDate, toInputDateString } from './valueHelpers.js';
 
 export class OwcClickEditableInput extends OwcClickEditable {
   static properties = { ...super.properties };
@@ -11,24 +12,14 @@ export class OwcClickEditableInput extends OwcClickEditable {
    * @param {import('lit').PropertyValues} changedProperties
    */
   shouldUpdate(changedProperties) {
-    try {
-      if (
-        (this.type === 'datetime-local' || this.type === 'date') &&
-        changedProperties.has('value')
-      ) {
-        if (this.value === '') {
-          return true;
-        }
-        // Check if date is valid. If not it will throw an error and not update
-        // @ts-ignore
-        const valueDate = new Date(this.value);
-
-        return !!valueDate.valueOf() && valueDate.getFullYear() > 1900;
-      }
-      return true;
-    } catch (error) {
-      return false;
+    if (
+      (this.type === 'datetime-local' || this.type === 'date') &&
+      changedProperties.has('value')
+    ) {
+      // Skip renders for invalid intermediate dates (e.g. while typing a year)
+      return this.value === '' || isReasonableDate(this.value);
     }
+    return true;
   }
 
   /**
@@ -36,13 +27,7 @@ export class OwcClickEditableInput extends OwcClickEditable {
    */
   update(changedProperties) {
     if ((this.type === 'datetime-local' || this.type === 'date') && this.value) {
-      // @ts-ignore
-      const valueDate = new Date(this.value);
-      if (
-        !valueDate.valueOf() ||
-        valueDate.getFullYear() < 1900 ||
-        valueDate.getFullYear() > 3000
-      ) {
+      if (!isReasonableDate(this.value)) {
         this.value = this.lastValue;
       }
     }
@@ -55,15 +40,7 @@ export class OwcClickEditableInput extends OwcClickEditable {
       'empty-display-muted': this.isEditPlaceholder(),
     };
 
-    const valueDate =
-      (this.type === 'datetime-local' || this.type === 'date') && this.value
-        ? // @ts-ignore
-          new Date(this.value)
-        : undefined;
-
-    valueDate?.setMinutes(valueDate.getMinutes() - valueDate.getTimezoneOffset());
-    // Slice off timezone and seconds and millis from iso-date
-    const valueDateFormatted = valueDate?.toISOString().slice(0, this.type === 'date' ? -14 : -8);
+    const valueDateFormatted = toInputDateString(this.value, this.type);
     return html`
       <div class="main-container">
         <div class="label-text-container">
@@ -116,7 +93,7 @@ export class OwcClickEditableInput extends OwcClickEditable {
               type=${this.type}
               min=${this.type === 'date' || this.type === 'datetime-local' ? '1900-01-01' : ''}
               max=${this.type === 'date' || this.type === 'datetime-local' ? '3000-03-03' : ''}
-              value=${valueDate ? valueDateFormatted : this.value}
+              value=${valueDateFormatted ?? this.value}
             ></wa-input>
             <div class="hint">Esc zum abbrechen</div>
           </div>

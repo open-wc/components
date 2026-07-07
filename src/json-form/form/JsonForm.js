@@ -22,6 +22,7 @@ import { CheckboxComboLayout } from '../layouts/CheckboxComboLayout.js';
 import { VerticalLayout2 } from '../layouts/VerticalLayout2.js';
 import { VerticalLayoutGrid } from '../layouts/VerticalLayoutGrid.js';
 import { removeFalseIshAndEmptyProperties } from '../helpers/validateSchema.js';
+import { evaluateRule } from '../helpers/evaluateRule.js';
 import { TabLayout } from '../layouts/TabLayout.js';
 import { OwcSeparator } from '../../separator/OwcSeparator.js';
 import { DetailsLayout } from '../layouts/DetailsLayout.js';
@@ -279,28 +280,11 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
         renderer = this.processedRenderers[schema.type];
       }
 
-      const ruleOptions = { disabled: false, hidden: false };
-      if (this.uiSchema.rule && this.mode !== 'schema') {
-        // @ts-ignore
-        const value = resolveDataSchema(this.value, this.uiSchema.rule?.condition.scope);
-        // @ts-ignore
-        const ruleMatches = new Validator(this.uiSchema.rule.condition.schema, '7', false).validate(
-          removeFalseIshAndEmptyProperties(value),
-        ).valid;
-        switch (this.uiSchema.rule.effect) {
-          case 'SHOW':
-            ruleOptions.hidden = !ruleMatches;
-            break;
-          case 'HIDE':
-            ruleOptions.hidden = ruleMatches;
-            break;
-          case 'ENABLE':
-            ruleOptions.disabled = !ruleMatches;
-            break;
-          case 'DISABLE':
-            ruleOptions.disabled = ruleMatches;
-        }
-      }
+      const ruleOptions =
+        this.mode === 'schema'
+          ? { disabled: false, hidden: false }
+          : // @ts-ignore
+            evaluateRule(this.uiSchema.rule, this.value);
 
       if (this.mode === 'schema') {
         renderer = () =>
@@ -357,67 +341,10 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
       return html`<owc-separator ?vertical=${typedUiSchema.options?.type === 'vertical'}
         >${typedUiSchema.options?.label || ''}</owc-separator
       >`;
-    } else if (this.uiSchema.type === 'ArrayLayout') {
-      const typedUiSchema = /**@type {import("@jsonforms/core").Layout} */ (this.uiSchema);
-      const ruleOptions = { disabled: false, hidden: false };
-
-      if (this.uiSchema.rule) {
-        // @ts-ignore
-        const value = resolveDataSchema(this.value, this.uiSchema.rule?.condition.scope);
-        // @ts-ignore
-        const ruleMatches = new Validator(this.uiSchema.rule.condition.schema, '7', false).validate(
-          removeFalseIshAndEmptyProperties(value),
-        ).valid;
-        switch (this.uiSchema.rule.effect) {
-          case 'SHOW':
-            ruleOptions.hidden = !ruleMatches;
-            break;
-          case 'HIDE':
-            ruleOptions.hidden = ruleMatches;
-            break;
-          case 'ENABLE':
-            ruleOptions.disabled = !ruleMatches;
-            break;
-          case 'DISABLE':
-            ruleOptions.disabled = ruleMatches;
-        }
-      }
-      return layoutRenderer(
-        this.schema,
-        typedUiSchema,
-        this.value,
-        this.validatorState,
-        this.renderers,
-        this.forceErrors,
-        ruleOptions,
-        this.readonly,
-        this.mode,
-      );
     } else {
       const typedUiSchema = /**@type {import("@jsonforms/core").Layout} */ (this.uiSchema);
-      const ruleOptions = { disabled: false, hidden: false };
-
-      if (this.uiSchema.rule) {
-        // @ts-ignore
-        const value = resolveDataSchema(this.value, this.uiSchema.rule?.condition.scope);
-        // @ts-ignore
-        const ruleMatches = new Validator(this.uiSchema.rule.condition.schema, '7', false).validate(
-          value,
-        ).valid;
-        switch (this.uiSchema.rule.effect) {
-          case 'SHOW':
-            ruleOptions.hidden = !ruleMatches;
-            break;
-          case 'HIDE':
-            ruleOptions.hidden = ruleMatches;
-            break;
-          case 'ENABLE':
-            ruleOptions.disabled = !ruleMatches;
-            break;
-          case 'DISABLE':
-            ruleOptions.disabled = ruleMatches;
-        }
-      }
+      // @ts-ignore
+      const ruleOptions = evaluateRule(this.uiSchema.rule, this.value);
       return layoutRenderer(
         this.schema,
         typedUiSchema,

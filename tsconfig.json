@@ -22,5 +22,5 @@
     "rootDir": "."
   },
   "include": ["exports", "src", "test", "demo", "types"],
-  "exclude": ["dist-types", "**/generated.*"]
+  "exclude": ["dist-types", "**/generated.*", "**/*.test-browser.js"]
 }

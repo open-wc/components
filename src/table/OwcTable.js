@@ -4,7 +4,7 @@ import { virtualize, virtualizerRef } from '@lit-labs/virtualizer/virtualize.js'
 
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { OwcTableHeaderCell } from './OwcTableHeaderCell.js';
-import { jsonToFilter } from '../filter/jsonToFilter.js';
+import { jsonToFilter } from './jsonToFilter.js';
 
 import '@awesome.me/webawesome/dist/components/spinner/spinner.js';
 import '@awesome.me/webawesome/dist/components/checkbox/checkbox.js';
@@ -18,7 +18,7 @@ import {
 } from '../field-path-helper/getFieldPathContent.js';
 import { copyAsCsv, downloadAsCsv } from '@open-wc/components/table/csv.js';
 import { jsonToSorters } from './jsonToSorters.js';
-import { globalSearchField } from '../filter/jsonToFilter.js';
+import { globalSearchField } from './jsonToFilter.js';
 import { copyAsExcel } from '@open-wc/components/table/excel.js';
 import { filterFieldValue } from './filterFieldValue.js';
 import { OwcTableInfo } from './OwcTableInfo.js';
@@ -106,9 +106,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     filterMode: { type: String, reflect: true, attribute: 'filter-mode' },
     saveStateToUrl: { type: Boolean, attribute: 'save-state-to-url', reflect: true },
     stickyHeader: { type: Boolean, attribute: 'sticky-header', reflect: true },
-    getRowLink: { type: Function },
+    getRowLinkSettings: { attribute: false },
     emptyMessage: { type: Object },
-    insertable: { type: Boolean },
     handleInsert: { type: Function },
     overrides: { type: Array, state: true },
     showInfo: { type: Boolean, attribute: 'show-info', reflect: true },
@@ -242,13 +241,13 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     this.sorters = [];
     /** @type {import('./OwcTable.types.js').JsonSorter[]} */
     this.jsonSorters = [];
-    /** @type {import('../filter/filter.type.js').NestedJsonFilters} */
+    /** @type {import('./filter.type.js').NestedJsonFilters} */
     this.jsonFilters = [];
-    /** @type {import('../filter/filter.type.js').NestedJsonFilters} */
+    /** @type {import('./filter.type.js').NestedJsonFilters} */
     this.highlightJsonFilters = [];
-    /** @type {import('../filter/filter.type.js').Filter<unknown> | null} */
+    /** @type {import('./filter.type.js').Filter<unknown> | null} */
     this.filter = null;
-    /** @type {import('../filter/filter.type.js').Filter<unknown> | null} */
+    /** @type {import('./filter.type.js').Filter<unknown> | null} */
     this.highlightFilter = null;
 
     /** @type {import('./OwcTable.types.js').Column<T>[]} */
@@ -258,17 +257,10 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     /** @type {'hidden' | 'global-search' | 'global-search-with-builder' | 'builder'} */
     this.filterMode = 'hidden';
 
-    /** @type {(selectedData: Array<T>, filteredData: Array<T>) => import('lit').TemplateResult | undefined} */
-    this.actionTemplate;
-
     /** @param {T} row */
     this.getRowId = row => {
       if (row && (row.id === undefined || row.id === null)) {
-        // eslint-disable-next-line no-console
-        console.log('Given row data results in an "row.id is undefined" error');
-        // eslint-disable-next-line no-console
-        console.log(row);
-        throw new Error('row.id is undefined');
+        throw new Error(`row.id is undefined for row ${JSON.stringify(row)}`);
       }
       return row && row.id ? /** @type {string | number} */ (row.id) : undefined;
     };
@@ -310,10 +302,19 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     return [...this.#visibleColumns];
   }
 
+  /**
+   * Selection ids are stored as strings so they survive the url round-trip
+   * (`save-state-to-url` serializes them as a comma separated string).
+   * @param {T} row
+   */
+  #rowKey(row) {
+    return String(this.getRowId(row));
+  }
+
   get selectedData() {
     const data = [];
     for (const item of this.data) {
-      if (this.#selectedSet.has(this.getRowId(item))) {
+      if (this.#selectedSet.has(this.#rowKey(item))) {
         data.push(item);
       }
     }
@@ -399,7 +400,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       this.#markOpenDetailsAsLoaded();
     }
     if (
-      changedProperties.has('filters') ||
+      changedProperties.has('filter') ||
       changedProperties.has('data') ||
       changedProperties.has('sorters') ||
       changedProperties.has('jsonSorters') ||
@@ -471,21 +472,24 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       this.allData = [...this.processedData, ...this.insertData];
     }
     if (
-      (changedProperties.has('showInfo') && this.showInfo) ||
-      (changedProperties.has('actionTabs') && this.actionTabs !== undefined) ||
-      (changedProperties.has('handleInsert') && this.handleInsert !== undefined) ||
-      (changedProperties.has('handleData') &&
-        this.handleData !== undefined &&
-        this.handleDataOptions.refreshButton)
+      changedProperties.has('showInfo') ||
+      changedProperties.has('actionTabs') ||
+      changedProperties.has('handleInsert') ||
+      changedProperties.has('handleData')
     ) {
-      this._hasInfoBlock = true;
+      this._hasInfoBlock = Boolean(
+        this.showInfo ||
+        this.actionTabs !== undefined ||
+        this.handleInsert !== undefined ||
+        (this.handleData !== undefined && this.handleDataOptions.refreshButton),
+      );
     }
     super.update(changedProperties);
   }
 
   /**
    *
-   * @param {import('../filter/filter.type.js').NestedJsonFilters} filters
+   * @param {import('./filter.type.js').NestedJsonFilters} filters
    * @param {string} prefix
    * @returns {string[]}
    */
@@ -494,6 +498,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     for (const filter of filters) {
       if (Array.isArray(filter)) {
         arr.push(...this.filteredFieldsRec(filter, prefix));
+      } else if (filter.enabled === false) {
+        // paused filters should not keep 'ifFiltered' columns visible
+        continue;
       } else if (filter.operator === 'some' || filter.operator === 'every') {
         // @ts-ignore
         arr.push(...this.filteredFieldsRec(filter.value, prefix + filter.field + '[].'));
@@ -518,12 +525,15 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * @param {{ jsonFilters?: import('../filter/filter.type.js').NestedJsonFilters }} [options]
+   * @param {{ jsonFilters?: import('./filter.type.js').NestedJsonFilters }} [options]
    */
   callHandleData = async ({ jsonFilters = this.jsonFilters } = {}) => {
     this.loading = true;
-    this.data = (await this.handleData?.({ jsonFilters })) ?? [];
-    this.loading = false;
+    try {
+      this.data = (await this.handleData?.({ jsonFilters })) ?? [];
+    } finally {
+      this.loading = false;
+    }
   };
 
   #callHandleDataDebounced = debounce(({ jsonFilters }) => {
@@ -532,7 +542,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   /**
    *
-   * @param {import('../filter/filter.type.js').NestedJsonFilters} [oldFilters]
+   * @param {import('./filter.type.js').NestedJsonFilters} [oldFilters]
    */
   async #executeHandleData(oldFilters) {
     if (this.handleDataUseCache === false && typeof this.handleData === 'function') {
@@ -566,10 +576,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     super.connectedCallback();
     this.handleInitialData();
     this.loadStateFromUrl();
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
   }
 
   loadStateFromUrl() {
@@ -612,6 +618,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     if (currentSelectedState) {
       const parsedSelectedState = currentSelectedState.split(',');
       for (const id of parsedSelectedState) {
+        // ids are stored as strings in the url; getRowId values are stringified
+        // on write so the set contents stay comparable
         this.#selectedSet.add(id);
       }
     }
@@ -638,54 +646,47 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     if (this.saveStateToUrl === false) {
       return;
     }
+    /** @type {boolean} */
     let needsUpdate = false;
     const newUrl = new URL(location.href);
 
-    if (this.jsonFilters.length > 0) {
-      const encodedFilterState = JSON.stringify(this.jsonFilters);
-      if (newUrl.searchParams.get(`${this.storeNamePrefix}-filter`) !== encodedFilterState) {
-        newUrl.searchParams.set(`${this.storeNamePrefix}-filter`, encodedFilterState);
+    /**
+     * Sets the param when there is a value and removes it when the state is
+     * empty again, so cleared filters/sorters don't resurrect on reload.
+     * @param {string} name
+     * @param {string} value
+     */
+    const setOrDeleteParam = (name, value) => {
+      if (value) {
+        if (newUrl.searchParams.get(name) !== value) {
+          newUrl.searchParams.set(name, value);
+          needsUpdate = true;
+        }
+      } else if (newUrl.searchParams.has(name)) {
+        newUrl.searchParams.delete(name);
         needsUpdate = true;
       }
-    }
-    if (this.highlightJsonFilters.length > 0) {
-      const encodedFilterState = JSON.stringify(this.highlightJsonFilters);
-      if (
-        newUrl.searchParams.get(`${this.storeNamePrefix}-highlight-filter`) !== encodedFilterState
-      ) {
-        newUrl.searchParams.set(`${this.storeNamePrefix}-highlight-filter`, encodedFilterState);
-        needsUpdate = true;
-      }
-    }
-    if (this.jsonSorters.length > 0) {
-      const encodedSorterState = JSON.stringify(this.jsonSorters);
-      if (newUrl.searchParams.get(`${this.storeNamePrefix}-sorter`) !== encodedSorterState) {
-        newUrl.searchParams.set(`${this.storeNamePrefix}-sorter`, encodedSorterState);
-        needsUpdate = true;
-      }
-    }
-    if (this.#selectedSet.size > 0) {
-      const encodedSelectedState = Array.from(this.#selectedSet.values()).join(',');
-      if (newUrl.searchParams.get(`${this.storeNamePrefix}-selected`) !== encodedSelectedState) {
-        newUrl.searchParams.set(`${this.storeNamePrefix}-selected`, encodedSelectedState);
-        needsUpdate = true;
-      }
-    } else {
-      newUrl.searchParams.delete(`${this.storeNamePrefix}-selected`);
-      needsUpdate = true;
-    }
+    };
 
-    if (this.actionTabActive !== undefined) {
-      if (
-        newUrl.searchParams.get(`${this.storeNamePrefix}-action-tab-active`) !==
-        this.actionTabActive
-      ) {
-        newUrl.searchParams.set(`${this.storeNamePrefix}-action-tab-active`, this.actionTabActive);
-        needsUpdate = true;
-      }
-    }
+    setOrDeleteParam(
+      `${this.storeNamePrefix}-filter`,
+      this.jsonFilters.length > 0 ? JSON.stringify(this.jsonFilters) : '',
+    );
+    setOrDeleteParam(
+      `${this.storeNamePrefix}-highlight-filter`,
+      this.highlightJsonFilters.length > 0 ? JSON.stringify(this.highlightJsonFilters) : '',
+    );
+    setOrDeleteParam(
+      `${this.storeNamePrefix}-sorter`,
+      this.jsonSorters.length > 0 ? JSON.stringify(this.jsonSorters) : '',
+    );
+    setOrDeleteParam(
+      `${this.storeNamePrefix}-selected`,
+      Array.from(this.#selectedSet.values()).join(','),
+    );
+    setOrDeleteParam(`${this.storeNamePrefix}-action-tab-active`, this.actionTabActive);
 
-    if (needsUpdate === true) {
+    if (needsUpdate) {
       history.replaceState({}, '', newUrl);
     }
   }
@@ -714,12 +715,16 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   }
 
   #addGlobalSearchJsonFilter() {
-    this.jsonFilters.unshift({
-      field: globalSearchField,
-      operator: 'includes',
-      value: '',
-      enabled: false,
-    });
+    // reassign instead of unshift so Lit sees the change
+    this.jsonFilters = [
+      {
+        field: globalSearchField,
+        operator: 'includes',
+        value: '',
+        enabled: false,
+      },
+      ...this.jsonFilters,
+    ];
   }
 
   /**
@@ -851,11 +856,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
    * @param {Event} ev
    */
   #actionTabActiveChanged(ev) {
-    const typedTarget =
-      /** @type {import('../tabs/OwcTabs.js').OwcTabs<import('../tabs/OwcTabs.types.js').Tabs<import('./OwcTable.types.js').OwcTableActionTabsRenderOptions<T>>>} */ (
-        ev.target
-      );
-    this.actionTabActive = typedTarget.active;
+    const typedTarget = /** @type {import('./OwcTableInfo.js').OwcTableInfo<T>} */ (ev.target);
+    this.actionTabActive = typedTarget.actionTabActive;
   }
 
   /**
@@ -1169,7 +1171,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   #renderItem = (
     row,
     index,
-    { mode = 'data-table', setLast = true, lastIndex = this.processedData.length - 1 } = {},
+    { mode = 'data-table', setLast = true, lastIndex = this.allData.length - 1 } = {},
   ) => {
     const annotationContent =
       this.renderAnnotation(row) === nothing
@@ -1347,9 +1349,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         let typeCheckbox = /** @type {HTMLInputElement} */ (useCheckbox);
         typeCheckbox.checked = !typeCheckbox.checked;
         if (typeCheckbox.checked) {
-          this.#selectedSet.add(this.getRowId(this.processedData[index]));
+          this.#selectedSet.add(this.#rowKey(this.processedData[index]));
         } else {
-          this.#selectedSet.delete(this.getRowId(this.processedData[index]));
+          this.#selectedSet.delete(this.#rowKey(this.processedData[index]));
         }
         this.#saveStateToUrl();
         this.requestUpdate();
@@ -1433,7 +1435,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     const typedTarget = /** @type {HTMLInputElement} */ (ev.target);
     if (typedTarget && typedTarget.checked) {
       for (const index of this.processedData.keys()) {
-        this.#selectedSet.add(this.getRowId(this.processedData[index]));
+        this.#selectedSet.add(this.#rowKey(this.processedData[index]));
       }
     } else {
       this.#selectedSet.clear();
@@ -1451,7 +1453,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
           ?indeterminate=${
             this.#selectedSet.size > 0 && this.#selectedSet.size < this.processedData.length
           }
-          area-label="Alle auswählen"
+          aria-label="Alle auswählen"
         ></wa-checkbox>`,
       includeInExport: false,
       formatter: (row, options) => {
@@ -1462,7 +1464,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         return html`<wa-checkbox
           class="owc-selectable-checkbox"
           value=${typedIndex}
-          ?checked=${this.#selectedSet.has(this.getRowId(this.processedData[typedIndex]))}
+          ?checked=${this.#selectedSet.has(this.#rowKey(this.processedData[typedIndex]))}
           aria-label=${ifDefined(selectorSettings['aria-label'])}
         ></wa-checkbox>`;
       },
@@ -1549,7 +1551,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   /**
    * @param {Set<string>} set
-   * @param {import('../filter/filter.type.js').NestedJsonFilters} value
+   * @param {import('./filter.type.js').NestedJsonFilters} value
    */
   getUsedFilterFieldNames(set = new Set(), value = this.jsonFilters) {
     const valueArray = Array.isArray(value) ? value : [value];
@@ -1558,13 +1560,15 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         filter.forEach(f =>
           this.getUsedFilterFieldNames(
             set,
-            /** @type {import('../filter/filter.type.js').NestedJsonFilters} */ (f),
+            /** @type {import('./filter.type.js').NestedJsonFilters} */ (f),
           ),
         );
       } else if (filter.enabled === undefined || filter.enabled === true) {
         if (
-          (this.filterMode === 'global-search-with-builder' || this.filterMode === 'builder') &&
+          (this.filterMode === 'global-search-with-builder' ||
+            this.filterMode === 'global-search') &&
           !Array.isArray(this.jsonFilters[0]) &&
+          filter.field === globalSearchField &&
           filter.field === this.jsonFilters[0].field
         ) {
           set.add('Global Text');
@@ -1572,7 +1576,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         }
         const column = this.findColumn(filter.field);
         const fieldName =
-          column.labelString || typeof column.label === 'string' ? column.label : column.field;
+          column.labelString || (typeof column.label === 'string' ? column.label : column.field);
         if (typeof fieldName === 'string') {
           set.add(fieldName);
         }

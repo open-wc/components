@@ -74,7 +74,6 @@ export class OwcTableSettings extends OwcAutocomplete {
   static properties = {
     storeNamePrefix: { type: String },
     columns: { type: Array },
-    saveState: { type: Boolean },
   };
 
   constructor() {
@@ -188,7 +187,7 @@ export class OwcTableSettings extends OwcAutocomplete {
       this.reorderColumns(order);
     });
 
-    super.update(changedProperties);
+    super.firstUpdated(changedProperties);
   }
 
   /**
