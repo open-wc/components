@@ -7,7 +7,7 @@ public namespaces.
 
 ## Coverage Summary
 
-- Top-level files under `exports/`: 45
+- Top-level files under `exports/`: 46
 - Owned helper/type files under `exports/table/`, `exports/filter/`, `exports/text/`, and
   `exports/lit/`: 10
 - Custom-element registration files under `exports/define/`: 30
@@ -37,7 +37,8 @@ public namespaces.
 | `OwcFileUpload.js`          | `src/file-upload/OwcFileUpload.js`                    | `src/file-upload/OwcFileUpload.rocket.md`                                       | OK                                                          |
 | `OwcGrapeTemplateEditor.js` | `src/template-editor/OwcGrapeTemplateEditor.js`       | `src/template-editor/OwcTemplateEditor.rocket.md`                               | OK                                                          |
 | `OwcIconButton.js`          | `src/icon-button/OwcIconButton.js`                    | `src/icon-button/OwcIconButton.rocket.md`                                       | OK                                                          |
-| `OwcInputAutofill.js`       | `src/input-autofill/OwcInputAutofill.js`              | `src/input-autofill/OwcInputAutofill.rocket.md`                                 | OK                                                          |
+| `OwcInputAutofill.js`       | `src/input-autofill/OwcInputAutofill.js`              | `src/input-autofill/OwcInputAutofill.rocket.md`, `src/input-autofill/README.md` | OK                                                          |
+| `OwcInputAutofill.types.ts` | `src/input-autofill/OwcInputAutofill.types.ts`        | `src/input-autofill/OwcInputAutofill.rocket.md`                                 | OK                                                          |
 | `OwcInputSlider.js`         | `src/input-slider/OwcInputSlider.js`                  | `src/input-slider/OwcInputSlider.rocket.md`                                     | OK                                                          |
 | `OwcLayoutSidebar.js`       | `src/layout-sidebar/OwcLayoutSidebar.js`              | `src/layout-sidebar/OwcLayoutSidebar.rocket.md`                                 | OK                                                          |
 | `OwcLayoutSidebar.types.ts` | `src/layout-sidebar/OwcLayoutSidebar.types.ts`        | `src/layout-sidebar/OwcLayoutSidebar.rocket.md`                                 | OK                                                          |

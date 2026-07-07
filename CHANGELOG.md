@@ -10,8 +10,23 @@ All notable changes to this project will be documented in this file.
   surface is owned by table, filter, text, Lit, and component namespaces.
 - Target MIT licensing for the public package.
 
+### Added
+
+- `OwcInputAutofill.types.ts` export: the option shape (`OwcInputAutofillOption`,
+  `OwcInputAutofillData`) is now importable from
+  `@open-wc/components/OwcInputAutofill.types.js`.
+
 ### Fixed
 
+- `OwcInputAutofill`: fixed a lifecycle bug where `updated()` called `super.update()` instead
+  of `super.updated()`, forcing a second render pass on every update.
+- `OwcInputAutofill`: options with an empty `label` can now be picked - selection validation
+  is based on the option's `value` (the label is display only).
+- `OwcInputAutofill`: the `change` event fired when picking an option is now bubbling and
+  composed, matching the `change` relayed for committed typed text - previously ancestor
+  listeners only saw typed changes, not selections.
+- `OwcInputAutofill`: typing in the dropdown's internal search field no longer leaks `input`
+  events to consumers (they looked like free-text edits even though the value was unchanged).
 - `OwcMultiCheckbox`: options with falsy values (`0`, `false`, `''`) can now actually be
   selected - the submit handler filtered the collected values by truthiness.
 - `OwcMultiCheckbox`: toggling a group checkbox no longer mutates the `value` object in

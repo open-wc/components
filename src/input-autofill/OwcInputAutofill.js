@@ -121,6 +121,7 @@ export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
             class="form"
             .label=${this.label ? ' ' : ''}
             .data=${this.data}
+            @input=${(/** @type {Event} */ ev) => ev.stopPropagation()}
             @autocomplete-selection=${this._onAutocompleteChange}
             ?open=${this.open}
           >

@@ -1,0 +1,1 @@
+One heads-up from the review: OwcClickEditableInputAutofill passes .hasFocus and .syncWidth to this component, but neither property exists — silent no-ops. I flagged that as a separate task chip since fixing it belongs in click-editable, not her
