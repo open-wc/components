@@ -63,3 +63,23 @@ export const neutralDetailCard = () => html`
   </owc-detail-card>
 `;
 ```
+
+## API
+
+### Attributes & properties
+
+| Property                                  | Type      | Default | Description                                                                   |
+| ----------------------------------------- | --------- | ------- | ----------------------------------------------------------------------------- |
+| `accent-color`                            | `string`  | `''`    | The accent rail color (sets `--owc-detail-card-accent-color`).                |
+| `open`                                    | `boolean` | `false` | Expands the detail content; reflected and kept in sync when the user toggles. |
+| `with-icon` / `with-detail` / `with-body` | `boolean` | `false` | Reserved areas; set automatically when the matching slot is filled.           |
+
+### Slots
+
+| Slot        | Description                                         |
+| ----------- | --------------------------------------------------- |
+| _(default)_ | Expandable detail content below the summary row.    |
+| `icon`      | The leading icon/visual.                            |
+| `text`      | The primary text column.                            |
+| `detail`    | The right-aligned summary column (e.g. price).      |
+| `suffix`    | Trailing indicator; defaults to a rotating chevron. |

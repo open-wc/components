@@ -9,8 +9,11 @@ export async function decompressStringFromBase64(text) {
   // @ts-ignore will be fixed once we update to the latest TS version
   const cs = new DecompressionStream('gzip');
   const writer = cs.writable.getWriter();
-  writer.write(byteArray);
-  writer.close();
+  // Invalid gzip data errors the whole stream: the error surfaces through the
+  // readable side below, so swallow the mirrored write/close rejections to
+  // avoid unhandled promise rejections.
+  writer.write(byteArray).catch(() => {});
+  writer.close().catch(() => {});
   const arrayBuffer = await new Response(cs.readable).arrayBuffer();
   return new TextDecoder().decode(arrayBuffer);
 }

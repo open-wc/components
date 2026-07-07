@@ -40,8 +40,8 @@ export class OwcTooltip extends LitElement {
         ?open=${this.open}
         ?disabled=${this.disabled}
         skidding=${this.skidding}
-        showDelay=${this.showDelay}
-        hideDelay=${this.hideDelay}
+        show-delay=${this.showDelay}
+        hide-delay=${this.hideDelay}
         trigger=${this.trigger}
         ?without-arrow=${this.withoutArrow}
       >

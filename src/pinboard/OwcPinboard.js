@@ -38,7 +38,7 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
     /**@type {import('../card-list/CardListTypes.js').Fields<T>} */
     this.fieldMapper = { body: () => '' };
     /**@type {(a: T, b: T) => number} */
-    this.sorter = () => 1;
+    this.sorter = () => 0;
     /**@type {(data: T) => string} */
     this.keyFunction = () => '';
     /**@type {(data: T, column: string) => boolean} */
@@ -55,15 +55,13 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
         )}
       </div>
       <div class="dropzone-container-container">
-      <div class="dropzone-container">
+        <div class="dropzone-container">
           ${Object.entries(this.dropZones).map(([key]) =>
             this.#renderDropzone(/**@type {"success" | "delete"}*/ (key)),
           )}
         </div>
-        </div>
       </div>
-    </div>
-    `;
+    </div>`;
   }
 
   /**@param {"success" | "delete"} dropzone */
@@ -341,7 +339,7 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
    */
   #renderStyles(data) {
     if (!this.fieldMapper.style) {
-      return css``;
+      return '';
     }
     return this.fieldMapper.style(data);
   }
@@ -355,7 +353,7 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
       return nothing;
     }
     return html` <img
-      slot="image"
+      slot="media"
       src=${this.fieldMapper.image.src(data)}
       alt=${this.fieldMapper.image.alt(data)}
     />`;

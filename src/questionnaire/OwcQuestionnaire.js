@@ -1,10 +1,8 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
-import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import '@awesome.me/webawesome/dist/components/button/button.js';
 import '@awesome.me/webawesome/dist/components/button-group/button-group.js';
 import '@awesome.me/webawesome/dist/components/progress-bar/progress-bar.js';
-import { OwcPieChartElement } from '../chart/OwcPieChartElement.js';
 
 /**
  * @typedef {Object<string, string | number>} StyleObject
@@ -18,11 +16,7 @@ import { OwcPieChartElement } from '../chart/OwcPieChartElement.js';
  * @property {Record<`--${string}`, string>=} [cssVariables]
  */
 
-export class OwcQuestionnaire extends ScopedElementsMixin(LitElement) {
-  static scopedElements = {
-    'owc-pie-chart-element': OwcPieChartElement,
-  };
-
+export class OwcQuestionnaire extends LitElement {
   static properties = {
     questionnaire: { type: Array },
     currentIndex: { type: Number },
@@ -131,6 +125,8 @@ export class OwcQuestionnaire extends ScopedElementsMixin(LitElement) {
 
   handleStartAgain() {
     this.currentIndex = 0;
+    this.selectedAnswers = [];
+    this.result = [];
   }
 
   renderOutro() {
@@ -171,6 +167,9 @@ export class OwcQuestionnaire extends ScopedElementsMixin(LitElement) {
   render() {
     const styleVars = this.extractCssVars(this.themeStyles);
     const current = this.questionnaire[this.currentIndex];
+    if (!current) {
+      return nothing;
+    }
     return html`
       <div style=${styleMap(styleVars)} class="card-overview">
         ${
@@ -209,7 +208,6 @@ export class OwcQuestionnaire extends ScopedElementsMixin(LitElement) {
       .outro-container {
         background-color: var(--ci-background);
         border-radius: 1.2rem;
-        //padding: 2rem;
       }
 
       .outro-container wa-button {

@@ -49,6 +49,9 @@ export class OwcDetailCard extends LitElement {
   }
 
   /**
+   * Syncs the host open property when the inner wa-details shows/hides.
+   * wa-details fires wa-show/wa-hide (never toggle); the after-variants only
+   * fire once the animation finished, which stalls in background tabs.
    * @param {Event & { currentTarget: HTMLElement & { open?: boolean } }} event
    */
   handleToggle(event) {
@@ -65,7 +68,8 @@ export class OwcDetailCard extends LitElement {
         class="card"
         style=${styleMap(styles ?? {})}
         ?open=${this.open}
-        @toggle=${this.handleToggle}
+        @wa-show=${this.handleToggle}
+        @wa-hide=${this.handleToggle}
       >
         <div slot="summary" class="summary">
           <div class="content">

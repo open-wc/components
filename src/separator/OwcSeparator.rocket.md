@@ -89,3 +89,22 @@ export const separatorCustomStyling = () => {
 ## Accessibility
 
 The separator automatically sets `role="separator"` on itself and keeps `aria-orientation` in sync with the `vertical` property, so assistive technologies announce it correctly in both orientations.
+
+## API
+
+### Attributes & properties
+
+| Property   | Type      | Default | Description                                |
+| ---------- | --------- | ------- | ------------------------------------------ |
+| `vertical` | `boolean` | `false` | Draws the separator vertically; reflected. |
+
+The element exposes `role="separator"` with a matching `aria-orientation`. Content in the
+default slot renders as the in-between note.
+
+### CSS custom properties
+
+| Property    | Description                 |
+| ----------- | --------------------------- |
+| `--color`   | The color of the lines.     |
+| `--width`   | The line width.             |
+| `--spacing` | Spacing around the content. |

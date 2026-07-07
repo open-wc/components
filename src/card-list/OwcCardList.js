@@ -50,7 +50,7 @@ export class OwcCardList extends ScopedElementsMixin(LitElement) {
         </div>
         <div class="card-wrapper">
           <div class="card-list">
-            ${this.data
+            ${[...this.data]
               .sort(this.sorter)
               .slice(0, 10)
               .map(
@@ -58,7 +58,7 @@ export class OwcCardList extends ScopedElementsMixin(LitElement) {
                   <div class="card">
                     <owc-card
                       href=${this.getCardLinkSettings(elm).href}
-                      styles="${this.#renderStyles(elm)}"
+                      style="${this.#renderStyles(elm)}"
                     >
                       ${this.#renderImage(elm)} ${this.#renderHeader(elm)} ${this.#renderBody(elm)}
                       ${this.#renderFooter(elm)}
@@ -92,7 +92,7 @@ export class OwcCardList extends ScopedElementsMixin(LitElement) {
       return nothing;
     }
     return html` <img
-      slot="image"
+      slot="media"
       src=${this.fields.image.src(data)}
       alt=${this.fields.image.alt(data)}
     />`;

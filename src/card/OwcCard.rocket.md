@@ -99,3 +99,26 @@ export const cardLink = () => {
   `;
 };
 ```
+
+## API
+
+### Attributes & properties
+
+| Property      | Type      | Default | Description                                                                   |
+| ------------- | --------- | ------- | ----------------------------------------------------------------------------- |
+| `href`        | `string`  | `''`    | Renders the whole card as an overlay link to this URL.                        |
+| `with-header` | `boolean` | `false` | Reserves the header area; set automatically when the `header` slot is filled. |
+| `with-footer` | `boolean` | `false` | Reserves the footer area; set automatically when the `footer` slot is filled. |
+| `with-media`  | `boolean` | `false` | Reserves the media area; set automatically when the `media` slot is filled.   |
+
+### Slots
+
+| Slot        | Description             |
+| ----------- | ----------------------- |
+| _(default)_ | The card body.          |
+| `media`     | Image/media at the top. |
+| `header`    | The card header.        |
+| `footer`    | The card footer.        |
+
+All areas are exposed as CSS parts (`media`, `header`, `body`, `footer`); spacing is
+controlled by the `--spacing` custom property.

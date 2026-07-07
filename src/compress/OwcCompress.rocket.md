@@ -53,8 +53,18 @@ export const demodecompressStringFromBase64 = async () => {
   const control = await decompressStringFromBase64(output);
 
   return html`
-    <div"><span style="font-weight: bold;">Compressed:</span> ${output}</div>
-    <div><span style="font-weight: bold;">Decompressed:</span>  ${control}</div>
+    <div><span style="font-weight: bold;">Compressed:</span> ${output}</div>
+    <div><span style="font-weight: bold;">Decompressed:</span> ${control}</div>
   `;
 };
 ```
+
+## API
+
+Importable from `@open-wc/components/compress.js`. Both functions run in the browser and in
+Node (18+) - they use the platform's `CompressionStream`/`DecompressionStream`.
+
+| Function                           | Signature                     | Description                                                                |
+| ---------------------------------- | ----------------------------- | -------------------------------------------------------------------------- |
+| `compressStringToBase64(text)`     | `(string) => Promise<string>` | Gzips the text and returns it base64-encoded.                              |
+| `decompressStringFromBase64(text)` | `(string) => Promise<string>` | Reverses it; rejects when the input is not valid base64-encoded gzip data. |

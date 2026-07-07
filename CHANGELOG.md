@@ -40,6 +40,29 @@ All notable changes to this project will be documented in this file.
   it stays empty - read the current list from the `files` property.
 - `OwcFileUpload`: `renderCardContent` is declared as a non-attribute property, and a stray
   `</div>` inside each file card template was removed.
+- `OwcTooltip`: `show-delay` and `hide-delay` are now actually forwarded to the underlying
+  `wa-tooltip` - they were bound as `showDelay`/`hideDelay` attributes, which it ignores.
+- `OwcCard`: a media element added after the first render is now detected - the slot
+  controller was registered for a non-existent `image` slot instead of `media`, so late
+  `media` content never re-rendered the card.
+- `OwcDetailCard`: the `open` property stays in sync when the user toggles the card - the
+  component listened for a `toggle` event that `wa-details` never fires (it fires
+  `wa-show`/`wa-hide`).
+- `OwcCardList`: sorting no longer mutates the `data` array passed in by the consumer;
+  images now render into the card's `media` slot (they were slotted as `image`, which
+  `owc-card` does not have, and never showed); the per-card `fields.style` result is applied
+  as the `style` attribute instead of a meaningless `styles` attribute.
+- `OwcPinboard`: card images now render into the card's `media` slot (same `image`-slot bug
+  as the card list); removed a stray closing tag from the board template.
+- `OwcQuestionnaire`: rendering with an empty `questionnaire` no longer crashes; "Test
+  wiederholen" starts a fresh run (previously old answers and the old result were kept);
+  removed an invalid `//` CSS comment and an unused pie-chart scoped element that pulled
+  the whole apexcharts dependency into the questionnaire bundle.
+- `OwcLayoutSidebar`: the documented `menuTopTemplate` property is now rendered (between
+  logo and menu) - it existed in the public types but was silently ignored.
+- `decompressStringFromBase64`: invalid input no longer causes unhandled promise rejections
+  on top of the returned rejection; the leftover `compress.demo.js` scratch file was removed
+  from the package.
 - `OwcTableMassEdit`: the textarea and checkbox mass-edit forms now work standalone - the
   component registers `wa-textarea`, `wa-checkbox`, `wa-input`, and `wa-button` itself
   instead of relying on other components having imported them; unused radio imports were

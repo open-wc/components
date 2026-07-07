@@ -79,3 +79,16 @@ export const loadingScreenWithLogo = () => {
   `;
 };
 ```
+
+## API
+
+### Attributes & properties
+
+| Property   | Type             | Default | Description                                                             |
+| ---------- | ---------------- | ------- | ----------------------------------------------------------------------- |
+| `progress` | `number`         | `0`     | Progress from 0 to 1; displayed as a percentage that never exceeds 99%. |
+| `autofill` | `boolean`        | `false` | Advances the progress automatically (~1% per 150ms) until turned off.   |
+| `logoSvg`  | `TemplateResult` | `''`    | Optional logo rendered above the spinner.                               |
+
+The autofill timer is bound to the element's lifecycle - it stops when the element is
+disconnected.

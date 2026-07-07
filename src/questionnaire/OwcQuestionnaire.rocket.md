@@ -181,3 +181,20 @@ export const questionnaireDemo = () => {
   ></owc-questionnaire>`;
 };
 ```
+
+## API
+
+### Attributes & properties
+
+| Property          | Type                                           | Default    | Description                                                                   |
+| ----------------- | ---------------------------------------------- | ---------- | ----------------------------------------------------------------------------- |
+| `questionnaire`   | `Questionnaire[]`                              | `[]`       | The steps: one `intro`, then `question`s, then one `outro`.                   |
+| `calculateResult` | `(questionnaire, selectedAnswers) => Result[]` | `() => []` | Called after the last question; the result is passed to the outro's `text()`. |
+| `selectedAnswers` | `number[]`                                     | `[]`       | The chosen option index per step (read).                                      |
+| `currentIndex`    | `number`                                       | `0`        | The current step (read/write).                                                |
+| `themeStyles`     | `object`                                       | `{}`       | `questionText`/`outroText` style maps plus `--*` CSS custom properties.       |
+
+Steps have a `type` (`intro` \| `question` \| `outro`), a `text()` template function
+(the outro's receives `{ result, renderResultText }`), `options` (`{ label }[]`) for
+intro/questions, and `headline()` for the outro. "Test wiederholen" restarts with fresh
+answers.

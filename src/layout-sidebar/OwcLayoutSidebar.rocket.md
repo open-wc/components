@@ -165,3 +165,19 @@ export const layoutSidebarFull = () => {
 | Method               | Description                                                                                                                                                                      |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `loadStateFromUrl()` | Marks the menu item whose href (including `hrefGETParams`) matches the current URL as selected and opens its ancestor groups. Called automatically when the element is connected |
+
+## API
+
+### Attributes & properties
+
+| Property             | Type             | Default | Description                                                              |
+| -------------------- | ---------------- | ------- | ------------------------------------------------------------------------ |
+| `menuItemList`       | `MenuItem[]`     | `[]`    | The main menu. Items with `subMenuItemList` render as expandable groups. |
+| `menuBottomItemList` | `MenuItem[]`     | `[]`    | Menu pinned to the bottom of the sidebar.                                |
+| `menuTopTemplate`    | `TemplateResult` | -       | Rendered between the logo and the menu (e.g. a user badge).              |
+| `logoSvg`            | `TemplateResult` | empty   | The logo at the top.                                                     |
+
+`MenuItem` (importable from `@open-wc/components/OwcLayoutSidebar.types.js`): `label`,
+`href`, `icon?`, `hrefGETParams?` (object or query string), `visible?`, `open?`,
+`subMenuItemList?`. On load the item matching the current URL is marked `selected` and its
+parent groups are opened. The page content goes into the default slot.

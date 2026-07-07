@@ -229,3 +229,18 @@ export const cardLink = () => {
   `;
 };
 ```
+
+## API
+
+### Attributes & properties
+
+| Property              | Type                | Default    | Description                                                                                  |
+| --------------------- | ------------------- | ---------- | -------------------------------------------------------------------------------------------- |
+| `title`               | `string`            | `''`       | Heading above the list.                                                                      |
+| `viewAllUrl`          | `string`            | `''`       | Renders an "Alle Anzeigen" link to this URL.                                                 |
+| `data`                | `T[]`               | `[]`       | The rows; at most the first 10 (after sorting) render as cards.                              |
+| `fields`              | `Fields<T>`         | `{ body }` | Maps a row to card content: `body`, `header?`, `footer?`, `image?` (`{src, alt}`), `style?`. |
+| `sorter`              | `(a, b) => number`  | keep order | Display sort; the data array itself is not mutated.                                          |
+| `getCardLinkSettings` | `(row) => { href }` | no links   | Makes each card an overlay link.                                                             |
+
+The field types are importable from `@open-wc/components/OwcCardList.types.js`.

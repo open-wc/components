@@ -4,24 +4,7 @@ import '@awesome.me/webawesome/dist/components/split-panel/split-panel.js';
 
 /** @typedef {import('./OwcLayoutSidebar.types.js').MenuItem} MenuItem */
 
-/**
- * @param {string} href
- * @param {Record<string, string>} hrefGet
- * @returns {string}
- */
-function getFullHref(href, hrefGet) {
-  const searchParams =
-    hrefGet && typeof hrefGet === 'string' ? new URLSearchParams(hrefGet) : new URLSearchParams();
-  if (hrefGet && typeof hrefGet === 'object') {
-    for (const [key, value] of Object.entries(hrefGet)) {
-      searchParams.set(key, value);
-    }
-  }
-  // @ts-ignore
-  const size = searchParams.size;
-
-  return size > 0 ? `${href}?${searchParams}` : href;
-}
+import { getFullHref } from './hrefHelpers.js';
 
 export class OwcLayoutSidebar extends LitElement {
   static get properties() {
@@ -39,6 +22,8 @@ export class OwcLayoutSidebar extends LitElement {
     this.menuItemList = [];
     /** @type {MenuItem[]} */
     this.menuBottomItemList = [];
+    /** @type {import('lit').TemplateResult | undefined} */
+    this.menuTopTemplate = undefined;
     this.logoSvg = html``;
   }
 
@@ -138,6 +123,7 @@ export class OwcLayoutSidebar extends LitElement {
           <div id="sidebar">
             <div id="top">
               ${this.logoSvg ? html`<div id="logo">${this.logoSvg}</div>` : ''}
+              ${this.menuTopTemplate ?? nothing}
               <ul>
                 ${this.menuItemList.map(menuItem => this.renderMenuItem(menuItem))}
               </ul>

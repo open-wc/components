@@ -12,11 +12,11 @@ export class OwcCard extends LitElement {
 
   constructor() {
     super();
-    this.hasSlotController = new HasSlotController(this, 'footer', 'header', 'image');
+    // the registered slot names re-render the card on slotchange
+    this.hasSlotController = new HasSlotController(this, 'footer', 'header', 'media');
     this.withHeader = false;
     this.withFooter = false;
     this.withMedia = false;
-    this.withHref = false;
     this.href = '';
   }
 
@@ -30,7 +30,6 @@ export class OwcCard extends LitElement {
     if (!this.withFooter && this.hasSlotController.test('footer')) {
       this.withFooter = true;
     }
-    this.withHref = !!this.href;
   }
 
   render() {

@@ -119,3 +119,22 @@ export const tooltipHtml = () => {
   `;
 };
 ```
+
+## API
+
+Wraps `wa-tooltip`; the element in the `anchor` slot is the tooltip target, the default slot
+is the tooltip content.
+
+### Attributes & properties
+
+| Property        | Type      | Default         | Description                                                     |
+| --------------- | --------- | --------------- | --------------------------------------------------------------- |
+| `placement`     | `string`  | `'top'`         | Preferred placement (`top`, `bottom-start`, ...).               |
+| `distance`      | `number`  | `8`             | Distance from the anchor in px.                                 |
+| `skidding`      | `number`  | `0`             | Offset along the anchor in px.                                  |
+| `show-delay`    | `number`  | `150`           | Delay before showing in ms.                                     |
+| `hide-delay`    | `number`  | `0`             | Delay before hiding in ms.                                      |
+| `trigger`       | `string`  | `'hover focus'` | Space-separated triggers (`hover`, `focus`, `click`, `manual`). |
+| `open`          | `boolean` | `false`         | Shows the tooltip; reflected.                                   |
+| `disabled`      | `boolean` | `false`         | Disables the tooltip; reflected.                                |
+| `without-arrow` | `boolean` | `false`         | Hides the arrow.                                                |
