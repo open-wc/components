@@ -11,7 +11,7 @@ import '@awesome.me/webawesome/dist/components/radio/radio.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import '@awesome.me/webawesome/dist/components/relative-time/relative-time.js';
 import { OwcTemplateEditor } from '../template-editor/OwcTemplateEditor.js';
-import { OwcEmailTagRadioGroup } from './OwcEmailTagRadioGroup.js';
+import { resolveRecipientStatus, useShortFormatter } from './recipientHelpers.js';
 
 /**
  * @typedef {{
@@ -29,7 +29,6 @@ export class OwcComposeEmail extends ScopedElementsMixin(LitElement) {
   static scopedElements = {
     'owc-autocomplete': OwcAutocomplete,
     'owc-template-editor': OwcTemplateEditor,
-    'owc-email-tag-radio-group': OwcEmailTagRadioGroup,
   };
 
   static properties = {
@@ -173,35 +172,16 @@ export class OwcComposeEmail extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * @param {import('lit').PropertyValues} changedProperties
-   */
-  updated(changedProperties) {
-    if (changedProperties.has('tags')) {
-      // tag radio group might have changed when tags update
-      this.tagRadioGroup = /**@type {HTMLSelectElement}*/ (
-        this.shadowRoot?.querySelector('#tag-radio')
-      );
-    }
-    super.updated(changedProperties);
-  }
-
-  /**
    *
    * @param {T} recipient
    */
   getRecipientStatus(recipient) {
-    const externalIsGood = this.recipientIsGood(recipient);
     const currentTag = this.currentTemplateRecord?.options?.tag;
-    if (!currentTag) {
-      return externalIsGood;
-    }
-    const hasTag = recipient.tagList?.includes(currentTag);
-    // Have externalIsGood take priority over tags
-    if (hasTag || !externalIsGood.good) {
-      return externalIsGood;
-    }
-
-    return { good: false, reason: 'Hat kein Interesse an dieser E-Mail' };
+    return resolveRecipientStatus(
+      this.recipientIsGood(recipient),
+      !!(currentTag && recipient.tagList?.includes(currentTag)),
+      !!currentTag,
+    );
   }
 
   // Needs a stale pointer because of wave based updates
@@ -394,11 +374,7 @@ export class OwcComposeEmail extends ScopedElementsMixin(LitElement) {
   }
 
   renderRecipientList() {
-    if (
-      this.formatterMode === 'short' ||
-      (this.formatterMode.includes('auto') &&
-        this.recipientList.length >= Number.parseInt(this.formatterMode))
-    ) {
+    if (useShortFormatter(this.formatterMode, this.recipientList.length)) {
       return this.shortEmailFormatter(this.recipientList, this.recipientListGood);
     }
 
@@ -494,11 +470,6 @@ export class OwcComposeEmail extends ScopedElementsMixin(LitElement) {
           ></wa-input>
 
           <div class="send-button-container">
-            <!-- ${
-              this.sendDate
-                ? html`<wa-relative-time date=${this.sendDate.toISOString()}></wa-relative-time>`
-                : html`<span>sofort</span>`
-            } -->
             <div class="extra-actions">${this.extraActions?.(this.recipientListGood) || ''}</div>
             <div class="send-button-wrapper">
               <wa-button

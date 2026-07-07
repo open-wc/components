@@ -664,3 +664,37 @@ export const helpButton = () => {
     <button @click="${handleClick}" id="validate-button">Validate</button> `;
 };
 ```
+
+## API (owc-template-editor)
+
+`<owc-template-editor>` is the orchestrator: it renders either the classic editor
+(`owc-template-editor-old`, textarea-based - the default) or the visual GrapesJS/MJML editor
+(`owc-template-editor-new`) and forwards its full configuration to whichever is active. The
+"Neuer Editor" switch (hide via `show-editor-switch`/`showEditorSwitch = false`) toggles
+between them at runtime.
+
+### Key attributes & properties
+
+| Property                                                                                       | Description                                                                                 |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `templates`                                                                                    | `Record<string, TemplateRecord>` - the selectable templates (see `OwcTemplateEditorTypes`). |
+| `useNewEditor`                                                                                 | Starts with the GrapesJS editor instead of the classic one.                                 |
+| `previewMode`, `previewData`, `previewDataParameter`                                           | Preview rendering with resolved `{client.*}`/`{user.*}`/`{default.*}` variables.            |
+| `showSubject`, `subject`                                                                       | Subject line editing.                                                                       |
+| `tags`, `showEmailTagSelection`                                                                | Email tag selection (renders `owc-email-tag-radio-group`).                                  |
+| `textModuleOptions`                                                                            | Insertable text modules.                                                                    |
+| `postProcessor`                                                                                | `(html, recipient) => string` applied after variable replacement.                           |
+| `enableMultiTemplate`, `showMultiTemplateButtons`, `currentIndex`                              | Multi-step template sequences.                                                              |
+| `grapeEditorBlocks`, `defaultStyling`, `defaultStyleAttributesByComponent`, `componentOptions` | GrapesJS-editor configuration.                                                              |
+| `showFileUpload`, `handleFileUpload`, `renderFileContent`                                      | Attachment handling.                                                                        |
+
+### Methods & read-only properties
+
+| Member                                                  | Description                                                                                                                     |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `generateValueForData(data, dataParameter, options?)`   | `{subject, html}` with variables resolved (delegates to the shared `generateValueForData` helper); MJML templates are compiled. |
+| `currentTemplateRecord`                                 | The selected template record (get/set, delegated to the inner editor).                                                          |
+| `validate()` / `valid`                                  | Validates the template's JSON-schema options form.                                                                              |
+| `getCurrentTemplate()` / `templateData` / `markSaved()` | Inner-editor passthroughs.                                                                                                      |
+
+Events from the inner editor (`templateUpdate`, `tag-change`) are re-dispatched on the host.

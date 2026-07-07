@@ -613,3 +613,106 @@ describe('json-form schema mode', () => {
     expect(el.shadowRoot.textContent).to.include('string');
   });
 });
+
+describe('json-form additional layouts and renderers', () => {
+  it('renders a horizontal layout with one nested form per element', async () => {
+    const el = await fixture(
+      html`<json-form
+        .schema=${personSchema}
+        .uiSchema=${{
+          type: 'HorizontalLayout',
+          elements: [
+            { type: 'Control', scope: '#/properties/name' },
+            { type: 'Control', scope: '#/properties/age' },
+          ],
+        }}
+      ></json-form>`,
+    );
+    const layout = await shadowQuery(el, 'horizontal-layout');
+    expect(layout).to.exist;
+    expect(layout.shadowRoot.querySelectorAll('json-form').length).to.equal(2);
+    expect(getComputedStyle(layout.shadowRoot.querySelector('.flex')).display).to.equal('flex');
+  });
+
+  it('renders a details layout with the formatted summary and hidden content', async () => {
+    const el = await fixture(
+      html`<json-form
+        .schema=${{
+          type: 'object',
+          properties: { street: { type: 'string' }, nr: { type: 'string' } },
+        }}
+        .uiSchema=${{
+          type: 'DetailsLayout',
+          label: 'My Address',
+          options: { formatter: '{street} {nr}', formatterScope: '#/properties' },
+          subLayout: {
+            type: 'VerticalLayout',
+            elements: [
+              { type: 'Control', scope: '#/properties/street' },
+              { type: 'Control', scope: '#/properties/nr' },
+            ],
+          },
+        }}
+        .value=${{ street: 'Broadway', nr: '2' }}
+      ></json-form>`,
+    );
+    const layout = await shadowQuery(el, 'details-layout');
+    expect(layout).to.exist;
+    expect(layout.shadowRoot.textContent).to.contain('My Address');
+    expect(layout.shadowRoot.textContent).to.contain('Broadway 2');
+    expect(layout.shadowRoot.querySelector('json-form')).to.exist;
+  });
+
+  it('switches to clickEditable renderers via uiSchema options', async () => {
+    const el = await fixture(
+      html`<json-form
+        .schema=${personSchema}
+        .uiSchema=${{
+          type: 'VerticalLayout',
+          elements: [{ type: 'Control', scope: '#/properties/name' }],
+          options: { renderers: 'clickEditable' },
+        }}
+        .value=${{ name: 'Ada' }}
+      ></json-form>`,
+    );
+    const clickEditable = await shadowQuery(
+      el,
+      'vertical-layout',
+      'json-form',
+      'owc-click-editable-input',
+    );
+    expect(clickEditable).to.exist;
+    expect(clickEditable.value).to.equal('Ada');
+  });
+
+  it('submits clickEditable edits into the form value', async () => {
+    const el = await fixture(
+      html`<json-form
+        .schema=${personSchema}
+        .uiSchema=${{
+          type: 'VerticalLayout',
+          elements: [{ type: 'Control', scope: '#/properties/name' }],
+          options: { renderers: 'clickEditable' },
+        }}
+        .value=${{ name: 'Ada' }}
+      ></json-form>`,
+    );
+    const clickEditable = await shadowQuery(
+      el,
+      'vertical-layout',
+      'json-form',
+      'owc-click-editable-input',
+    );
+
+    clickEditable.shadowRoot.querySelector('.display').dispatchEvent(new Event('dblclick'));
+    await clickEditable.updateComplete;
+    clickEditable.inputElement.value = 'Grace';
+    clickEditable.inputElement.dispatchEvent(new Event('input'));
+
+    setTimeout(() =>
+      clickEditable.inputElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' })),
+    );
+    await oneEvent(el, 'formDataChange');
+    expect(el.value.name).to.equal('Grace');
+  });
+});

@@ -1,4 +1,4 @@
-import { fixture, html, expect, aTimeout } from '@open-wc/testing';
+import { fixture, html, expect, aTimeout, waitUntil } from '@open-wc/testing';
 import { OwcPinboard } from './OwcPinboard.js';
 
 customElements.define('owc-pinboard', OwcPinboard);
@@ -31,7 +31,10 @@ async function pinboardFixture(overrides = {}) {
       .canDrop=${overrides.canDrop ?? (() => true)}
     ></owc-pinboard>`,
   );
-  await aTimeout(30); // let the virtualizer render
+  // the virtualizer renders asynchronously, slower under parallel test load
+  await waitUntil(() => el.shadowRoot.querySelector('.column owc-card'), 'cards never rendered', {
+    timeout: 4000,
+  });
   return el;
 }
 
@@ -91,7 +94,9 @@ describe('owc-pinboard', () => {
       },
     ];
     await el.updateComplete;
-    await aTimeout(30);
+    await waitUntil(() => columnEls(el)[0]?.querySelector('owc-card'), 'cards never re-rendered', {
+      timeout: 4000,
+    });
 
     const [todoCol, doneCol] = columnEls(el);
     const card = todoCol.querySelector('owc-card');
