@@ -5,6 +5,11 @@ import '@awesome.me/webawesome/dist/components/button/button.js';
 import { html, literal } from 'lit/static-html.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 
+import { getLinkAttributes } from './linkHelpers.js';
+
+/**
+ * A borderless icon-only button; renders as an anchor when `href` is set.
+ */
 export class OwcIconButton extends LitElement {
   static properties = {
     name: { type: String },
@@ -23,21 +28,12 @@ export class OwcIconButton extends LitElement {
     /**@type {'_blank' | '_parent' | '_self' | '_top' | ''} */
     this.target = '';
     this.download = '';
-    this.disabled = '';
+    this.disabled = false;
     this.label = '';
     this.variant = '';
   }
 
-  #handleBlur() {
-    this.hasFocus = false;
-  }
-
-  #handleFocus() {
-    this.hasFocus = true;
-  }
-
   /**
-   *
    * @param {Event} event
    */
   #handleClick(event) {
@@ -48,7 +44,7 @@ export class OwcIconButton extends LitElement {
   }
 
   get button() {
-    return /**@type {HTMLButtonElement | HTMLLinkElement | undefined}*/ (
+    return /**@type {HTMLButtonElement | HTMLAnchorElement | undefined}*/ (
       this.shadowRoot?.querySelector('.icon-button')
     );
   }
@@ -58,10 +54,9 @@ export class OwcIconButton extends LitElement {
     this.button?.click();
   }
 
-  /** Sets focus on the icon button. */
   /**
-   *
-   * @param {FocusOptions} options
+   * Sets focus on the icon button.
+   * @param {FocusOptions} [options]
    */
   focus(options) {
     this.button?.focus(options);
@@ -75,29 +70,26 @@ export class OwcIconButton extends LitElement {
   render() {
     const isLink = !!this.href;
     const tag = isLink ? literal`a` : literal`button`;
+    const link = getLinkAttributes(this);
     return html`
       <${tag}
         class="icon-button"
-        ?disabled=${ifDefined(isLink ? undefined : this.disabled)}
+        ?disabled=${!isLink && this.disabled}
         type=${ifDefined(isLink ? undefined : 'button')}
-        href=${ifDefined(isLink ? this.href : undefined)}
-        target=${ifDefined(isLink ? this.target : undefined)}
-        download=${ifDefined(isLink ? this.download : undefined)}
-        rel=${ifDefined(isLink && this.target ? 'noreferrer noopener' : undefined)}
-        role=${ifDefined(isLink ? undefined : 'button')}
+        href=${ifDefined(isLink ? link.href : undefined)}
+        target=${ifDefined(isLink ? link.target : undefined)}
+        download=${ifDefined(isLink ? link.download : undefined)}
+        rel=${ifDefined(isLink ? link.rel : undefined)}
         aria-disabled=${this.disabled ? 'true' : 'false'}
-        aria-label="${this.label}"
+        aria-label=${ifDefined(this.label || undefined)}
         tabindex=${this.disabled ? '-1' : '0'}
-        @blur=${this.#handleBlur}
-        @focus=${this.#handleFocus}
         @click=${this.#handleClick}
-      
       >
       <wa-icon
         class="icon-button__icon"
         name=${this.name}
         aria-hidden="true"
-        variant=${this.variant}
+        variant=${ifDefined(this.variant || undefined)}
       ></wa-icon>
       </${tag}>
     `;
@@ -126,20 +118,22 @@ export class OwcIconButton extends LitElement {
         -webkit-appearance: none;
       }
 
-      .icon-button:hover:not(.icon-button:disabled),
-      .icon-button:focus-visible:not(.icon-button:disabled) {
+      .icon-button:hover:not(:disabled, [aria-disabled='true']),
+      .icon-button:focus-visible:not(:disabled, [aria-disabled='true']) {
         color: var(--wa-color-brand-40);
       }
 
-      .icon-button:active:not(.icon-button--disabled) {
-        color: var(--sl-color-brand-30);
+      .icon-button:active:not(:disabled, [aria-disabled='true']) {
+        color: var(--wa-color-brand-30);
       }
 
       .icon-button:focus {
         outline: none;
       }
 
-      .icon-button:disabled {
+      /* :disabled only matches the button variant; disabled links match via aria-disabled */
+      .icon-button:disabled,
+      .icon-button[aria-disabled='true'] {
         opacity: 0.5;
         cursor: not-allowed;
       }

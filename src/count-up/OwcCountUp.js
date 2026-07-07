@@ -1,6 +1,12 @@
 import { LitElement, html, css } from 'lit';
 import { CountUp } from 'countup.js';
 
+import { mergeCountUpOptions } from './mergeCountUpOptions.js';
+
+/**
+ * Animates a number counting up to `end`, powered by countup.js.
+ * By default the animation starts when the element scrolls into view.
+ */
 export class OwcCountUp extends LitElement {
   static properties = {
     start: { type: Number },
@@ -11,7 +17,6 @@ export class OwcCountUp extends LitElement {
   };
 
   /** @type {CountUp | undefined} */
-  // eslint-disable-next-line no-unused-private-class-members
   #countUp = undefined;
 
   constructor() {
@@ -27,6 +32,11 @@ export class OwcCountUp extends LitElement {
     };
   }
 
+  /** The underlying countup.js instance, e.g. for `countUp.reset()`. */
+  get countUp() {
+    return this.#countUp;
+  }
+
   get #target() {
     if (this.shadowRoot) {
       return /** @type {HTMLElement} */ (this.shadowRoot.querySelector('#target'));
@@ -37,7 +47,8 @@ export class OwcCountUp extends LitElement {
   /**
    * @param {import('lit').PropertyValues} changedProperties
    */
-  update(changedProperties) {
+  updated(changedProperties) {
+    super.updated(changedProperties);
     if (
       changedProperties.has('start') ||
       changedProperties.has('end') ||
@@ -45,26 +56,14 @@ export class OwcCountUp extends LitElement {
       changedProperties.has('separator') ||
       changedProperties.has('options')
     ) {
-      this.options = {
-        startVal: this.start,
-        duration: this.duration,
-        separator: this.separator,
-        ...this.options,
-      };
       this.#setup();
     }
-
-    super.update(changedProperties);
   }
 
   #setup() {
     if (this.#target) {
-      this.#countUp = new CountUp(this.#target, this.end, this.options);
+      this.#countUp = new CountUp(this.#target, this.end, mergeCountUpOptions(this, this.options));
     }
-  }
-
-  firstUpdated() {
-    this.#setup();
   }
 
   render() {

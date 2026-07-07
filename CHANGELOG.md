@@ -15,9 +15,31 @@ All notable changes to this project will be documented in this file.
 - `OwcInputAutofill.types.ts` export: the option shape (`OwcInputAutofillOption`,
   `OwcInputAutofillData`) is now importable from
   `@open-wc/components/OwcInputAutofill.types.js`.
+- `OwcCountUp`: the underlying countup.js instance is exposed as the read-only `countUp`
+  property, e.g. for `countUp.reset()`.
+- `OwcFileUpload`: the empty-state text is configurable via the new `label` property (also
+  used as the drop area's accessible name), and the drop area is keyboard operable
+  (focusable, Enter/Space opens the file dialog).
 
 ### Fixed
 
+- `OwcCountUp`: property changes after the first render now take effect - the merged
+  countup.js options used to be written back into the `options` property, so the stale
+  first merge shadowed every later `start`/`duration`/`separator` change.
+- `OwcIconButton`: links no longer render a bare `download=""` attribute, which turned every
+  same-origin link into a download instead of a navigation; empty `target`/`download` are
+  treated as unset.
+- `OwcIconButton`: no empty `aria-label` is rendered when no `label` is set, disabled links
+  are styled like disabled buttons (the old `:active` rule referenced a class that was never
+  applied and a stale `--sl-*` custom property), `disabled` initializes as a real boolean,
+  and dead internal focus tracking was removed.
+- `OwcFileUpload`: adding files no longer mutates the `files` array passed in by the
+  consumer - the list is replaced on every change.
+- `OwcFileUpload`: the `files-selected` event detail now lists only the files that were
+  actually added (duplicates are skipped instead of being reported as selected); on removal
+  it stays empty - read the current list from the `files` property.
+- `OwcFileUpload`: `renderCardContent` is declared as a non-attribute property, and a stray
+  `</div>` inside each file card template was removed.
 - `OwcInputAutofill`: fixed a lifecycle bug where `updated()` called `super.update()` instead
   of `super.updated()`, forcing a second render pass on every update.
 - `OwcInputAutofill`: options with an empty `label` can now be picked - selection validation

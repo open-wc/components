@@ -3,16 +3,27 @@ import { LitElement, html, css } from 'lit';
 import { OwcCard } from '../card/OwcCard.js';
 import { OwcIconButton } from '../icon-button/OwcIconButton.js';
 
+import { addFiles, fileIsEqual } from './fileHelpers.js';
+
 /**
  * @typedef {File & Record<string,any>} FilePlus
  */
 
+/**
+ * A drop area for selecting files via drag & drop, click, or keyboard.
+ * Selected files render as removable cards.
+ *
+ * @fires files-selected - after files are added (detail.files lists the newly
+ *   added files) or removed (detail.files is empty); read the current list
+ *   from the files property
+ */
 export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
   static properties = {
     dragging: { type: Boolean, reflect: true },
     files: { type: Array },
-    renderCardContent: { type: Function },
+    renderCardContent: { attribute: false },
     multiple: { type: Boolean },
+    label: { type: String },
   };
 
   static scopedElements = {
@@ -23,20 +34,24 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
   constructor() {
     super();
     this.dragging = false;
-    /**@type {(FilePlus)[]} */
-    (this.files = []);
+    /** @type {FilePlus[]} */
+    this.files = [];
     this.renderCardContent = this.renderCardContentDefault;
     this.multiple = true;
+    this.label = 'Dateien hierher ziehen oder klicken, um hochzuladen';
   }
 
   render() {
     return html`
       <div
         class="drop-area"
+        tabindex="0"
+        aria-label=${this.label}
         @dragover=${this._onDragOver}
         @dragleave=${this._onDragLeave}
         @drop=${this._onDrop}
         @click=${this._onClick}
+        @keydown=${this._onKeyDown}
       >
         <input
           type="file"
@@ -49,30 +64,35 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
             ? html`<div class="file-list">
                 ${this.files.map(
                   file =>
-                    html`<owc-card @click=${(/** @type {Event} */ ev) => ev.stopPropagation()}>${(this.renderCardContent || this.renderCardContentDefault)(file, this.removeFile.bind(this))}</owc-card></div>`,
+                    html`<owc-card @click=${(/** @type {Event} */ ev) => ev.stopPropagation()}
+                      >${(this.renderCardContent || this.renderCardContentDefault)(
+                        file,
+                        this.removeFile.bind(this),
+                      )}</owc-card
+                    >`,
                 )}
               </div> `
-            : html`<span class="upload-label"
-                >Dateien hierher ziehen oder klicken, um hochzuladen</span
-              >`
+            : html`<span class="upload-label">${this.label}</span>`
         }
       </div>
     `;
   }
 
   /**
-   *
    * @param {FilePlus} file
    * @param {OwcFileUpload['removeFile']} removeFile
-   * @returns
+   * @returns {import('lit').TemplateResult}
    */
   renderCardContentDefault(file, removeFile) {
     return html`${file.name}
-      <owc-icon-button @click=${() => removeFile(file)} name="x"></owc-icon-button>`;
+      <owc-icon-button
+        @click=${() => removeFile(file)}
+        name="x"
+        label="Remove ${file.name}"
+      ></owc-icon-button>`;
   }
 
   /**
-   *
    * @param {File} file
    */
   removeFile(file) {
@@ -86,9 +106,22 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
     );
   }
 
+  get #fileInput() {
+    return /**@type {HTMLInputElement}*/ (this.shadowRoot?.getElementById('fileInput'));
+  }
+
   _onClick() {
-    const input = /**@type {HTMLInputElement}*/ (this.shadowRoot?.getElementById('fileInput'));
-    input.click();
+    this.#fileInput.click();
+  }
+
+  /**
+   * @param {KeyboardEvent} event
+   */
+  _onKeyDown(event) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      this.#fileInput.click();
+    }
   }
 
   /**
@@ -132,44 +165,27 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * @param {File[]} files
+   * @param {File} file1
+   * @param {File} file2
+   * @returns {boolean}
    */
-  _handleFiles(files) {
-    if (!this.multiple) {
-      this.files = [files[0]];
-      this.dispatchEvent(
-        new CustomEvent('files-selected', {
-          detail: { files: [files[0]] },
-          bubbles: true,
-          composed: true,
-        }),
-      );
-      return;
-    }
+  fileIsEqual(file1, file2) {
+    return fileIsEqual(file1, file2);
+  }
 
-    for (const file of files) {
-      if (this.files.every(elm => !this.fileIsEqual(file, elm))) {
-        this.files.push(file);
-      }
-    }
-    this.files = [...this.files];
+  /**
+   * @param {File[]} incoming
+   */
+  _handleFiles(incoming) {
+    const { files, added } = addFiles(this.files, incoming, this.multiple);
+    this.files = files;
     this.dispatchEvent(
       new CustomEvent('files-selected', {
-        detail: { files },
+        detail: { files: added },
         bubbles: true,
         composed: true,
       }),
     );
-  }
-
-  /**
-   *
-   * @param {File} file1
-   * @param {File} file2
-   * @returns
-   */
-  fileIsEqual(file1, file2) {
-    return file1.size === file2.size && file1.name === file2.name && file1.type === file2.type;
   }
 
   static styles = css`
@@ -188,6 +204,11 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
     :host([dragging]) {
       background-color: var(--wa-color-brand-95);
       border-color: var(--wa-color-brand-60);
+    }
+
+    .drop-area:focus-visible {
+      outline: var(--wa-focus-ring);
+      outline-offset: var(--wa-focus-ring-offset);
     }
 
     input[type='file'] {
