@@ -5,6 +5,7 @@ import { OwcAutocomplete } from '../autocomplete/OwcAutocomplete.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import '@awesome.me/webawesome/dist/components/copy-button/copy-button.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
+import { labelForValue, labelsForValues } from './labelHelpers.js';
 
 /**
  * @template {Record<string, unknown>} T
@@ -16,10 +17,10 @@ export class OwcClickEditableAutocomplete extends ScopedElementsMixin(OwcClickEd
 
   static properties = {
     ...super.properties,
+    data: { attribute: false },
     multiple: { type: Boolean },
     clearable: { type: Boolean },
     hideSelectAll: { type: Boolean, attribute: 'hide-select-all' },
-    hasFocus: { type: Boolean },
   };
 
   constructor() {
@@ -29,7 +30,6 @@ export class OwcClickEditableAutocomplete extends ScopedElementsMixin(OwcClickEd
     this.multiple = false;
     this.clearable = false;
     this.hideSelectAll = false;
-    this.hasFocus = false;
   }
 
   get open() {
@@ -61,32 +61,27 @@ export class OwcClickEditableAutocomplete extends ScopedElementsMixin(OwcClickEd
   }
 
   /**
+   * Labels are looked up loosely on purpose ('100' matches 100); values
+   * without a matching option are skipped.
    *
    * @param {any} value
    */
   defaultFormatter(value) {
     if (Array.isArray(value)) {
-      const formattedValue = value
-        .map(val => this.data.find(elm => elm.value === val)?.label)
-        .join(', ');
+      const formattedValue = labelsForValues(this.data, value);
       return html`${formattedValue.length > 0 ? formattedValue : this.fallbackValue}`;
     }
-    return html`${this.data.find(elm => elm.value == value)?.label || this.fallbackValue}`;
+    return html`${labelForValue(this.data, value) || this.fallbackValue}`;
   }
 
   /**
-   *
    * @param {any} value
    */
   #formatToString(value) {
     if (Array.isArray(value)) {
-      const formattedValue = value
-        .map(val => this.data.find(elm => elm.value === val)?.label)
-        .join(', ');
-      return `${formattedValue.length > 0 ? formattedValue : ''}`;
+      return labelsForValues(this.data, value);
     }
-    // Loose comparison on purpose - matches defaultFormatter (e.g. '100' vs 100)
-    return `${this.data.find(elm => elm.value == value)?.label || ''}`;
+    return labelForValue(this.data, value) || '';
   }
 
   render() {
@@ -120,7 +115,6 @@ export class OwcClickEditableAutocomplete extends ScopedElementsMixin(OwcClickEd
                 .hideSelectAll=${this.hideSelectAll}
                 .multiple=${this.multiple || false}
                 .withClear=${this.clearable}
-                .hasFocus=${this.hasFocus}
                 .syncWidth=${false}
                 id="form-element"
                 @wa-hide=${() => {

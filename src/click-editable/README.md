@@ -40,8 +40,9 @@ fires while editing. `parsedValue` exposes the value parsed per `type`
 - Custom `formatter` (return `nothing` to show the muted `fallbackValue`) and
   `validator` (blocks submit, shows the error as validation message)
 - `read-only`, `show-copy-button`, `form-align`, `label`/`help-text` slots
-- Autocomplete variant: `multiple`, `clearable`, `hide-select-all`, options
-  via `.data`
+- Autocomplete variant: `multiple`, `clearable`, `hide-select-all`, reactive
+  options via `.data`; labels match loosely and skip missing values (pure
+  logic in [labelHelpers.js](./labelHelpers.js))
 - Used by `owc-table` and `owc-data-detail` for their editable cells
 
 ## Docs & demos
@@ -56,6 +57,7 @@ reference lives on the Input page (`/click-editable-input/`).
 
 - [OwcClickEditable.js](./OwcClickEditable.js) - base class (edit lifecycle, validation, events)
 - [valueHelpers.js](./valueHelpers.js) - pure type parsing/date formatting helpers
+- [labelHelpers.js](./labelHelpers.js) - pure option-label lookup for the autocomplete variant
 - [OwcClickEditable.types.ts](./OwcClickEditable.types.ts) - public option types
-- [OwcClickEditable.test-browser.js](./OwcClickEditable.test-browser.js) - browser tests for the family (`npx web-test-runner src/click-editable/OwcClickEditable.test-browser.js`)
-- [valueHelpers.test.js](./valueHelpers.test.js) - logic tests (`node --test src/click-editable/`)
+- [OwcClickEditable.test-browser.js](./OwcClickEditable.test-browser.js) - browser tests for all four variants (`npx web-test-runner src/click-editable/OwcClickEditable.test-browser.js`)
+- [valueHelpers.test.js](./valueHelpers.test.js), [labelHelpers.test.js](./labelHelpers.test.js) - logic tests (`node --test src/click-editable/valueHelpers.test.js src/click-editable/labelHelpers.test.js`)

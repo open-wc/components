@@ -17,7 +17,6 @@ export interface OwcClickEditableAutocompleteOptions extends OwcClickEditableOpt
   clearable?: boolean;
   hideSelectAll?: boolean;
   open?: boolean;
-  hasFocus?: boolean;
 }
 
 export type OwcClickEditableAutocompleteDataOptions = readonly { label: string; value: unknown }[];

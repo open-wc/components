@@ -49,7 +49,10 @@ const personData = [
 
 # Table Info
 
-Part above the Table
+The action-tab bar above the table: row counts, refresh, and built-in tabs for export, mass
+edit (`owc-table-mass-edit`), and column settings (`owc-table-settings`). It is rendered
+automatically by `owc-table` when `show-info` is set; use it standalone to compose your own
+toolbar.
 
 ```js demo
 export const simpleTable = () => {
@@ -91,3 +94,38 @@ export const simpleTable = () => {
   `;
 };
 ```
+
+## Settings tab (`owc-table-settings`)
+
+The built-in settings tab renders an `owc-table-settings` dropdown ("Spalten") where users
+cycle each column's visibility (always → if filtered → never) and reorder columns via drag &
+drop. Changes fire a `change` event and are persisted twice: to `localStorage` and to the
+URL, keyed by `storeNamePrefix` (`<prefix>-override-settings` / `?<prefix>-overrides=`).
+URL overrides win on load, except for columns the user overrode locally. The footer's
+Reset button clears both stores.
+
+There is no `define` entry for it - like the mass edit it is registered as a scoped element
+inside `owc-table-info` and configured through the table's `store-name-prefix`.
+
+## API
+
+### Attributes & properties
+
+| Property                                                | Type       | Default | Description                                                            |
+| ------------------------------------------------------- | ---------- | ------- | ---------------------------------------------------------------------- |
+| `table`                                                 | `OwcTable` | -       | The connected table (wired automatically by `owc-table`).              |
+| `columns`                                               | `Column[]` | -       | Column config, forwarded to the mass-edit and settings tabs.           |
+| `data`                                                  | `T[]`      | -       | Rows, used by tabs like sums.                                          |
+| `actionTabs`                                            | `object`   | -       | Adds or overrides tabs (see the table docs "Add your own action tab"). |
+| `actionTabActive`                                       | `string`   | -       | The active tab key.                                                    |
+| `showInfo`                                              | `boolean`  | `false` | Shows the row-count info line.                                         |
+| `refreshButton`                                         | `boolean`  | `false` | Shows a refresh button.                                                |
+| `loading`                                               | `boolean`  | `false` | Spins the refresh button.                                              |
+| `dataFullSize` / `dataCurrentSize` / `dataSelectedSize` | `number`   | `0`     | The counts shown in the info line.                                     |
+
+### Events
+
+| Event                       | Description                                         |
+| --------------------------- | --------------------------------------------------- |
+| `refresh-button-clicked`    | Fired (bubbling, composed) when refresh is clicked. |
+| `action-tab-active-changed` | Fired when the active tab changes.                  |

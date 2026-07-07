@@ -16,14 +16,13 @@ export class OwcClickEditableInputAutofill extends ScopedElementsMixin(OwcClickE
 
   static properties = {
     ...super.properties,
-    hasFocus: { type: Boolean },
+    data: { attribute: false },
   };
 
   constructor() {
     super();
     /** @type {Array<T>} */
     this.data = /** @type {Array<T>} */ ([]);
-    this.hasFocus = false;
   }
 
   get open() {
@@ -80,8 +79,6 @@ export class OwcClickEditableInputAutofill extends ScopedElementsMixin(OwcClickE
           <div class="form-container-wrapper" >
             <div class="form-container input">
               <owc-input-autofill
-                .hasFocus=${this.hasFocus}
-                .syncWidth=${false}
                 id="form-element"
                 @change=${() => {
                   if (this.editable) {

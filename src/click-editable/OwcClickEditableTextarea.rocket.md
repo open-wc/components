@@ -181,3 +181,11 @@ export const tabbable = () => {
   `;
 };
 ```
+
+## API
+
+The textarea variant adds no attributes or properties of its own - see the
+[Click Editable Input API](/click-editable-input/#api) for the full shared reference
+(formatter, validator, `read-only`, `show-copy-button`, `form-align`, slots,
+`change`/`submit` events). Behavior differences: Enter submits, **Shift+Enter** inserts a
+new line, and the display preserves line breaks (`white-space: pre-wrap`).

@@ -2,8 +2,10 @@ import { LitElement, html, css, nothing } from 'lit';
 import { OwcAutocomplete } from '@open-wc/components/OwcAutocomplete.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 
-import '@awesome.me/webawesome/dist/components/radio/radio.js';
-import '@awesome.me/webawesome/dist/components/radio-group/radio-group.js';
+import '@awesome.me/webawesome/dist/components/button/button.js';
+import '@awesome.me/webawesome/dist/components/checkbox/checkbox.js';
+import '@awesome.me/webawesome/dist/components/input/input.js';
+import '@awesome.me/webawesome/dist/components/textarea/textarea.js';
 import { setFieldPath } from '../field-path-helper/setFieldPath.js';
 
 /**
@@ -167,6 +169,9 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
       return;
     }
     const field = this.column.field;
+    // Capture the value: this.value is reset below, but consumers may call
+    // autoSetData later (e.g. after an async save)
+    const value = this.value;
 
     const handleUpdate = this.table?.handleUpdate || this.handleUpdateExecute;
     if (handleUpdate) {
@@ -176,10 +181,10 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
           data: selectedData,
           event,
           config: this.column,
-          value: this.value,
+          value,
           allRequiredFieldsAreFilled: () => true,
           isNewInsert: false,
-          autoSetData: (data = selectedData) => setFieldPath(data, field, this.value),
+          autoSetData: (data = selectedData) => setFieldPath(data, field, value),
         });
       }
     }

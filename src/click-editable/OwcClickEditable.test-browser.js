@@ -2,10 +2,12 @@ import { fixture, html, expect, oneEvent, aTimeout } from '@open-wc/testing';
 import { OwcClickEditableInput } from './OwcClickEditableInput.js';
 import { OwcClickEditableTextarea } from './OwcClickEditableTextarea.js';
 import { OwcClickEditableAutocomplete } from './OwcClickEditableAutocomplete.js';
+import { OwcClickEditableInputAutofill } from './OwcClickEditableInputAutofill.js';
 
 customElements.define('owc-click-editable-input', OwcClickEditableInput);
 customElements.define('owc-click-editable-textarea', OwcClickEditableTextarea);
 customElements.define('owc-click-editable-autocomplete', OwcClickEditableAutocomplete);
+customElements.define('owc-click-editable-input-autofill', OwcClickEditableInputAutofill);
 
 /**
  * @param {import('./OwcClickEditable.js').OwcClickEditable} el
@@ -246,6 +248,31 @@ describe('owc-click-editable-textarea', () => {
     await oneEvent(el, 'submit');
     expect(el.value).to.equal('line one\nline two');
   });
+
+  it('restores the original text on Escape', async () => {
+    const el = await fixture(
+      html`<owc-click-editable-textarea value="keep me"></owc-click-editable-textarea>`,
+    );
+    await startEditing(el);
+    el.inputElement.value = 'discard me';
+    el.inputElement.dispatchEvent(new Event('input'));
+    await el.updateComplete;
+
+    setTimeout(() => pressKey(el, 'Escape'));
+    await oneEvent(el, 'change');
+    expect(el.value).to.equal('keep me');
+    expect(el.editable).to.equal(false);
+  });
+
+  it('shows the fallback value when empty', async () => {
+    const el = await fixture(
+      html`<owc-click-editable-textarea
+        value=""
+        fallbackValue="no notes"
+      ></owc-click-editable-textarea>`,
+    );
+    expect(display(el).textContent).to.include('no notes');
+  });
 });
 
 describe('owc-click-editable-autocomplete', () => {
@@ -313,5 +340,124 @@ describe('owc-click-editable-autocomplete', () => {
     await oneEvent(el, 'submit');
     expect(el.value).to.equal('101');
     expect(el.editable).to.equal(false);
+  });
+
+  it('fires change while selecting in multiple mode and submits when the dropdown closes', async () => {
+    const el = await fixture(
+      html`<owc-click-editable-autocomplete
+        multiple
+        .value=${['100']}
+        .data=${data}
+      ></owc-click-editable-autocomplete>`,
+    );
+    await startEditing(el);
+
+    setTimeout(() => el._autocomplete.handleOptionAction('101'));
+    await oneEvent(el, 'change');
+    expect(el.editable).to.equal(true);
+
+    setTimeout(() => el._autocomplete.dispatchEvent(new Event('wa-hide')));
+    await oneEvent(el, 'submit');
+    expect(el.value).to.deep.equal(['100', '101']);
+    expect(el.editable).to.equal(false);
+  });
+
+  it('skips selected values without a matching option in the display (regression)', async () => {
+    const el = await fixture(
+      html`<owc-click-editable-autocomplete
+        multiple
+        .value=${['100', '999']}
+        .data=${data}
+      ></owc-click-editable-autocomplete>`,
+    );
+    await aTimeout(10);
+    // '999' has no option - it used to leave a stray ', ' in the display
+    expect(display(el).textContent.trim()).to.equal('Apple');
+  });
+
+  it('updates the display when data arrives after the value (regression)', async () => {
+    const el = await fixture(
+      html`<owc-click-editable-autocomplete value="100"></owc-click-editable-autocomplete>`,
+    );
+    expect(display(el).textContent).to.include('-');
+
+    el.data = data;
+    await el.updateComplete;
+    expect(display(el).textContent).to.include('Apple');
+  });
+});
+
+describe('owc-click-editable-input-autofill', () => {
+  const data = [
+    { label: 'Apple', value: 'Apple' },
+    { label: 'Banana', value: 'Banana' },
+    { label: 'Grape', value: 'Grape' },
+  ];
+
+  it('renders the value and is not editable initially', async () => {
+    const el = await fixture(
+      html`<owc-click-editable-input-autofill
+        value="Grape"
+        .data=${data}
+      ></owc-click-editable-input-autofill>`,
+    );
+    expect(display(el).textContent).to.include('Grape');
+    expect(el.editable).to.equal(false);
+  });
+
+  it('copies the value into the inner input-autofill when editing starts', async () => {
+    const el = await fixture(
+      html`<owc-click-editable-input-autofill
+        value="Grape"
+        .data=${data}
+      ></owc-click-editable-input-autofill>`,
+    );
+    await startEditing(el);
+    expect(el.editable).to.equal(true);
+    expect(el._inputAutofill.value).to.equal('Grape');
+  });
+
+  it('applies a dropdown selection and fires change', async () => {
+    const el = await fixture(
+      html`<owc-click-editable-input-autofill
+        value="Grape"
+        .data=${data}
+      ></owc-click-editable-input-autofill>`,
+    );
+    await startEditing(el);
+    const autofill = el._inputAutofill;
+    await autofill.updateComplete;
+    const dropdown = autofill.shadowRoot.querySelector('owc-autocomplete');
+    await dropdown.updateComplete;
+
+    setTimeout(() => dropdown.handleOptionAction('Banana'));
+    await oneEvent(el, 'change');
+    expect(el.value).to.equal('Banana');
+  });
+
+  it('submits on blur', async () => {
+    const el = await fixture(
+      html`<owc-click-editable-input-autofill
+        value="Grape"
+        .data=${data}
+      ></owc-click-editable-input-autofill>`,
+    );
+    await startEditing(el);
+    el._inputAutofill.value = 'free text';
+    setTimeout(() => el._inputAutofill.dispatchEvent(new Event('blur')));
+    await oneEvent(el, 'submit');
+    expect(el.value).to.equal('free text');
+    expect(el.editable).to.equal(false);
+  });
+
+  it('forwards data changes to the inner input-autofill (regression)', async () => {
+    const el = await fixture(
+      html`<owc-click-editable-input-autofill value="X1"></owc-click-editable-input-autofill>`,
+    );
+    expect(el._inputAutofill.data).to.deep.equal([]);
+
+    el.data = data;
+    await el.updateComplete;
+    expect(el._inputAutofill.data).to.deep.equal(data);
   });
 });

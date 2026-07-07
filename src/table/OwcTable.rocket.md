@@ -1562,3 +1562,44 @@ export const annotationTable = () => {
   `;
 };
 ```
+
+## API
+
+The sections above document each feature with live demos; this is the summary of the public
+surface. Column config types are importable from `@open-wc/components/OwcTable.types.js`.
+
+### Attributes & properties
+
+| Property                                                                                         | Type                        | Description                                                                                     |
+| ------------------------------------------------------------------------------------------------ | --------------------------- | ----------------------------------------------------------------------------------------------- |
+| `data`                                                                                           | `T[]`                       | The rows to display.                                                                            |
+| `columns`                                                                                        | `Column<T>[]`               | Column configuration (labels, field paths, formatters, editing, visibility, ...).               |
+| `handleData` / `handleDataOptions`                                                               | `function` / `object`       | Async data provider and its options (see "Data Handling").                                      |
+| `loading`                                                                                        | `boolean`                   | Shows the loading state; reflected.                                                             |
+| `store-name-prefix`                                                                              | `string`                    | Key prefix for URL/localStorage persistence (state, column settings).                           |
+| `selectable`                                                                                     | `boolean`                   | Adds the selection checkbox column (see "Selectable rows").                                     |
+| `save-state-to-url`                                                                              | `boolean`                   | Persists filters/sorting to the URL (see "Save state to URL").                                  |
+| `sticky-header`                                                                                  | `boolean`                   | Keeps the header visible while scrolling.                                                       |
+| `filter-mode`                                                                                    | `string`                    | Filtering behavior; reflected.                                                                  |
+| `jsonFilters` / `filter`                                                                         | `JsonFilter[]` / `function` | Declarative JSON filters or a custom filter function (see "Filter").                            |
+| `highlightJsonFilters` / `highlightFilter`                                                       | `JsonFilter[]` / `function` | Highlight matching cells without filtering rows.                                                |
+| `jsonSorters` / `sorters`                                                                        | `JsonSorter[]` / `array`    | Declarative or custom sorting (see "Sorting").                                                  |
+| `getRowLinkSettings`                                                                             | `function`                  | Renders rows as links (see "Rows as Links").                                                    |
+| `renderDetail` / `openDetails`                                                                   | `function` / `array`        | Detail rows (see "Show Details").                                                               |
+| `renderAnnotation`                                                                               | `function`                  | Row annotations (see "Annotation").                                                             |
+| `renderHeaderContent`                                                                            | `function`                  | Extra header content (see "Add Header Content").                                                |
+| `handleInsert` / `insertData`                                                                    | `function` / `T[]`          | Inserting new rows (see "Editing Table Content").                                               |
+| `show-info`                                                                                      | `boolean`                   | Shows the `owc-table-info` action-tab bar (see "Extra info").                                   |
+| `actionTabs` / `action-tab-active`                                                               | `object` / `string`         | Custom action tabs and the active tab (see "Add your own action tab").                          |
+| `emptyMessage`                                                                                   | `TemplateResult`            | Rendered when there are no rows.                                                                |
+| `customStyles`                                                                                   | `CSSResult`                 | Extra styles injected into the table.                                                           |
+| `currencyFormatter`, `dateFormatter`, `dateTimeFormatter`, `numberFormatter`, `percentFormatter` | `Intl.*`                    | Override the built-in formatters (see "Override Built in Formatter").                           |
+| `render-mode`, `virtualizer-mode`, `renderType`                                                  | `string`                    | Rendering strategy tuning; `renderType`/`compareOverrides` drive the mass-edit compare preview. |
+| `visibleData`, `processedData`, `allData`                                                        | `T[]` (read)                | The rows after filtering/sorting/visibility - useful for exports and mass edit.                 |
+
+### Events
+
+| Event                  | Description                                                                    |
+| ---------------------- | ------------------------------------------------------------------------------ |
+| `rowClick`             | Fired when a row is clicked; the row data is on `event.row` (`RowClickEvent`). |
+| `owc-table-data-ready` | Fired (bubbling, composed) once new data has been rendered.                    |

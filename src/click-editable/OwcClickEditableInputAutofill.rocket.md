@@ -169,3 +169,18 @@ export const buttonInputAutofillField = () => {
   `;
 };
 ```
+
+## API
+
+Shares the full [Click Editable Input API](/click-editable-input/#api) (formatter, validator,
+`read-only`, `show-copy-button`, `form-align`, slots, `change`/`submit` events). Additional
+attributes & properties:
+
+| Property | Type                      | Default | Description                                                           |
+| -------- | ------------------------- | ------- | --------------------------------------------------------------------- |
+| `data`   | `Array<{ label, value }>` | `[]`    | The autofill options (property only). Reactive - may be loaded async. |
+| `value`  | `string`                  | `''`    | Free text, or an option's `value` after picking from the dropdown.    |
+| `open`   | `boolean` (property)      | `false` | Opens/closes the suggestion dropdown, e.g. together with `editable`.  |
+
+Unlike the autocomplete variant, the display shows the raw `value` - free text stays free
+text and never falls back because it matches no option.

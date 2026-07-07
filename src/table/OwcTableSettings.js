@@ -2,6 +2,7 @@ import { css, html } from 'lit';
 
 import { live } from 'lit/directives/live.js';
 import { OwcAutocomplete } from '@open-wc/components/OwcAutocomplete.js';
+import { mergeVisibility, nextVisibility } from './overrideHelpers.js';
 import '@awesome.me/webawesome/dist/components/checkbox/checkbox.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 import { createRef, ref } from 'lit/directives/ref.js';
@@ -79,6 +80,8 @@ export class OwcTableSettings extends OwcAutocomplete {
   constructor() {
     super();
     this.storeNamePrefix = 'owc-table';
+    // Static trigger text - the settings dropdown never has a "selected" value
+    this.placeholder = 'Spalten';
     /** @type {import('./OwcTable.types.js').Overrides} */
     this.overrides = this.emptyOverrides();
     /** @type {import('./OwcTable.types.js').Overrides} */
@@ -106,16 +109,6 @@ export class OwcTableSettings extends OwcAutocomplete {
         </div>
       `;
     };
-  }
-
-  renderComboBox() {
-    return html`<slot part="prefix" name="prefix" class="select__prefix"></slot>
-      <div id="placeholder">${this.placeholder}</div>
-      <div class="select__display-input">Spalten</div>
-
-      <slot name="expand-icon" part="expand-icon" class="select__expand-icon">
-        <wa-icon library="system" name="chevron-down"></wa-icon>
-      </slot>`;
   }
 
   /**
@@ -195,11 +188,7 @@ export class OwcTableSettings extends OwcAutocomplete {
    * @returns {import('./OwcTable.types.js').Visibility}
    */
   nextVisibility(visibility) {
-    return visibility === 'always'
-      ? 'ifFiltered'
-      : visibility === 'ifFiltered'
-        ? 'never'
-        : 'always';
+    return nextVisibility(visibility);
   }
 
   /**
@@ -352,15 +341,7 @@ export class OwcTableSettings extends OwcAutocomplete {
    * @param {{ [column: string]: import('./OwcTable.types.js').Visibility }} url
    */
   mergeVisibility(local, url) {
-    /** @type {{ [column: string]: import('./OwcTable.types.js').Visibility }} */
-    const merged = {};
-    for (const [key, value] of Object.entries(url)) {
-      merged[key] = value;
-    }
-    for (const [key, value] of Object.entries(local)) {
-      merged[key] = value;
-    }
-    return merged;
+    return mergeVisibility(local, url);
   }
 
   reset() {

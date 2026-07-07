@@ -259,7 +259,8 @@ export const manualWidth = () => {
 
 ## Number
 
-You can also use numbers as values.
+You can also use numbers as values. Labels are looked up loosely, so a string value `'100'`
+finds an option with the numeric value `100` and vice versa.
 
 ```js demo
 export const number = () => {
@@ -275,3 +276,21 @@ export const number = () => {
   `;
 };
 ```
+
+## API
+
+Shares the full [Click Editable Input API](/click-editable-input/#api) (formatter, validator,
+`read-only`, `show-copy-button`, `form-align`, slots, `change`/`submit` events). Additional
+attributes & properties:
+
+| Property          | Type                      | Default | Description                                                                    |
+| ----------------- | ------------------------- | ------- | ------------------------------------------------------------------------------ |
+| `data`            | `Array<{ label, value }>` | `[]`    | The selectable options (property only). Reactive - may be loaded async.        |
+| `value`           | `unknown` \| `unknown[]`  | `''`    | The selected option value; an array in `multiple` mode.                        |
+| `multiple`        | `boolean`                 | `false` | Multi-select; selecting fires `change`, closing the dropdown submits.          |
+| `clearable`       | `boolean`                 | `false` | Shows a clear button next to the selection.                                    |
+| `hide-select-all` | `boolean`                 | `false` | Hides the "select all" button in `multiple` mode.                              |
+| `open`            | `boolean` (property)      | `false` | Opens/closes the dropdown, e.g. together with `editable` for external editing. |
+
+Values without a matching option are skipped in the display. The dropdown width can be fixed
+via the `--owc-autocomplete-popover-width` CSS custom property (see "Manual Width").

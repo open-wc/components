@@ -40,6 +40,25 @@ All notable changes to this project will be documented in this file.
   it stays empty - read the current list from the `files` property.
 - `OwcFileUpload`: `renderCardContent` is declared as a non-attribute property, and a stray
   `</div>` inside each file card template was removed.
+- `OwcTableMassEdit`: the textarea and checkbox mass-edit forms now work standalone - the
+  component registers `wa-textarea`, `wa-checkbox`, `wa-input`, and `wa-button` itself
+  instead of relying on other components having imported them; unused radio imports were
+  removed.
+- `OwcTableMassEdit`: `autoSetData` on a mass-edit update now applies the value the edit was
+  executed with even when called after `executeEdit` returned (e.g. after an async save) -
+  it used to read the live value, which is reset to `''` right after dispatching.
+- `OwcTableSettings`: the settings dropdown shows its "Spalten" trigger text again - it was
+  rendered by a `renderComboBox` override that the autocomplete base class no longer calls
+  (dead code removed, the text now uses the regular placeholder mechanism).
+- `OwcClickEditableAutocomplete` / `OwcClickEditableInputAutofill`: the `data` property is
+  now reactive - options set or replaced after the first render (e.g. loaded async) update
+  the display and the dropdown; previously they were silently ignored.
+- `OwcClickEditableAutocomplete`: the multi-select display no longer renders stray
+  separators for selected values without a matching option, and array values now match
+  options loosely (`'100'` matches `100`) like the single-select display already did.
+- `OwcClickEditableAutocomplete` / `OwcClickEditableInputAutofill`: the `hasFocus` property
+  was removed - it was forwarded into a field that nothing ever reads, so it never had any
+  effect. Drop `.hasFocus` bindings; use `editable` and `focus()` to control editing focus.
 - `OwcInputAutofill`: fixed a lifecycle bug where `updated()` called `super.update()` instead
   of `super.updated()`, forcing a second render pass on every update.
 - `OwcInputAutofill`: options with an empty `label` can now be picked - selection validation
