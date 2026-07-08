@@ -30,6 +30,24 @@ describe('owc-table-info', () => {
     expect(info.textContent).to.include('(davon 2 ausgewählt)');
   });
 
+  it('renders built-in tabs from getRenderOptions', async () => {
+    const columns = [{ label: 'Age', field: 'age', showInCalculateSums: true }];
+    const el = await fixture(
+      html`<owc-table-info
+        .actionTabs=${{ calculateSums: { visible: true } }}
+        .columns=${columns}
+        .getRenderOptions=${() => ({
+          selectedData: [],
+          processedData: [{ age: 30 }, { age: 20 }],
+          columns,
+        })}
+      ></owc-table-info>`,
+    );
+    const tabs = el.shadowRoot.querySelector('owc-tabs');
+    expect(tabs.shadowRoot.textContent).to.include('Age:');
+    expect(tabs.shadowRoot.textContent).to.include('50');
+  });
+
   it('fires refresh-button-clicked when the refresh button is pressed', async () => {
     const el = await fixture(html`<owc-table-info .refreshButton=${true}></owc-table-info>`);
     const button = el.shadowRoot.querySelector('wa-button');

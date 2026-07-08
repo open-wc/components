@@ -45,6 +45,26 @@ const personData = [
     age: 10,
   },
 ];
+
+const columns = [
+  {
+    label: 'Profession',
+    field: 'profession',
+  },
+  {
+    label: 'First Name',
+    field: 'firstName',
+  },
+  {
+    label: 'Last Name',
+    field: 'lastName',
+  },
+  {
+    label: 'Age',
+    field: 'age',
+    showInCalculateSums: true,
+  },
+];
 ```
 
 # Table Info
@@ -58,38 +78,20 @@ toolbar.
 export const simpleTable = () => {
   return html`
     <owc-table-info
-      show-info
+      .showInfo=${true}
       .actionTabs=${{
-        massEdit: {
-          label: 'Massenänderung',
-          content: () => html`<owc-table-mass-edit></owc-table-mass-edit>`,
-        },
         calculateSums: {
           visible: true,
         },
       }}
-      .fullSize=${200}
-      .currentSize=${17}
-      .columns=${[
-        {
-          label: 'Profession',
-          field: 'profession',
-        },
-        {
-          label: 'First Name',
-          field: 'firstName',
-        },
-        {
-          label: 'Last Name',
-          field: 'lastName',
-        },
-        {
-          label: 'Age',
-          field: 'age',
-          showInCalculateSums: true,
-        },
-      ]}
-      .data=${personData}
+      .dataFullSize=${200}
+      .dataCurrentSize=${17}
+      .columns=${columns}
+      .getRenderOptions=${() => ({
+        selectedData: [],
+        processedData: personData,
+        columns,
+      })}
     ></owc-table-info>
   `;
 };
@@ -107,21 +109,39 @@ Reset button clears both stores.
 There is no `define` entry for it - like the mass edit it is registered as a scoped element
 inside `owc-table-info` and configured through the table's `store-name-prefix`.
 
+## Built-in action tabs
+
+`owc-table-info` owns the built-in action tabs. They are hidden by default and are enabled
+through `actionTabs` by key:
+
+| Key             | Enables                                                          |
+| --------------- | ---------------------------------------------------------------- |
+| `calculateSums` | Sum rows for columns with `showInCalculateSums: true`.           |
+| `export`        | Copy as Excel and download as CSV.                               |
+| `massEdit`      | Edit selected rows with `owc-table-mass-edit`.                   |
+| `settings`      | Open column visibility/order settings with `owc-table-settings`. |
+
+When `owc-table-info` is rendered by `owc-table`, the table supplies the render context for
+these tabs automatically. When composing `owc-table-info` yourself, pass `getRenderOptions`
+with the same shape (`selectedData`, `processedData`, `columns`, and any formatters your tab
+uses). See the table docs for [calculate sums](/table/#calculate-sums), [exporting](/table/#exporting-the-table),
+[custom action tabs](/table/#add-your-own-action-tab), and [mass editing](/table/#mass-editing).
+
 ## API
 
 ### Attributes & properties
 
-| Property                                                | Type       | Default | Description                                                            |
-| ------------------------------------------------------- | ---------- | ------- | ---------------------------------------------------------------------- |
-| `table`                                                 | `OwcTable` | -       | The connected table (wired automatically by `owc-table`).              |
-| `columns`                                               | `Column[]` | -       | Column config, forwarded to the mass-edit and settings tabs.           |
-| `data`                                                  | `T[]`      | -       | Rows, used by tabs like sums.                                          |
-| `actionTabs`                                            | `object`   | -       | Adds or overrides tabs (see the table docs "Add your own action tab"). |
-| `actionTabActive`                                       | `string`   | -       | The active tab key.                                                    |
-| `showInfo`                                              | `boolean`  | `false` | Shows the row-count info line.                                         |
-| `refreshButton`                                         | `boolean`  | `false` | Shows a refresh button.                                                |
-| `loading`                                               | `boolean`  | `false` | Spins the refresh button.                                              |
-| `dataFullSize` / `dataCurrentSize` / `dataSelectedSize` | `number`   | `0`     | The counts shown in the info line.                                     |
+| Property                                                | Type       | Default      | Description                                                                         |
+| ------------------------------------------------------- | ---------- | ------------ | ----------------------------------------------------------------------------------- |
+| `table`                                                 | `OwcTable` | -            | The connected table (wired automatically by `owc-table`).                           |
+| `columns`                                               | `Column[]` | -            | Column config, forwarded to the mass-edit and settings tabs.                        |
+| `getRenderOptions`                                      | `function` | `() => ({})` | Supplies tab render context such as `processedData`, `selectedData`, and `columns`. |
+| `actionTabs`                                            | `object`   | -            | Adds or overrides tabs (see the table docs "Add your own action tab").              |
+| `actionTabActive`                                       | `string`   | -            | The active tab key.                                                                 |
+| `showInfo`                                              | `boolean`  | `false`      | Shows the row-count info line.                                                      |
+| `refreshButton`                                         | `boolean`  | `false`      | Shows a refresh button.                                                             |
+| `loading`                                               | `boolean`  | `false`      | Spins the refresh button.                                                           |
+| `dataFullSize` / `dataCurrentSize` / `dataSelectedSize` | `number`   | `0`          | The counts shown in the info line.                                                  |
 
 ### Events
 
