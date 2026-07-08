@@ -42,14 +42,61 @@ const PLANET_LIST = [
 
 # Data Detail
 
-Show the details of a single record as a compact label/value grid - the detail view
-companion to the Table. Columns are defined as arrays of items with a `label` and a `field`
-(field paths like `client.firstName` and getters work too). Items can be formatted, made
-click-editable, hidden per data, or expanded into arbitrary content such as a nested table.
+`owc-data-detail` renders one record as a compact label/value grid. It is the
+single-record companion to `owc-table`: use the table to scan many rows, and use
+Data Detail to show or edit the selected row.
+
+The component is configured with a `data` object and a nested `columns` array. Each
+inner array is one visual column; each item inside that array is one label/value row.
+Items resolve their value from `field` (including dot paths such as
+`client.firstName` and JavaScript getters), then optionally format, edit, hide, or
+expand that value.
+
+The most common item shape is:
+
+```js
+{ label: 'First Name', field: 'firstName' }
+```
+
+Add `type: 'editable'` for click-to-edit values, `formatter` for display formatting,
+`visible` for conditional rows, and `type: 'expandable'` plus `contentExpanded` when a
+row should open a larger detail area.
+
+## Basic usage
+
+Start with `data` and one or more visual columns. This example renders two visual
+columns: names on the left, birth data on the right. The date row uses the built-in
+`date` formatter, but the source value in `data.dateOfBirth` stays unchanged.
+
+```js demo
+const basicColumns = [
+  [
+    { label: 'First Name', field: 'firstName' },
+    { label: 'Last Name', field: 'lastName' },
+  ],
+  [
+    { label: 'Date of Birth', field: 'dateOfBirth', formatter: 'date' },
+    { label: 'Age', field: 'age' },
+  ],
+];
+
+export const basicUsageDemo = () => html`
+  <owc-data-detail .data=${data} .columns=${basicColumns}></owc-data-detail>
+`;
+```
 
 ## Kitchen sink
 
-A demo showcasing most features of Data Detail.
+This example combines the main features in one component:
+
+- click-editable fields (`First Name`, `Last Name`, `Date of Birth`)
+- autocomplete editing (`Favorite Planet`)
+- expandable rows with nested tables (`Family Members`, `Email`)
+- badges next to labels and suffix content next to values
+- computed getters on the record (`age`, `primaryEmail`, `primaryFamilyMember`)
+
+Use it as a reference when you need several features together. The smaller demos below
+show each concept in isolation.
 
 ```js demo
 class Client {
@@ -285,7 +332,18 @@ export const kitchenSinkDemo = () => html`
 
 ## Columns
 
+`columns` is an array of visual columns. Each visual column is an array of rows. The
+component renders rows by index, so the first item from each visual column appears on
+the first grid row, the second item from each visual column appears on the second grid
+row, and so on.
+
+This makes it easy to split a large detail view into compact side-by-side groups while
+keeping the row order explicit.
+
 ### One Column
+
+A single inner array creates a simple vertical label/value list. This is the clearest
+layout for short records or narrow containers.
 
 ```js demo
 const oneColumn = [
@@ -303,6 +361,10 @@ export const oneColumnsDemo = () => html`
 
 ### Two columns
 
+Use two inner arrays to place two groups side by side. Here `First Name` and `Last Name`
+share the first rendered row, and `Age` occupies the second row in the first visual
+column.
+
 ```js demo
 const twoColumns = [
   [
@@ -319,6 +381,10 @@ export const twoColumnsDemo = () => html`
 
 ### Three columns
 
+Additional inner arrays add more visual columns. Keep the number of columns low when
+labels or values are long; the component is intentionally compact and does not wrap
+labels by default.
+
 ```js demo
 const threeColumns = [
   [
@@ -334,9 +400,13 @@ export const threeColumnsDemo = () => html`
 `;
 ```
 
-## Type
+## Value rendering
 
 ### Content
+
+The default render mode is plain HTML content resolved from `field`. Setting
+`type: 'html'` is explicit and useful when you want the column config to document that
+the value is display-only.
 
 ```js demo
 const contentType = [
@@ -352,7 +422,17 @@ export const contentTypeDemo = () => html`
 `;
 ```
 
-### Input
+## Editing
+
+Set `type: 'editable'` to render a click-editable value. When the user submits a value,
+`owc-data-detail` calls `handleUpdate` with `{ data, field, value, config, autoSetData }`.
+If no `handleUpdate` is provided, the component writes the submitted value into `data`
+itself.
+
+### Text input
+
+Editable fields use the click-editable input by default. You can also set
+`editableOptions.type: 'input'` explicitly, as shown here.
 
 ```js demo
 const inputType = [
@@ -393,7 +473,8 @@ export const inputTypeDemo = () => html`
 
 #### Text
 
-Defaults to Text Input Editable
+This is the shortest editable configuration. Because no `editableOptions.type` is set,
+the editable type defaults to a text input.
 
 ```js demo
 const editableTextColumns = [[{ label: 'First Name', field: 'firstName', type: 'editable' }]];
@@ -404,6 +485,10 @@ export const editableTextDemo = () => html`
 ```
 
 #### Number
+
+Pass options through `editableOptions.inputOptions` to configure the underlying
+click-editable input. A numeric input is useful when browser-level number controls or
+validation are desired.
 
 ```js demo
 const editableNumberColumns = [
@@ -424,6 +509,10 @@ export const editableNumberDemo = () => html`
 
 #### Date
 
+The same input options can switch the editor to a date input. The stored value is still
+the submitted input value; add `handleUpdate` when you need to normalize it before
+writing it back to your model.
+
 ```js demo
 const editableDateColumns = [
   [
@@ -442,6 +531,10 @@ export const editableDateDemo = () => html`
 ```
 
 ### Autocomplete
+
+Use `editableOptions.type: 'autocomplete'` with a `data` array when the value should be
+selected from known options. The display value is the stored `value`, while the editor
+uses the labels from the autocomplete data.
 
 ```js demo
 const autocompleteColumns = [
@@ -465,7 +558,15 @@ export const autocompleteTypeDemo = () => html`
 
 ## Expandable
 
+Expandable rows are for values that need a compact summary plus a larger detail area.
+The label becomes a toggle, the normal value stays visible, and `contentExpanded`
+renders below the grid row. Only one expandable field is opened by a label click at a
+time; control the initial state with `openColumns`.
+
 ### Single Expandable
+
+This row opens hard-coded content below the detail grid. In real usage the expanded
+content can be any Lit template, including forms, charts, or another component.
 
 ```js demo
 const expandableHardCodedColumns = [
@@ -485,6 +586,10 @@ export const expandableHardCodedDemo = () => html`
 ```
 
 ### Shared Expandable
+
+Expandable rows can live in different visual columns. Clicking one expandable label
+closes the previously opened expandable row, because the component stores a single open
+field when users toggle labels.
 
 ```js demo
 const expandableSharedColumns = [
@@ -513,6 +618,9 @@ export const expandableSharedDemo = () => html`
 
 ### Opened Expandable
 
+Set `.openColumns` when the detail view should start with a specific expandable row
+already open.
+
 ```js demo
 const expandableOpenedColumns = [
   [
@@ -536,6 +644,10 @@ export const expandableOpenedDemo = () => html`
 
 ## Content Suffix
 
+`contentSuffix` renders additional content after the value. Use it for small actions,
+icons, units, or status markers that belong to the value but should not replace the
+value itself.
+
 ```js demo
 const contentSuffixColumns = [
   [
@@ -555,6 +667,10 @@ export const contentSuffixColumnsDemo = () => html`
 
 ## Built in Formatters
 
+Formatters transform the displayed value while leaving the underlying `data` object
+unchanged. Built-in formatter names include `date`, `datetime`, `currency`, `number`,
+`percent`, `email`, `tickCross`, and `checkbox`.
+
 ```js demo
 const builtInFormatterColumns = [
   [
@@ -572,6 +688,10 @@ export const builtinFormatter = () => html`
 ```
 
 ## Override Built in Formatter
+
+The built-in date, datetime, number, currency, and percent formatters use formatter
+instances from the component. Override those properties when the same formatter name
+should render with different locale or formatting rules.
 
 ```js demo
 const overrideBuiltInFormatterColumns = [
@@ -599,6 +719,10 @@ export const overrideBuiltinFormatter = () => html`
 
 ## Custom Formatter
 
+Use a formatter function when the display value depends on more than a named formatter.
+The function receives the full data record, so it can combine fields, add custom
+markup, or return a fallback string.
+
 ```js demo
 const formatter = [
   [
@@ -622,9 +746,10 @@ export const formatterDemo = () => html`
 `;
 ```
 
-## Show Hide Cells
+## Conditional visibility
 
-You can generally hide a cell by setting `visible: false`
+Set `visible: false` to hide a row unconditionally. Hidden rows are removed before the
+grid row count is calculated.
 
 ```js demo
 const visibleItems = [
@@ -646,8 +771,10 @@ export const visibleDemo = () => html`
 `;
 ```
 
-Or Hide columns based on data.
-For example only show the firstName cell if the age is bigger then 20
+`visible` can also be a function of the current record. This is useful for fields that
+only apply to some records. In this example the first detail view hides `First Name`
+because `age` is `12`; the second one shows it because the data override sets `age` to
+`40`.
 
 ```js demo
 const visibleFunctionItems = [
@@ -697,5 +824,16 @@ export const visibleFunctionDemo = () => html`
 | `labelBadge`      | `(data: T) => TemplateResult \| string \| number`  | Small badge rendered next to the label.                                                                    |
 | `contentSuffix`   | `(data: T) => TemplateResult \| string \| number`  | Content rendered after the value.                                                                          |
 | `visible`         | `boolean \| (data: T) => boolean`                  | Hide/show the item; defaults to visible.                                                                   |
+
+### Editable options
+
+| Field                | Type                                                    | Description                                                                  |
+| -------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `type`               | `'input' \| 'textarea' \| 'autocomplete' \| 'checkbox'` | Editor to render for `type: 'editable'`; defaults to `input`.                |
+| `inputOptions`       | `object`                                                | Options forwarded to the click-editable input, textarea, or autocomplete.    |
+| `insertInputOptions` | `object`                                                | Options used when a surrounding table renders the value as a new insert row. |
+| `data`               | `Array<{ label: string, value: string }>`               | Autocomplete options.                                                        |
+| `dataFn`             | `(row: T) => Array<{ label: string, value: string }>`   | Builds autocomplete options from the current row.                            |
+| `required`           | `boolean`                                               | Marks the field as required for editable update helpers.                     |
 
 The types are importable from `@open-wc/components/OwcDataDetail.types.js`.

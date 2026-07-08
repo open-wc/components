@@ -412,14 +412,6 @@ export const changeEvent = () => {
 };
 ```
 
-| Event                    | Description                                                                                  |
-| ------------------------ | -------------------------------------------------------------------------------------------- |
-| `change`                 | Fired whenever the selection changes (select, deselect, clear, select all, fill mode paste). |
-| `input`                  | Fired when the selection is cleared via the clear button or a tag remove button.             |
-| `autocomplete-selection` | Fired when an option is selected. `detail` is the selected option object. Bubbles/composed.  |
-| `wa-show`                | Fired after the dropdown opened via `show()`.                                                |
-| `wa-hide`                | Fired after the dropdown closed via `hide()`.                                                |
-
 ## Keyboard interaction
 
 While the dropdown is open:
@@ -461,6 +453,16 @@ While the combobox is focused and closed, any typing key opens the dropdown and 
 | -                     | `getAccentBarColor`         | `(row: T) => string \| undefined` | `row.accentBarColor` | Extracts the accent bar color of an option.                                                                |
 | -                     | `getTag`                    | `(option: T) => TemplateResult`   | -                    | Customizes the tag rendered per selection when `multiple`.                                                 |
 | -                     | `footer`                    | `() => TemplateResult`            | -                    | Renders extra content at the bottom of the dropdown.                                                       |
+
+### Events
+
+| Event                    | Description                                                                                  |
+| ------------------------ | -------------------------------------------------------------------------------------------- |
+| `change`                 | Fired whenever the selection changes (select, deselect, clear, select all, fill mode paste). |
+| `input`                  | Fired when the selection is cleared via the clear button or a tag remove button.             |
+| `autocomplete-selection` | Fired when an option is selected. `detail` is the selected option object. Bubbles/composed.  |
+| `wa-show`                | Fired after the dropdown opened via `show()`.                                                |
+| `wa-hide`                | Fired after the dropdown closed via `hide()`.                                                |
 
 ### Methods
 

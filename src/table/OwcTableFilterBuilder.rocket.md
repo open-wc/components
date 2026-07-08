@@ -126,7 +126,53 @@ Columns with a `description` (and optionally `subDescription`) are listed in an 
 "Filter Lexikon" panel next to the filter entries. Set the `hide-info-detail` attribute to
 suppress the panel (the table's array filters use this internally).
 
-## Properties
+```js demo
+export const filterLexikon = () => {
+  return html`
+    <owc-table-filter-builder
+      @change=${ev => console.log(ev.target.value)}
+      .columns=${[
+        {
+          label: 'First Name',
+          field: 'firstName',
+          filterable: true,
+          description: 'Filters the first name with text search.',
+        },
+        {
+          label: 'Last Name',
+          field: 'lastName',
+          filterable: true,
+          description: 'Filters the last name with text search.',
+        },
+        {
+          label: 'Profession',
+          field: 'profession',
+          filterable: true,
+          filterType: 'autocomplete',
+          filterOptions: [
+            { value: 'Teacher', label: 'Teacher' },
+            { value: 'Lawyer', label: 'Lawyer' },
+            { value: 'Developer', label: 'Developer' },
+          ],
+          description: 'Filters by one of the available professions.',
+          subDescription: 'Available options: Teacher, Lawyer, Developer.',
+        },
+        {
+          label: 'Age',
+          field: 'age',
+          filterable: true,
+          filterType: 'number',
+          description: 'Filters age with numeric comparison operators.',
+        },
+      ]}
+    ></owc-table-filter-builder>
+  `;
+};
+```
+
+## API
+
+### Attributes & properties
 
 | Property           | Attribute            | Type                | Default | Description                                                       |
 | ------------------ | -------------------- | ------------------- | ------- | ----------------------------------------------------------------- |
@@ -136,7 +182,7 @@ suppress the panel (the table's array filters use this internally).
 | `globalSearchOnly` | `global-search-only` | `boolean`           | `false` | Only show the global search input, no manual filter entries       |
 | `hideInfoDetail`   | `hide-info-detail`   | `boolean`           | `false` | Hide the "Filter Lexikon" column description panel                |
 
-## Events
+### Events
 
 | Event    | Description                                                            |
 | -------- | ---------------------------------------------------------------------- |

@@ -73,7 +73,9 @@ which renders an `owc-table-mass-edit` element with `.columns`, `.data` (selecte
 
 > If you want to use the element standalone you have to register the class yourself, e.g. with `customElements.define('owc-table-mass-edit', OwcTableMassEdit)` or via your own scoped registry.
 
-## Properties
+## API
+
+### Attributes & properties
 
 | Property    | Type                         | Description                                                                                                            |
 | ----------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
@@ -86,7 +88,7 @@ which renders an `owc-table-mass-edit` element with `.columns`, `.data` (selecte
 | `operation` | `'SET' \| 'ADD' \| 'REMOVE'` | Defaults to `'SET'`. The current implementation always sets the value.                                                 |
 | `preview`   | `Boolean`                    | While `true` the table renders in compare mode showing current vs new values for the selected rows.                    |
 
-## Methods
+### Methods
 
 - `setColumn(value)`: selects the column whose `field` matches `value`. If that column is currently hidden it is temporarily forced to `visible: 'always'` on the table so the preview can be seen.
 - `resetColumn()`: reverts the temporary visibility override of the last selected column and clears the selection.

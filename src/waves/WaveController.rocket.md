@@ -242,7 +242,83 @@ export const clientTestReactive = () => {
 };
 ```
 
-We can also extend this to object and array properties! Let's add a list of invoices to the client. We can configure the WaveControllers to also react to updates on invoices by setting the clients controller to "forward" (forward waves from sub-properties) and the components controller to "childUpdate" (react to waves propagated from array properties).
+We can also extend this to object and array properties. Without WaveController, nested object
+updates need to be surfaced manually. In this example the invoice amounts change, but the component
+only updates because the click handler calls `requestUpdate()`.
+
+```js demo
+class ClientPlainPlus {
+  constructor(name) {
+    this.name = name;
+    this.invoiceList = [];
+  }
+}
+
+class InvoicePlain {
+  constructor(amount, date) {
+    this.amount = amount;
+    this.date = date;
+  }
+
+  evadeTaxes() {
+    this.amount = Math.round(this.amount * 0.9 * 100) / 100;
+  }
+}
+
+class ClientComponentPlainPlus extends LitElement {
+  static properties = {
+    client: { type: Object },
+  };
+
+  constructor() {
+    super();
+    this.client = undefined;
+  }
+
+  render() {
+    return html`
+      Name: ${this.client.name}<br />
+      <button
+        @click=${() => {
+          if (this.client) {
+            this.client.name = this.client.name.split(' ').reverse().join(' ');
+            this.requestUpdate();
+          }
+        }}
+      >
+        Reverse Name</button
+      ><br />
+      ${this.client.invoiceList.map(
+        invoice => html`${invoice.amount}$ ${invoice.date.toISOString().split('T')[0]}, `,
+      )}<br />
+      <button
+        @click=${() => {
+          this.client.invoiceList.forEach(invoice => invoice.evadeTaxes());
+          this.requestUpdate();
+        }}
+      >
+        Cut a little off the top
+      </button>
+    `;
+  }
+}
+
+customElements.define('client-component-plain-plus', ClientComponentPlainPlus);
+
+export const clientTestPlainPlus = () => {
+  const client = new ClientPlainPlus('Peter Parker');
+  client.invoiceList = [
+    new InvoicePlain(Math.round(Math.random() * 10000) / 100, new Date(Math.random() * 2000000000)),
+    new InvoicePlain(Math.round(Math.random() * 10000) / 100, new Date(Math.random() * 2000000000)),
+    new InvoicePlain(Math.round(Math.random() * 10000) / 100, new Date(Math.random() * 2000000000)),
+  ];
+  return html`<client-component-plain-plus .client=${client}></client-component-plain-plus>`;
+};
+```
+
+With WaveControllers we can configure the client controller to "forward" (forward waves from
+sub-properties) and the component controller to "childUpdate" (react to waves propagated from array
+properties).
 
 ```js demo
 class ClientReactivePlus extends ReactiveObject {

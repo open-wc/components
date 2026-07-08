@@ -151,21 +151,6 @@ export const layoutSidebarFull = () => {
 };
 ```
 
-## Properties
-
-| Property             | Type             | Description                                                                      |
-| -------------------- | ---------------- | -------------------------------------------------------------------------------- |
-| `menuItemList`       | `MenuItem[]`     | The main menu shown at the top of the sidebar. Defaults to `[]`                  |
-| `menuBottomItemList` | `MenuItem[]`     | A second menu pinned to the bottom of the sidebar. Defaults to `[]`              |
-| `logoSvg`            | `TemplateResult` | A lit template (typically an inline SVG) rendered above the main menu            |
-| `menuTopTemplate`    | `TemplateResult` | Declared as a property and part of the type, but currently not rendered anywhere |
-
-## Methods
-
-| Method               | Description                                                                                                                                                                      |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `loadStateFromUrl()` | Marks the menu item whose href (including `hrefGETParams`) matches the current URL as selected and opens its ancestor groups. Called automatically when the element is connected |
-
 ## API
 
 ### Attributes & properties
@@ -181,3 +166,9 @@ export const layoutSidebarFull = () => {
 `href`, `icon?`, `hrefGETParams?` (object or query string), `visible?`, `open?`,
 `subMenuItemList?`. On load the item matching the current URL is marked `selected` and its
 parent groups are opened. The page content goes into the default slot.
+
+### Methods
+
+| Method               | Description                                                                                                                                                                      |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `loadStateFromUrl()` | Marks the menu item whose href (including `hrefGETParams`) matches the current URL as selected and opens its ancestor groups. Called automatically when the element is connected. |

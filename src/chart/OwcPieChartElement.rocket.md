@@ -46,27 +46,6 @@ export const simplePieChart = () => {
 };
 ```
 
-## Data (`yData`)
-
-`yData` is an array of slice objects. Each slice has the following fields:
-
-| Field     | Type                    | Description                                                     |
-| --------- | ----------------------- | --------------------------------------------------------------- |
-| `name`    | `string`                | Label of the slice, shown in the legend and tooltip.            |
-| `data`    | `number`                | Value of the slice. Slice sizes are proportional to the values. |
-| `onClick` | `() => void` (optional) | Called when this slice is clicked.                              |
-
-Slice colors are assigned automatically from a built-in palette (the same nine colors repeated).
-
-## Options
-
-All fields of `options` are optional.
-
-| Field        | Type     | Description                                                                                                                            |
-| ------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`      | `string` | Title shown above the chart.                                                                                                           |
-| `otherIndex` | `number` | Index of the slice in `yData` that represents "everything else" — that slice is rendered in a neutral grey instead of a palette color. |
-
 ## Title and "Other" Slice
 
 A typical use case is showing the biggest contributors individually and grouping the rest into an "Other" slice. Point `otherIndex` at that entry and it is colored grey so it visually recedes behind the named slices.
@@ -117,7 +96,37 @@ export const pieChartClick = ({ wrapperRef }) => {
 };
 ```
 
-## Exports
+## API
+
+### Attributes & properties
+
+| Property  | Type      | Default | Description                                                          |
+| --------- | --------- | ------- | -------------------------------------------------------------------- |
+| `yData`   | `Slice[]` | `[]`    | The pie slices to render. See [Slice objects](#slice-objects-ydata). |
+| `options` | `object`  | `{}`    | Pie chart configuration. See [Options](#options).                    |
+
+### Slice objects (`yData`)
+
+`yData` is an array of slice objects. Each slice has the following fields:
+
+| Field     | Type                    | Description                                                     |
+| --------- | ----------------------- | --------------------------------------------------------------- |
+| `name`    | `string`                | Label of the slice, shown in the legend and tooltip.            |
+| `data`    | `number`                | Value of the slice. Slice sizes are proportional to the values. |
+| `onClick` | `() => void` (optional) | Called when this slice is clicked.                              |
+
+Slice colors are assigned automatically from a built-in palette (the same nine colors repeated).
+
+### Options
+
+All fields of `options` are optional.
+
+| Field        | Type     | Description                                                                                                                            |
+| ------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`      | `string` | Title shown above the chart.                                                                                                           |
+| `otherIndex` | `number` | Index of the slice in `yData` that represents "everything else" — that slice is rendered in a neutral grey instead of a palette color. |
+
+### Exports
 
 The module exports the element class:
 
