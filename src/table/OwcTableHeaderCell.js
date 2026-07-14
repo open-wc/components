@@ -18,8 +18,8 @@ export class OwcTableHeaderCell extends LitElement {
   constructor() {
     super();
     this.sortable = true;
-    /** @type {'asc' | 'desc' | null} */
-    this.order = null;
+    /** @type {'asc' | 'desc' | undefined} */
+    this.order = undefined;
     this.field = '';
     /** @type {import('./OwcTable.types.js').JsonSorter[] | undefined} */
     this.customSorters = undefined;
@@ -39,20 +39,19 @@ export class OwcTableHeaderCell extends LitElement {
         this.order = 'desc'
         break
       case 'desc':
-        this.order = null;
+        this.order = undefined;
         break
-      case null:
+      case undefined:
         this.order = 'asc'
         break
     }
     if (this.customSorters) {
       this.sorters = this.customSorters.map(sorter => ({
         field: sorter.field,
-        order: /** @type {'asc' | 'desc'} */ (this.order),
+        order: /** @type {'asc' | 'desc' | undefined} */ (this.order),
         sortType: sorter.sortType,
       }));
     } else {
-      // @ts-ignore // due the switch statement, it cannot be undefined
       this.sorters = [{ field: this.field, order: this.order }];
     }
     this.dispatchEvent(new Event('sort-changed', { bubbles: true }));
