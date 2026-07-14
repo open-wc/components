@@ -29,21 +29,21 @@ export class OwcTableHeaderCell extends LitElement {
      */
     this.sorters = undefined;
   }
-  
+
   #clickHandler() {
     if (this.sortable === false) {
       return;
     }
-    switch (this.order){
+    switch (this.order) {
       case 'asc':
-        this.order = 'desc'
-        break
+        this.order = 'desc';
+        break;
       case 'desc':
         this.order = undefined;
-        break
+        break;
       case undefined:
-        this.order = 'asc'
-        break
+        this.order = 'asc';
+        break;
     }
     if (this.customSorters) {
       this.sorters = this.customSorters.map(sorter => ({

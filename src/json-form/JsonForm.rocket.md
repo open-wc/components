@@ -1110,27 +1110,27 @@ export const arrayTabsKitchenSink = () =>
 
 ### Attributes & properties
 
-| Property         | Type             | Default                | Description                                                                 |
-| ---------------- | ---------------- | ---------------------- | --------------------------------------------------------------------------- |
-| `schema`         | `JsonSchema7`    | `{}`                   | JSON Schema that defines and validates the form data.                       |
-| `uiSchema`       | `UISchemaElement` | `{}`                   | JsonForms UI schema that selects controls, layouts, labels, and options.    |
-| `value`          | `object`         | `{}`                   | Current form data. Updated in place as controls emit `formDataChange`.      |
-| `validatorState` | `ValidationResult` | `{ valid: true, errors: [] }` | Latest validation result for `value` against `schema`.              |
-| `rootForm`       | `boolean`        | `true`                 | Marks the form that owns value updates and validation. Nested forms set this internally. |
-| `forceErrors`    | `boolean`        | `false`                | Forces validation errors to render even before a field has been touched.    |
-| `renderers`      | `RendererRecord` | `{}`                   | Custom renderers merged with the default renderer set.                      |
-| `readonly`       | `boolean`        | `false`                | Renders controls read-only by passing `readonly` into control options.      |
-| `mode`           | `'form' \| 'schema'` | `'form'`           | Selects the form rendering mode.                                            |
+| Property         | Type                 | Default                       | Description                                                                              |
+| ---------------- | -------------------- | ----------------------------- | ---------------------------------------------------------------------------------------- |
+| `schema`         | `JsonSchema7`        | `{}`                          | JSON Schema that defines and validates the form data.                                    |
+| `uiSchema`       | `UISchemaElement`    | `{}`                          | JsonForms UI schema that selects controls, layouts, labels, and options.                 |
+| `value`          | `object`             | `{}`                          | Current form data. Updated in place as controls emit `formDataChange`.                   |
+| `validatorState` | `ValidationResult`   | `{ valid: true, errors: [] }` | Latest validation result for `value` against `schema`.                                   |
+| `rootForm`       | `boolean`            | `true`                        | Marks the form that owns value updates and validation. Nested forms set this internally. |
+| `forceErrors`    | `boolean`            | `false`                       | Forces validation errors to render even before a field has been touched.                 |
+| `renderers`      | `RendererRecord`     | `{}`                          | Custom renderers merged with the default renderer set.                                   |
+| `readonly`       | `boolean`            | `false`                       | Renders controls read-only by passing `readonly` into control options.                   |
+| `mode`           | `'form' \| 'schema'` | `'form'`                      | Selects the form rendering mode.                                                         |
 
 ### Events
 
-| Event            | Description                                                                 |
-| ---------------- | --------------------------------------------------------------------------- |
+| Event            | Description                                                                                           |
+| ---------------- | ----------------------------------------------------------------------------------------------------- |
 | `formDataChange` | Fired by controls and layouts when form data changes; read the current form data from `target.value`. |
 
 ### Methods
 
-| Method              | Description                                                               |
-| ------------------- | ------------------------------------------------------------------------- |
-| `validate()`        | Revalidates `value` against `schema` and updates `validatorState`.        |
-| `getFirstInvalid()` | Returns the first invalid nested `json-form` element, or `undefined`.     |
+| Method              | Description                                                           |
+| ------------------- | --------------------------------------------------------------------- |
+| `validate()`        | Revalidates `value` against `schema` and updates `validatorState`.    |
+| `getFirstInvalid()` | Returns the first invalid nested `json-form` element, or `undefined`. |

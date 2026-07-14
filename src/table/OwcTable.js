@@ -889,13 +889,13 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   renderStyles() {
     return html`
       ${this.#visibleColumns.map(
-      (column, index) => html`
-        #data-table .row > .cell:nth-child(${index + 2}) { width:
-        ${column.width ?? column._calculatedWidth}px;
-        ${column.width ? 'flex-shrink:0; flex-grow:0;' : ''} } #size-table .row >
-        .cell:nth-child(${index + 2}) { ${column.width ? `width:${column.width}px;` : ''} }
-      `,
-    )}
+        (column, index) => html`
+          #data-table .row > .cell:nth-child(${index + 2}) { width:
+          ${column.width ?? column._calculatedWidth}px;
+          ${column.width ? 'flex-shrink:0; flex-grow:0;' : ''} } #size-table .row >
+          .cell:nth-child(${index + 2}) { ${column.width ? `width:${column.width}px;` : ''} }
+        `,
+      )}
     `;
   }
 

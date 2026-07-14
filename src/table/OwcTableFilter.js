@@ -812,9 +812,9 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
         position: relative;
         flex-flow: column;
         --owc-tableFilter-gray: #ccc;
-        --owc-tableFilter-button-border: var(--owc-tableFilter-gray,#ccc );
-        --owc-tableFilter-background-secondary-color: var(--owc-tableFilter-gray,#ccc );
-        --owc-tableFilter-border-radius: var(--wa-border-radius-m,6px)
+        --owc-tableFilter-button-border: var(--owc-tableFilter-gray, #ccc);
+        --owc-tableFilter-background-secondary-color: var(--owc-tableFilter-gray, #ccc);
+        --owc-tableFilter-border-radius: var(--wa-border-radius-m, 6px);
       }
       :host([only-button][type='or']) {
         min-width: 100px;
