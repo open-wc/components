@@ -819,6 +819,10 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
         min-width: 270px;
         position: relative;
         flex-flow: column;
+        --owc-tableFilter-gray: #ccc;
+        --owc-tableFilter-button-border: var(--owc-tableFilter-gray,#ccc );
+        --owc-tableFilter-background-secondary-color: var(--owc-tableFilter-gray,#ccc );
+        --owc-tableFilter-border-radius: var(--wa-border-radius-m,6px)
       }
       :host([only-button][type='or']) {
         min-width: 100px;
@@ -829,7 +833,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
       }
 
       button {
-        border: 1px dashed #ccc;
+        border: 1px dashed var(--owc-tableFilter-button-border);
         border-radius: 10px;
         padding: 15px;
         display: grid;
@@ -862,7 +866,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
         z-index: 100;
         opacity: 0;
         transition: opacity 0.3s;
-        background: #fff;
+        background: var(--owc-tableFilter-background-primary-color, #fff);
       }
 
       #controls owc-icon-button {
@@ -880,6 +884,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
       #main.disabled::after {
         opacity: 0.5;
         pointer-events: all;
+        border-radius: var(--owc-tableFilter-border-radius);
       }
 
       #main::after {
@@ -889,7 +894,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
         left: 0;
         width: 100%;
         height: 100%;
-        background: #ccc;
+        background: var(--owc-tableFilter-background-secondary-color);
         opacity: 0;
         transition: opacity 0.3s;
         pointer-events: none;
@@ -925,7 +930,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
         top: 0;
         width: 20px;
         height: 100%;
-        background: #ccc;
+        background: var(--owc-tableFilter-background-secondary-color);
         opacity: 0;
         transition: opacity 0.3s;
       }

@@ -1060,7 +1060,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
                   style="--owc-table-header-cell-align: ${column.align}"
                   .field=${column.field}
                   data-sorter
-                  .sortable=${column.headerSort !== undefined ? column.headerSort : true}
+                  .sortable=${column.formatter !== 'rownum'? column.headerSort !== undefined ? column.headerSort : true: false}
                   .customSorters=${column.sorter}
                 >
                   ${typeof column.label === 'function' ? column.label() : column.label}
@@ -1630,13 +1630,21 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   static styles = [
     contentFormatterStyles,
     css`
-      :host {
+      :host{
+        --owc-table-borderColor: #e5e7eb;
+        --owc-table-loadingColor: rgba(200, 200, 200, 0.3);
+        --owc-table-important-row-background-color: #f9fafb;
+        --owc-table-primary-background-color: #fff;
+        --owc-table-header-color: #6b7280;
         display: block;
+        
       }
 
       * {
         box-sizing: border-box;
       }
+
+
 
       .row-wrapper {
         position: relative;
@@ -1668,24 +1676,24 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
       .row {
         display: flex;
-        width: 100%;
+        width: max-content;
         position: relative;
       }
 
       .row:has(.row-click):hover {
-        background: #f9fafb;
+        background: var(--owc-table-important-row-background-color);
       }
 
       .highlighted {
-        background: #ffec60;
+        background: var(--owc-table-highlighted, #ffec60);
       }
       .highlighted:hover {
-        background: #eddc5a;
+        background: var(--owc-table-highlighted-hover, #eddc5a);
       }
       .cell {
         flex-grow: 1;
         outline: 0;
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--owc-table-borderColor);
         border-width: 0 0 1px 0;
         flex-shrink: 0;
         min-width: 50px;
@@ -1719,7 +1727,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       .group-label-container {
         position: relative;
         outline: 0;
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--owc-table-borderColor);
         min-height: 45px;
         display: flex;
         align-items: center;
@@ -1734,7 +1742,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         white-space: nowrap;
         width: 100%;
         font-weight: bold;
-        color: rgb(107, 114, 128);
+        color: var(--owc-table-header-color);
         display: flex;
         align-items: center;
         gap: 1ch;
@@ -1760,7 +1768,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         content: '';
         width: 1px;
         height: 100%;
-        background: #aeafaf;
+        background: var(--owc-table-resize-bar-color ,#aeafaf);
         position: absolute;
         right: 50%;
       }
@@ -1770,7 +1778,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
 
       .cell-selector {
-        z-index: 100;
+        z-index: 10;
         overflow: hidden;
       }
 
@@ -1781,9 +1789,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         border-right-width: 1px;
       }
       .table-header .row {
-        color: #6b7280;
+        color: var(--owc-table-header-color);
         font-weight: bold;
-        background-color: #f9fafb;
+        background-color: var(--owc-table-important-row-background-color);
       }
       .table-header .cell {
         display: inline-flex;
@@ -1842,13 +1850,13 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         display: inline-flex;
         align-items: center;
         justify-content: flex-start;
-        background: #fff;
+        background: var(--owc-table-primary-background-color);
         min-height: 40px;
       }
 
       #info {
         font-size: 0.8em;
-        color: #6b7280;
+        color: var(--owc-table-header-color);
         margin: 0.5em 0;
         padding-left: 1em;
       }
@@ -1926,7 +1934,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       :host([sticky-header]) #info-outer-wrapper {
         position: sticky;
         top: 0;
-        background: #fff;
+        background: var(--owc-table-primary-background-color);
         z-index: 110;
       }
 
@@ -1949,12 +1957,12 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         display: inline-flex;
       }
       .row-container {
-        width: 100%;
+        width: fit-content;
       }
 
       .row-annotation {
         width: 100%;
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--owc-table-borderColor);
         border-width: 0 1px 0px 1px;
         padding-top: 0.5rem;
         padding-left: 1rem;
@@ -1969,7 +1977,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         display: flex;
         justify-content: center;
         align-items: center;
-        background: rgba(200, 200, 200, 0.3);
+        background: var(--owc-table-loadingColor);
         opacity: 1;
         pointer-events: none;
         height: 100%;
@@ -1983,7 +1991,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         display: flex;
         justify-content: center;
         align-items: center;
-        background: rgba(200, 200, 200, 0.3);
+        background: var(--owc-table-loadingColor);
         opacity: 0;
         transition: opacity 0.5s ease-in-out;
         pointer-events: none;
@@ -2020,12 +2028,14 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
       wa-details::part(content) {
         margin: 0;
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--owc-table-borderColor);
         border-width: 0 1px 1px 1px;
         padding: 0px;
         padding-left: 20px;
         padding-right: 20px;
-        height: 85dvh;
+        min-height: 25dvh;
+        max-height: 85dvh;
+        min-width: max-content;
         overflow-y: auto;
       }
 

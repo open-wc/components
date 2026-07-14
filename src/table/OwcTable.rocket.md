@@ -1389,7 +1389,7 @@ export const massEdit = () => {
         {
           label: 'Last Name',
           field: 'lastName',
-          formatterCompare: (row, { override }) => `${override.lastName}-`,
+          formatterCompare: (row, { override }) => `${override.lastName}`,
           editableOptions: {
             massEdit: true,
           },
@@ -1512,17 +1512,17 @@ import '@awesome.me/webawesome/dist/components/tag/tag.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 
 export const annotationTable = () => {
+  // filter-mode="global-search-with-builder"
+  //show-info
+  // .actionTabs=${{
+  //   export: { visible: true },
+  //   settings: { visible: true },
+  // }}
+  //save-state-to-url
   return html`
     <owc-table
       selectable
-      filter-mode="global-search-with-builder"
-      save-state-to-url
       sticky-header
-      show-info
-      .actionTabs=${{
-        export: { visible: true },
-        settings: { visible: true },
-      }}
       .columns=${[
         {
           label: 'First Name',

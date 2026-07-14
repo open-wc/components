@@ -31,12 +31,22 @@ export class OwcTableHeaderCell extends LitElement {
      */
     this.sorters = undefined;
   }
-
+  
   #clickHandler() {
     if (this.sortable === false) {
       return;
     }
-    this.order = this.order === 'asc' ? 'desc' : 'asc';
+    switch (this.order){
+      case 'asc':
+        this.order = 'desc'
+        break
+      case 'desc':
+        this.order = null;
+        break
+      case null:
+        this.order = 'asc'
+        break
+    }
     if (this.customSorters) {
       this.sorters = this.customSorters.map(sorter => ({
         field: sorter.field,
@@ -44,6 +54,7 @@ export class OwcTableHeaderCell extends LitElement {
         sortType: sorter.sortType,
       }));
     } else {
+      // @ts-ignore // due the switch statement, it cannot be undefined
       this.sorters = [{ field: this.field, order: this.order }];
     }
     this.dispatchEvent(new Event('sort-changed', { bubbles: true }));
