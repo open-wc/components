@@ -1,5 +1,6 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
+import { until } from 'lit/directives/until.js';
 import { virtualize, virtualizerRef } from '@lit-labs/virtualizer/virtualize.js';
 
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
@@ -295,6 +296,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
     /** @type {'always' | 'never' | 'auto'} */
     this.virtualizerMode = 'auto';
+
+    /** @type {number} */
+    this.tableWidth = 0;
   }
 
   #selectedSet = new Set();
@@ -350,7 +354,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         return;
       }
       columnElements[index].order =
-        this.jsonSorters.find(sorter => sorter.field === column.field)?.order || null;
+        this.jsonSorters.find(sorter => sorter.field === column.field)?.order || undefined;
     });
     super.firstUpdated(changedProperties);
   }
@@ -880,7 +884,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     this.shadowRoot?.querySelectorAll('#data-table [data-sorter]').forEach(cell => {
       const cellTyped = /** @type {import('./OwcTableHeaderCell.js').OwcTableHeaderCell} */ (cell);
       if (cellTyped !== targetTyped) {
-        cellTyped.order = null;
+        cellTyped.order = undefined;
       }
     });
     if (targetTyped.sorters) {
@@ -893,16 +897,22 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   renderStyles() {
     return html`
       ${this.#visibleColumns.map(
-        (column, index) => html`
-          #data-table .row > .cell:nth-child(${index + 2}) { width:
-          ${column.width ? column.width : column._calculatedWidth}px;
-          ${column.width ? 'flex-shrink: 0; flex-grow: 0; ' : ''} }
-          <!-- size table -->
-          #size-table .row > .cell:nth-child(${index + 2}) {
-          ${column.width ? html`width: ${column.width}px;` : nothing}}
-        `,
-      )}
+      (column, index) => html`
+        #data-table .row > .cell:nth-child(${index + 2}) { width:
+        ${column.width ?? column._calculatedWidth}px;
+        ${column.width ? 'flex-shrink:0; flex-grow:0;' : ''} } #size-table .row >
+        .cell:nth-child(${index + 2}) { ${column.width ? `width:${column.width}px;` : ''} }
+      `,
+    )}
     `;
+  }
+
+  #updateTableWidthCssVariable() {
+    const tableWidth = this.#visibleColumns.reduce((sum, column) => {
+      return sum + (column.width ?? column._calculatedWidth ?? 50);
+    }, 0);
+
+    this.style.setProperty('--owc-table-width', `${tableWidth}px`);
   }
 
   /**
@@ -1060,7 +1070,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
                   style="--owc-table-header-cell-align: ${column.align}"
                   .field=${column.field}
                   data-sorter
-                  .sortable=${column.formatter !== 'rownum'? column.headerSort !== undefined ? column.headerSort : true: false}
+                  .sortable=${column.formatter !== 'rownum' ? (column.headerSort !== undefined ? column.headerSort : true) : false}
                   .customSorters=${column.sorter}
                 >
                   ${typeof column.label === 'function' ? column.label() : column.label}
@@ -1270,12 +1280,21 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
             >
               ${
                 this.#shouldRenderDetail(rowId)
-                  ? this.renderDetail(row, {
-                      jsonFilters: this.jsonFilters,
-                      closeDetail: () => {
-                        this.openDetails = this.openDetails.filter(elm => elm !== rowId);
-                      },
-                    })
+                  ? until(
+                      Promise.resolve(
+                        this.renderDetail(row, {
+                          jsonFilters: this.jsonFilters,
+                          closeDetail: () => {
+                            this.openDetails = this.openDetails.filter(elm => elm !== rowId);
+                          },
+                        }),
+                      ),
+                      html`<div
+                        style="display: flex; justify-content: center; align-items: center; min-height: 100px;"
+                      >
+                        <wa-spinner></wa-spinner>
+                      </div>`,
+                    )
                   : nothing
               }
             </wa-details>
@@ -1401,11 +1420,13 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
           const { clientX } = event;
           const newWidth = width + (clientX - clientXStart);
           column.width = newWidth;
+          this.#updateTableWidthCssVariable();
           this.requestUpdate();
         } else if (target.parentElement) {
           const realWidth = target.parentElement.getBoundingClientRect().width;
           column.width = realWidth;
           width = realWidth;
+          this.#updateTableWidthCssVariable();
           this.requestUpdate();
         }
       };
@@ -1427,16 +1448,27 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     await this.updateComplete;
 
     const headers = this.shadowRoot?.querySelectorAll('#size-table .table-header .row > .cell');
+
     if (!headers) {
       return;
     }
+
+    let changed = false;
+
     for (const [index, header] of Array.from(headers).entries()) {
       const newWidth = parseInt(getComputedStyle(header).width);
       const currentWidth = this.#visibleColumns[index]._calculatedWidth;
+
       if (newWidth !== currentWidth) {
         this.#visibleColumns[index]._calculatedWidth = newWidth;
-        this.requestUpdate();
+        changed = true;
       }
+    }
+
+    this.#updateTableWidthCssVariable();
+
+    if (changed) {
+      this.requestUpdate();
     }
   }
 
@@ -1630,21 +1662,19 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   static styles = [
     contentFormatterStyles,
     css`
-      :host{
+      :host {
         --owc-table-borderColor: #e5e7eb;
         --owc-table-loadingColor: rgba(200, 200, 200, 0.3);
         --owc-table-important-row-background-color: #f9fafb;
         --owc-table-primary-background-color: #fff;
         --owc-table-header-color: #6b7280;
+        --owc-table-width: auto;
         display: block;
-        
       }
 
       * {
         box-sizing: border-box;
       }
-
-
 
       .row-wrapper {
         position: relative;
@@ -1768,7 +1798,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         content: '';
         width: 1px;
         height: 100%;
-        background: var(--owc-table-resize-bar-color ,#aeafaf);
+        background: var(--owc-table-resize-bar-color, #aeafaf);
         position: absolute;
         right: 50%;
       }
@@ -2008,6 +2038,11 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         scroll-margin-left: 1000px;
       }
 
+      wa-details {
+        display: block;
+        width: var(--owc-table-width);
+        max-width: var(--owc-table-width);
+      }
       /* wa-detail overrides */
       wa-details::part(base) {
         border: none;
@@ -2035,7 +2070,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         padding-right: 20px;
         min-height: 25dvh;
         max-height: 85dvh;
-        min-width: max-content;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
         overflow-y: auto;
       }
 
