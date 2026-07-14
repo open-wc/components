@@ -28,6 +28,9 @@ const personData = [
     premium: true,
     gender: 'male',
     age: 34,
+    birthDate: '1992-04-18',
+    monthlyPay: 3850,
+    hobbies: ['Reading', 'Hiking', 'Photography'],
   },
   {
     id: '0013X00002eP8qsQAC',
@@ -37,6 +40,9 @@ const personData = [
     premium: false,
     gender: 'female',
     age: 65,
+    birthDate: '1961-09-02',
+    monthlyPay: 6400,
+    hobbies: ['Cooking', 'Traveling', 'Music'],
   },
   {
     id: '0013X00002eP8sDQAS',
@@ -46,6 +52,9 @@ const personData = [
     premium: false,
     gender: 'female',
     age: 1025,
+    birthDate: '1941-01-11',
+    monthlyPay: 2100,
+    hobbies: ['Gardening', 'Reading'],
   },
 ];
 
@@ -56,18 +65,85 @@ const person = {
   profession: 'Teacher',
   premium: true,
   gender: 'male',
+  age: 34,
+  birthDate: '1992-04-18',
+  monthlyPay: 3850,
+  hobbies: ['Reading', 'Hiking', 'Photography'],
 };
 
-function generateMoreData(originalData, amount = 50) {
-  const data = [...originalData];
+const firstNames = [
+  'Paul',
+  'Maria',
+  'Leon',
+  'Julia',
+  'David',
+  'Emma',
+  'Lucas',
+  'Sophie',
+  'Max',
+  'Anna',
+  'Jonas',
+  'Lea',
+];
+
+const lastNames = [
+  'Huber',
+  'Mayer',
+  'Gruber',
+  'Schmidt',
+  'Wagner',
+  'Bauer',
+  'Hofer',
+  'Fischer',
+  'Leitner',
+  'Lang',
+];
+
+const professions = ['Teacher', 'Developer', 'Lawyer', 'Professor', ''];
+
+const hobbies = [
+  'Reading',
+  'Hiking',
+  'Cycling',
+  'Cooking',
+  'Photography',
+  'Gardening',
+  'Gaming',
+  'Traveling',
+  'Swimming',
+  'Music',
+];
+
+function generateMoreData(amount = 25) {
+  const data = [];
+
   for (let i = 0; i < amount; i++) {
-    const randomIndex = Math.floor(Math.random() * data.length);
-    const newEntry = JSON.parse(JSON.stringify(data[randomIndex]));
-    newEntry.id = crypto.randomUUID();
-    data.push(newEntry);
+    const birthYear = 1960 + Math.floor(Math.random() * 40);
+    const birthMonth = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+    const birthDay = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
+
+    const personHobbies = [...hobbies]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2 + Math.floor(Math.random() * 4));
+
+    data.push({
+      id: crypto.randomUUID(),
+      firstName: firstNames[Math.floor(Math.random() * firstNames.length)],
+      lastName: lastNames[Math.floor(Math.random() * lastNames.length)],
+      profession: professions[Math.floor(Math.random() * professions.length)],
+      premium: Math.random() > 0.5,
+      gender: Math.random() > 0.5 ? 'male' : 'female',
+      age: 25 + Math.floor(Math.random() * 45),
+      birthDate: `${birthYear}-${birthMonth}-${birthDay}`,
+      monthlyPay: 2800 + Math.floor(Math.random() * 4200),
+      hobbies: personHobbies,
+    });
   }
+
   return data;
 }
+
+const defaultTableConfig = {};
 ```
 
 # Table
@@ -106,15 +182,27 @@ export const simpleTable = () => {
           {
             label: 'Profession',
             field: 'profession',
+            filterable: true,
           },
           {
             label: 'Age',
             field: 'age',
             formatter: 'number',
             showInCalculateSums: true,
+            filterable: true,
+          },
+          {
+            label: 'Monthly Pay',
+            field: 'monthlyPay',
+            formatter: 'number',
+          },
+          {
+            label: 'Birthdate',
+            field: 'birthDate',
+            formatter: 'date',
           },
         ]}
-        .data=${generateMoreData(personData)}
+        .data=${generateMoreData()}
       ></owc-table>
     </div>
   `;
@@ -184,7 +272,6 @@ export const handleDataOptions_initiallyOnce = () => {
         await new Promise(resolve => setTimeout(resolve, 1000));
         return personData;
       }}
-      filter-mode="global-search"
       .columns=${[
         {
           label: 'Profession',
@@ -236,7 +323,6 @@ export const handleDataOptions_anyFilterChange = () => {
         },
         debounceTime: 500 /* this is the default - just here for demo purposes */,
       }}
-      filter-mode="global-search"
       .columns=${[
         {
           label: 'Profession',
@@ -318,14 +404,14 @@ export const hideColumnsTable = () => {
 
 ## Rows as Links
 
-To add a link to row set the `render-mode` as `link` and use the `getRowLinkSettings` setting and set a link for the rows.
+To add a link to row set the `render-mode` as `link` and use the `getRowLinkSettings` setting and set a link for the rows. In this example, it searches via google the profession. it can also reference pages of the same Website. the row contains every column of the entity
 
 ```js demo
 export const rowLinks = () => {
   return html`
     <owc-table
       render-mode="link"
-      .getRowLinkSettings=${row => ({ href: `/detail/${row.id}` })}
+      .getRowLinkSettings=${row => ({ href: `https://www.google.com/search?q=${row.profession}` })}
       .columns=${[
         {
           label: 'Nr.',
@@ -338,6 +424,11 @@ export const rowLinks = () => {
         {
           label: 'Last Name',
           field: 'lastName',
+        },
+        {
+          label: 'Profession',
+          field: 'profession',
+          visible: 'never',
         },
       ]}
       .data=${personData}
@@ -953,7 +1044,7 @@ export const stickyHeaderTable = () => {
           field: 'lastName',
         },
       ]}
-      .data=${generateMoreData(personData)}
+      .data=${generateMoreData()}
     ></owc-table>
   `;
 };
@@ -1092,32 +1183,40 @@ export const exportTable = () => {
 ## Add your own action tab
 
 You can add your own action by adding an additional key to the `actionTabs`.
+selected data contains the data that has been selected via the checkbox and processed data is the data that is currently shown. i.e.: if a filter is applied, the statistics will be calculated based of that.
 
 ```js demo
 export const actionTabTable = () => {
   return html`
+  <div style="height: 60vh; overflow: auto; ">
     <owc-table
+      show-info
+      .filterMode=${'global-search-with-builder'}
       selectable
       .columns=${[
         {
           label: 'Nr.',
           formatter: 'rownum',
           includeInExport: false,
+          filterable: true,
         },
         {
           label: 'Profession',
           field: 'profession',
+          filterable: true,
         },
         {
           label: 'First Name',
           field: 'firstName',
+          filterable: true,
         },
         {
           label: 'Last Name',
           field: 'lastName',
+          filterable: true,
         },
       ]}
-      .data=${personData}
+      .data=${generateMoreData(100)}
       .actionTabs=${{
         statistics: {
           label: 'Gender Statistics',
@@ -1133,6 +1232,7 @@ export const actionTabTable = () => {
         },
       }}
     ></owc-table>
+    </div
   `;
 };
 ```
@@ -1140,7 +1240,7 @@ export const actionTabTable = () => {
 ## Open a specific action tab
 
 You can pre open a tag by setting `.actionTabActive` or `action-tab-active` to the key of the tab.
-Example `<owc-table action-tab-active="settings"></owc-table>`
+Example `<owc-table action-tab-active="statistics"></owc-table>`
 
 ```js demo
 export const actionTabOpenTable = () => {
@@ -1148,11 +1248,28 @@ export const actionTabOpenTable = () => {
     <owc-table
       .columns=${[
         {
+          label: 'Nr.',
+          formatter: 'rownum',
+          includeInExport: false,
+          filterable: true,
+        },
+        {
+          label: 'Profession',
+          field: 'profession',
+          filterable: true,
+        },
+        {
           label: 'First Name',
           field: 'firstName',
+          filterable: true,
+        },
+        {
+          label: 'Last Name',
+          field: 'lastName',
+          filterable: true,
         },
       ]}
-      .data=${personData}
+      .data=${generateMoreData(10)}
       .actionTabs=${{
         export: {
           visible: true,
@@ -1160,8 +1277,20 @@ export const actionTabOpenTable = () => {
         settings: {
           visible: true,
         },
+        statistics: {
+          label: 'Gender Statistics',
+          content: ({ selectedData, processedData }) => {
+            const data = selectedData.length > 0 ? selectedData : processedData;
+            const maleCount = data.filter(person => person.gender === 'male').length;
+            const femaleCount = data.filter(person => person.gender === 'female').length;
+            return html`
+              <p>Males: ${maleCount}</p>
+              <p>Females: ${femaleCount}</p>
+            `;
+          },
+        },
       }}
-      action-tab-active="settings"
+      action-tab-active="statistics"
     ></owc-table>
   `;
 };
@@ -1202,6 +1331,7 @@ export const descriptionTable = () => {
             { value: 'Teacher', label: 'Teacher' },
             { value: 'Lawyer', label: 'Lawyer' },
             { value: 'Developer', label: 'Developer' },
+            { value: 'Professor', label: 'Professor'}
           ],
           description: 'This filters the professions with multiple options',
           subDescription: 'All options are: Teacher, Lawyer, Developer',
@@ -1261,7 +1391,7 @@ export const editingContent = () => {
 
 ### Edit with Checkbox
 
-Using `editableOptions: { type: 'checkbox' },` you can handle boolean values with a checkbox.
+Using `editableOptions: { type: 'checkbox' }`, you can handle boolean values with a checkbox.
 
 ```js demo
 export const editCheckbox = () => {
@@ -1296,6 +1426,8 @@ export const editCheckbox = () => {
 
 ### Edit with Autocomplete
 
+using `editableOptions: { type: 'autocomplete' }`, you can use the autocomplete feature (described in Autocomplete) to enter values easier and to specify possible options.
+
 ```js demo
 export const editAutocomplete = () => {
   return html`
@@ -1324,6 +1456,7 @@ export const editAutocomplete = () => {
               { value: 'Teacher', label: 'Teacher' },
               { value: 'Lawyer', label: 'Lawyer' },
               { value: 'Developer', label: 'Developer' },
+              { value: 'Professor', label: 'Professor' },
             ],
           },
         },
@@ -1335,6 +1468,8 @@ export const editAutocomplete = () => {
 ```
 
 ### Add new Row
+
+using `.handleInsert`, you can define what the init values for the fields are. this allows to add a new row to the table
 
 ```js demo
 export const addNewRow = () => {
@@ -1364,6 +1499,8 @@ export const addNewRow = () => {
 ```
 
 ### Mass Editing
+
+you can enable mass edit for specific columns by specifying `massEdit: true` in the `editableOptions`. in addition, you can specify a formatterCompare to display the change.
 
 ```js demo
 export const massEdit = () => {
