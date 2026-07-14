@@ -1331,7 +1331,7 @@ export const descriptionTable = () => {
             { value: 'Teacher', label: 'Teacher' },
             { value: 'Lawyer', label: 'Lawyer' },
             { value: 'Developer', label: 'Developer' },
-            { value: 'Professor', label: 'Professor'}
+            { value: 'Professor', label: 'Professor' },
           ],
           description: 'This filters the professions with multiple options',
           subDescription: 'All options are: Teacher, Lawyer, Developer',

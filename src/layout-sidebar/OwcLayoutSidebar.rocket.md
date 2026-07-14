@@ -169,6 +169,6 @@ parent groups are opened. The page content goes into the default slot.
 
 ### Methods
 
-| Method               | Description                                                                                                                                                                      |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Method               | Description                                                                                                                                                                       |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `loadStateFromUrl()` | Marks the menu item whose href (including `hrefGETParams`) matches the current URL as selected and opens its ancestor groups. Called automatically when the element is connected. |

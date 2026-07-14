@@ -1,17 +1,16 @@
-:root{
-    /* Fonts */
-    --owc-font-color: #334155;
-    --owc-font-family: 'Rubik', Arial, Helvetica, sans-serif;
-    --owc-font-size: 16px ;
-    
-    --owc-header-font-color: #6b7280;
-    --owc-header-font-weight: bold;
+:root {
+  /* Fonts */
+  --owc-font-color: #334155;
+  --owc-font-family: 'Rubik', Arial, Helvetica, sans-serif;
+  --owc-font-size: 16px;
 
-    /* Colors */
-    --owc-primary-color: /* needs to be spoken bout */;
-    --owc-secondary-color: /* needs to be spoken bout */;
-    --owc-primary-background-color: #ffffff;
-    --owc-secondary-background-color: #f9fafb;
-    --owc-border-color: #9194a2;
+  --owc-header-font-color: #6b7280;
+  --owc-header-font-weight: bold;
 
+  /* Colors */
+  --owc-primary-color: /* needs to be spoken bout */;
+  --owc-secondary-color: /* needs to be spoken bout */;
+  --owc-primary-background-color: #ffffff;
+  --owc-secondary-background-color: #f9fafb;
+  --owc-border-color: #9194a2;
 }
