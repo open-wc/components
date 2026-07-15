@@ -858,7 +858,7 @@ export class OwcTemplateEditorOld extends ScopedElementsMixin(LitElement) {
           class="help-button"
           caret
           outline
-          size="small"
+          size="s"
           >Hilfe</wa-button
         >`;
     }

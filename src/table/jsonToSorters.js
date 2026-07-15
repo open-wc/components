@@ -7,6 +7,8 @@ import { resolveFieldPath } from './resolveFieldPath.js';
 export function jsonToSorters(jsonSorter) {
   /** @type {import('./OwcTable.types.js').Sorter} */
   function sorter(a, b) {
+    if (jsonSorter.order === undefined) return 0;
+
     let aValue = resolveFieldPath(a, jsonSorter.field);
     let bValue = resolveFieldPath(b, jsonSorter.field);
 

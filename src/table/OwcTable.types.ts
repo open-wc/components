@@ -116,7 +116,11 @@ type SorterParam = Record<string, unknown>;
 
 export type Sorter = (a: SorterParam, b: SorterParam) => number;
 
-export type JsonSorter = { field: string; order?: 'desc' | 'asc'; sortType?: 'dateNoYear' };
+export type JsonSorter = {
+  field: string;
+  order?: 'desc' | 'asc' | undefined;
+  sortType?: 'dateNoYear';
+};
 
 export interface RowLinkSettings {
   href: string;
