@@ -93,10 +93,8 @@ export class OwcTableSettings extends OwcAutocomplete {
       return html`
         <div id="footer">
           <div id="footer-actions">
-            <wa-button size="small" appearance="outlined" @click=${this.toggleLegend}>
-              ?
-            </wa-button>
-            <wa-button size="small" appearance="outlined" @click=${this.reset}>Reset</wa-button>
+            <wa-button size="s" appearance="outlined" @click=${this.toggleLegend}> ? </wa-button>
+            <wa-button size="s" appearance="outlined" @click=${this.reset}>Reset</wa-button>
           </div>
           <div id="footer-legend" hidden>
             <p>Spalten werden in der Tabelle angezeigt, wenn:</p>

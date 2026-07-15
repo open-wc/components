@@ -216,7 +216,7 @@ export const openExternally = () => {
       ]}
     ></owc-autocomplete>
     <wa-button
-      size="small"
+      size="s"
       @click=${() => {
         const buttonOpen = document
           .querySelector('[demo-name=openExternally]')
@@ -339,7 +339,7 @@ The `size` attribute sets the height of the dropdown. Possible options are `smal
 export const size = () => {
   return html`
     <owc-autocomplete
-      size="small"
+      size="s"
       .data=${[
         { label: 'VAV', value: '100' },
         { label: 'Standard Life', value: '101' },

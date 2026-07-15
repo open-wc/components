@@ -785,7 +785,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
                   ${
                     this.handleInsert
                       ? html`<wa-button
-                          size="small"
+                          size="s"
                           variant="brand"
                           @click=${async () => {
                             if (this.handleInsert) {

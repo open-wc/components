@@ -154,7 +154,7 @@ export const buttonInputAutofillField = () => {
     <wa-button
       variant="brand"
       style="margin-top: 20px"
-      size="small"
+      size="s"
       @click=${() => {
         const buttonInputAutofill = document
           .querySelector('[demo-name=buttonInputAutofillField]')
