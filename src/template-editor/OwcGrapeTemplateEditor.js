@@ -2363,7 +2363,7 @@ export class OwcGrapeTemplateEditor extends ScopedElementsMixin(LitElement) {
                                   <span>formal</span>
                                   <wa-switch
                                     id="template-variant-switch"
-                                    size="small"
+                                    size="s"
                                     ?checked=${(this.currentVariant || 'formal') === 'informal'}
                                     ?disabled=${this.isVariantSwitchDisabled}
                                     @change=${this.handleVariantSwitchChange}

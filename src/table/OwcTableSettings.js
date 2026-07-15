@@ -95,10 +95,8 @@ export class OwcTableSettings extends OwcAutocomplete {
       return html`
         <div id="footer">
           <div id="footer-actions">
-            <wa-button size="small" appearance="outlined" @click=${this.toggleLegend}>
-              ?
-            </wa-button>
-            <wa-button size="small" appearance="outlined" @click=${this.reset}
+            <wa-button size="s" appearance="outlined" @click=${this.toggleLegend}> ? </wa-button>
+            <wa-button size="s" appearance="outlined" @click=${this.reset}
               >${tableTerm(this.tableLocalize, 'tableReset')}</wa-button
             >
           </div>

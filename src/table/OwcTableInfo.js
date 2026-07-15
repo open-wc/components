@@ -120,7 +120,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
         content: () =>
           html`<div>
             <wa-button
-              size="small"
+              size="s"
               appearance="outlined"
               @click=${() => {
                 this.table?.copyAsExcel();
@@ -131,7 +131,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
 
             <wa-button
               appearance="outlined"
-              size="small"
+              size="s"
               @click=${() => {
                 this.table?.downloadAsCsv();
               }}
@@ -163,7 +163,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
             .columns=${this.columns}
             .storeNamePrefix=${this.table?.storeNamePrefix}
             @change=${this.#overridesChanged}
-            size="small"
+            size="s"
           ></owc-table-settings>
         `,
         visible: false,

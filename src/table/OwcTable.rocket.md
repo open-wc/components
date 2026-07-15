@@ -22,8 +22,8 @@ import '@open-wc/components/define/owc-table.js';
 const personData = [
   {
     id: '0013X00002eOb5BQAS',
-    firstName: 'Robert',
-    lastName: 'Lombart',
+    firstName: 'Julian',
+    lastName: 'Schmidt',
     profession: 'Teacher',
     premium: true,
     gender: 'male',
@@ -34,8 +34,8 @@ const personData = [
   },
   {
     id: '0013X00002eP8qsQAC',
-    firstName: 'Sarah',
-    lastName: 'Arlon',
+    firstName: 'Sophie',
+    lastName: 'Wagner',
     profession: 'Developer',
     premium: false,
     gender: 'female',
@@ -46,8 +46,8 @@ const personData = [
   },
   {
     id: '0013X00002eP8sDQAS',
-    firstName: 'Grace',
-    lastName: 'Annerer',
+    firstName: 'Jonas',
+    lastName: 'Gruber',
     profession: '',
     premium: false,
     gender: 'female',
@@ -60,8 +60,8 @@ const personData = [
 
 const person = {
   id: '0013X00002eOb5BQAS',
-  firstName: 'Robert',
-  lastName: 'Lombart',
+  firstName: 'Huber',
+  lastName: 'Schmidt',
   profession: 'Teacher',
   premium: true,
   gender: 'male',
@@ -72,7 +72,7 @@ const person = {
 };
 
 const firstNames = [
-  'Paul',
+  'Lucie',
   'Maria',
   'Leon',
   'Julia',
@@ -80,10 +80,10 @@ const firstNames = [
   'Emma',
   'Lucas',
   'Sophie',
-  'Max',
+  'Julian',
   'Anna',
   'Jonas',
-  'Lea',
+  'Martina',
 ];
 
 const lastNames = [
@@ -148,7 +148,7 @@ const defaultTableConfig = {};
 
 # Table
 
-A Table with many filter options and features.
+`owc-table` is a highly configurable data table component supporting client-side and server-side data loading, filtering, sorting, editing, grouping, exporting, and customizable row rendering.
 
 Simple example:
 
@@ -211,7 +211,7 @@ export const simpleTable = () => {
 
 ## Data Handling
 
-In order to fetch data from an API you can
+The main method of using the table is row based over an Json. the `column` attribute defines the presentation and parsing of the data. the data itself can be provided in two different ways.
 
 ### Passing data
 
@@ -228,12 +228,10 @@ export const dataHandlingPassing = () => {
         {
           label: 'First Name',
           field: 'firstName',
-          filterable: true,
         },
         {
           label: 'Last Name',
           field: 'lastName',
-          filterable: true,
         },
       ]}
       .data=${[
@@ -249,7 +247,7 @@ export const dataHandlingPassing = () => {
 
 If you want to make an API call you can provide an async `handleData` function.
 
-Generally there are 3 modes
+Generally there are 3 modes:
 
 1. `initiallyOnce`: fetch the data once on initial render and then only filter in the browser
 1. `anyFilterChange`: fetch the data on every filter change (has a debounce of 500ms by default)
@@ -267,8 +265,7 @@ export const handleDataOptions_initiallyOnce = () => {
   return html`
     <owc-table
       .handleData=${async () => {
-        // this await Promise is for demo purposes - this should be your fetch
-        // return await fetch('api.domain.com/v1/stuff');
+        // Simulate an API request.
         await new Promise(resolve => setTimeout(resolve, 1000));
         return personData;
       }}
@@ -301,20 +298,22 @@ This will result in an API call for every keystroke / filter change.
 If you wish to limit the amount of API call then you can provide a `condition´ function to for example only do an api call after a min. of 3 characters are entered.
 
 ```js demo
+const handleDataOptionsArray = [...generateMoreData(100), ...personData];
+
 export const handleDataOptions_anyFilterChange = () => {
   return html`
     <owc-table
       .handleData="${async ({ jsonFilters }) => {
         const search = jsonFilters[0]?.value;
-        // this await Promise is for demo purposes - this should be your fetch
-        // return await fetch('api.domain.com/v1/stuff');
+        // Simulate an API request.
         await new Promise(resolve => setTimeout(resolve, 1000));
-        return personData.filter(
+        return handleDataOptionsArray.filter(
           person =>
             person.firstName.toLowerCase().includes(search.toLowerCase()) ||
             person.lastName.toLowerCase().includes(search.toLowerCase()),
         );
       }}"
+      filter-mode="global-search"
       .handleDataOptions=${{
         mode: 'anyFilterChange',
         condition: ({ jsonFilters }) => {
@@ -327,6 +326,14 @@ export const handleDataOptions_anyFilterChange = () => {
         {
           label: 'Profession',
           field: 'profession',
+          filterable: true,
+          filterType: 'autocomplete',
+          filterOptions: [
+            { value: 'Teacher', label: 'Teacher' },
+            { value: 'Lawyer', label: 'Lawyer' },
+            { value: 'Developer', label: 'Developer' },
+            { value: 'Professor', label: 'Professor' },
+          ],
         },
         {
           label: 'First Name',
@@ -344,7 +351,11 @@ export const handleDataOptions_anyFilterChange = () => {
 };
 ```
 
-## Show or hide columns
+## Presentation of data
+
+this chapter is mainly for the presentation of the data itself. this is usually defined for every column or over a function that is called for every row.
+
+### Show or hide columns
 
 Set
 
@@ -366,6 +377,7 @@ to add a dropdown above the table that can show, hide or only show the columns w
 export const hideColumnsTable = () => {
   return html`
     <owc-table
+      filter-mode="global-search-with-builder"
       .actionTabs=${{
         settings: { visible: true },
       }}
@@ -402,9 +414,9 @@ export const hideColumnsTable = () => {
 };
 ```
 
-## Rows as Links
+### Rows as Links
 
-To add a link to row set the `render-mode` as `link` and use the `getRowLinkSettings` setting and set a link for the rows. In this example, it searches via google the profession. it can also reference pages of the same Website. the row contains every column of the entity
+To add a link to row set the `render-mode` as `link` and use the `getRowLinkSettings` setting and set a link for the rows. In this example, it searches via the google search for the profession. it can also reference pages of the same Website. the row contains every column of the entity
 
 ```js demo
 export const rowLinks = () => {
@@ -437,7 +449,7 @@ export const rowLinks = () => {
 };
 ```
 
-## Show Details
+### Show Details
 
 For the detail views of the rows to appear directly in the table, set the `render-mode` as `detail` and use the `renderDetails` to provide html for row detail views.
 
@@ -476,7 +488,7 @@ export const showDetails = () => {
 };
 ```
 
-## Async Show Details
+### Async Show Details
 
 Show Details can also handle async functions
 
@@ -518,7 +530,259 @@ export const asyncShowDetails = () => {
 };
 ```
 
-## Add Header Content
+### Formatted cells
+
+To use formatted cells define the `formatter`. Existing formatters are `rownum` (numbered rows), `datetime` (date from Date object) and `currency` (local currency). A custom formatter function can also be used to filter information from this row or visually change a column with html.
+
+```js demo
+import { renderSubList } from '@open-wc/components/table/subListHelpers.js';
+export const formatTable = () => {
+  return html`
+    <owc-table
+      .columns=${[
+        { label: 'Nr.', formatter: 'rownum' },
+        {
+          label: 'First Name',
+          field: 'firstName',
+        },
+        {
+          label: 'Age',
+          field: 'age',
+          formatter: 'number',
+        },
+        {
+          label: 'Monthly Pay',
+          field: 'monthlyPay',
+          formatter: 'currency',
+        },
+        {
+          label: 'Birthdate',
+          field: 'birthDate',
+          formatter: 'date',
+        },
+        {
+          label: 'Hobbies',
+          field: 'hobbies[]',
+          fieldFilteredReturn: 'hobbies[]',
+          filterType: 'number',
+          formatter: (row, { fieldValueFiltered }) => {
+            return html`<ul>
+              ${fieldValueFiltered.map(value => html`<li>${value}</li>`)}
+            </ul>`;
+          },
+        },
+        {
+          label: 'Profession',
+          field: 'profession',
+          formatter: row => html`
+            <span style="background: green; border-radius: 5px; color: white; padding: 3px;">
+              ${row.profession}
+            </span>
+          `,
+        },
+      ]}
+      ]}
+      .data=${personData}
+    ></owc-table>
+  `;
+};
+```
+
+### Override Built in Formatter
+
+you can also replace the default formatter with a different formatter. per default, it uses the german standard.
+
+```js demo
+export const overrideBuiltinFormatter = () => {
+  return html`
+    <owc-table
+      .columns=${[
+        { label: 'Nr.', formatter: 'rownum' },
+        {
+          label: 'First Name',
+          field: 'firstName',
+        },
+        {
+          label: 'Age',
+          field: 'age',
+          formatter: 'number',
+        },
+        {
+          label: 'Monthly Pay',
+          field: 'monthlyPay',
+          formatter: 'currency',
+        },
+        {
+          label: 'Birthdate',
+          field: 'birthDate',
+          formatter: 'date',
+        },
+      ]}
+      .data=${personData}
+      .numberFormatter=${new Intl.NumberFormat('de', { minimumFractionDigits: 2 })}
+      .currencyFormatter=${new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}
+      .dateFormatter=${new Intl.DateTimeFormat('en-US', {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric',
+      })}
+    ></owc-table>
+  `;
+};
+```
+
+### Annotation
+
+Use `renderAnnotation` to render custom annotations to the top of the row
+
+```js demo
+import '@awesome.me/webawesome/dist/components/tag/tag.js';
+import '@awesome.me/webawesome/dist/components/icon/icon.js';
+
+export const annotationTable = () => {
+  // filter-mode="global-search-with-builder"
+  //show-info
+  // .actionTabs=${{
+  //   export: { visible: true },
+  //   settings: { visible: true },
+  // }}
+  //save-state-to-url
+  return html`
+    <owc-table
+      selectable
+      sticky-header
+      .columns=${[
+        {
+          label: 'First Name',
+          field: 'firstName',
+          filterable: true,
+        },
+        {
+          label: 'Last Name',
+          field: 'lastName',
+          filterable: true,
+        },
+        {
+          label: 'Profession',
+          field: 'profession',
+        },
+        {
+          label: 'Age',
+          field: 'age',
+          formatter: 'number',
+          showInCalculateSums: true,
+        },
+      ]}
+      .renderDetail=${(row, {}) => {
+        return html`${row.profession}`;
+      }}
+      render-mode="detail"
+      .renderAnnotation=${row => {
+        return !row.profession
+          ? html`<wa-tag variant="warning">
+              <wa-icon name="clock"></wa-icon>
+              &nbsp;<span>Warning: Profession field is empty</span>
+            </wa-tag>`
+          : nothing;
+      }}
+      .data=${personData}
+    ></owc-table>
+  `;
+};
+```
+
+### Groups
+
+By specifing a list of groups and a selector function, mapping data elements to group keys, you can divide the table up into groups for a better overview. Groups can be opened and closed by clicking. All elements grouped into non specified groups go into a "other" group. By specifying a priority the display order of the groups can be decided. By setting the active property of a group to true, it will be open by default.
+
+```js demo
+const groupedTableArray = [...generateMoreData(100), ...personData];
+
+export const groupedTable = () => {
+  return html`
+    <div style="height: 60vh; overflow: auto; ">
+      <owc-table
+        .groupList=${[
+          { key: 'j', label: 'Starts with R', priority: 10, active: true },
+          {
+            key: 'm',
+            label: 'Starts with M',
+            priority: 10,
+            active: false,
+            backgroundColor: 'red',
+            textColor: 'white',
+          },
+        ]}
+        .groupSelector=${row => row.firstName.toLowerCase().substring(0, 1)}
+        .columns=${[
+          {
+            label: 'Nr.',
+            formatter: 'rownum',
+          },
+          {
+            label: 'Gender',
+            field: 'gender',
+          },
+          {
+            label: 'Birthdate',
+            field: 'birthDate',
+            formatter: 'date',
+            sorter: [{ field: 'birthDate', order: 'desc', sortType: 'dateNoYear' }],
+          },
+          {
+            label: 'First Name',
+            field: 'firstName',
+          },
+        ]}
+        .data=${groupedTableArray}
+      ></owc-table>
+    </div>
+  `;
+};
+```
+
+## Additional settings
+
+This chapter mainly talks about additional settings, that do not directly have to do with the data itself but more of additional features and options over the entire row.
+
+### Extra info
+
+The `show-info` shows a help text that says how many rows are currently being displayed. This works with the filter as well.
+
+```js demo
+export const showInfoTable = () => {
+  return html`
+    <owc-table
+      show-info
+      .filterMode=${'global-search'}
+      .columns=${[
+        {
+          label: 'Nr.',
+          formatter: 'rownum',
+        },
+        {
+          label: 'First Name',
+          field: 'firstName',
+          filterable: true,
+        },
+        {
+          label: 'Last Name',
+          field: 'lastName',
+          filterable: true,
+        },
+      ]}
+      .data=${personData}
+    ></owc-table>
+  `;
+};
+```
+
+### Add Header Content
 
 If you want to add static content between the Filter and the content you can provide a `renderHeaderContent` function
 
@@ -526,6 +790,7 @@ If you want to add static content between the Filter and the content you can pro
 export const headerContent = () => {
   return html`
     <owc-table
+      filter-mode="global-search"
       .columns=${[
         {
           label: 'Nr.',
@@ -545,143 +810,66 @@ export const headerContent = () => {
 };
 ```
 
-## Formatted cells
+### Sticky header
 
-To use formatted cells define the `formatter`. Existing formatters are `rownum` (numbered rows), `datetime` (date from Date object) and `currency` (local currency). A custom formatter function can also be used to filter information from this row or visually change a column with html.
+Use the `sticky-header` attribute to make the header fixed at the top of the table when scrolling.
 
 ```js demo
-import { renderSubList } from '@open-wc/components/table/subListHelpers.js';
-export const formatTable = () => {
+export const stickyHeaderTable = () => {
   return html`
-    <owc-table
-      .columns=${[
-        { label: 'Nr.', formatter: 'rownum' },
-        { label: 'Date', field: 'date', formatter: 'datetime' },
-        {
-          label: 'Amount',
-          field: 'amount',
-          formatter: 'currency',
-        },
-        {
-          label: 'Product Status',
-          field: 'productList[].status',
-          // filteredField: 'productList[]',
-          // formatter: (row, { fieldValueFiltered }) =>
-          //   renderSubList(fieldValueFiltered, [
-          //     product => product.label,
-          //     product => product.status,
-          //   ]),
-        },
-        {
-          label: 'Product Amount',
-          field: 'productList[].amount',
-          fieldFilteredReturn: 'productList[]',
-          filterType: 'number',
-          formatter: (row, { fieldValueFiltered, currencyFormatter }) =>
-            renderSubList(fieldValueFiltered, [
-              product => product.label,
-              product => product.amount && currencyFormatter.format(product.amount),
-            ]),
-        },
-        {
-          label: 'Performance',
-          field: 'performance',
-          formatter: row => html`
-            <span style="background: green; border-radius: 5px; color: white; padding: 3px;">
-              ${row.performance}
-            </span>
-          `,
-        },
-      ]}
-      .data=${[
-        {
-          id: 1,
-          date: new Date('2023-10-01T10:00:00Z'),
-          amount: 1500.0,
-          productList: [
-            {
-              status: 'available',
-              amount: 1500.0,
-              label: 'Test product 3s',
-            },
-          ],
-          performance: 'Declining',
-        },
-        {
-          id: 2,
-          date: new Date('2023-10-02T11:30:00Z'),
-          amount: 2500.5,
-          productList: [
-            {
-              status: 'available',
-              amount: 2500.5,
-              label: 'Test product 1',
-            },
-          ],
-          performance: 'Good',
-        },
-        {
-          id: 3,
-          date: new Date('2023-10-03T14:45:00Z'),
-          amount: 3200.75,
-          productList: [
-            {
-              status: 'available',
-              amount: 2500.5,
-              label: 'Test product 1',
-            },
-            {
-              status: 'out of stock',
-              amount: 700.25,
-              label: 'Test product 2',
-            },
-          ],
-          performance: 'Good',
-        },
-      ]}
-    ></owc-table>
+    <div style="height: 60vh; overflow: auto; ">
+      <owc-table
+        sticky-header
+        .columns=${[
+          {
+            label: 'Nr.',
+            formatter: 'rownum',
+          },
+          {
+            label: 'Profession',
+            field: 'profession',
+          },
+          {
+            label: 'First Name',
+            field: 'firstName',
+          },
+          {
+            label: 'Last Name',
+            field: 'lastName',
+          },
+        ]}
+        .data=${generateMoreData()}
+      ></owc-table>
+    </div>
   `;
 };
 ```
 
-## Override Built in Formatter
+### Exporting the Table
 
-```js demo
-export const overrideBuiltinFormatter = () => {
-  return html`
-    <owc-table
-      selectable
-      .columns=${[
-        {
-          label: 'Nr.',
-          formatter: 'rownum',
-        },
-        {
-          label: 'Age',
-          field: 'age',
-          formatter: 'number',
-        },
-      ]}
-      .data=${personData}
-      .numberFormatter=${new Intl.NumberFormat('de', { minimumFractionDigits: 2 })}
-    ></owc-table>
-  `;
-};
+Tables can be copied to an Excel Table or downloaded as a `*.csv`. It comes with a built in "Export" Tab action which you can enable by setting it's visibility to true.
+
+```js
+.actionTabs=${{
+  export: { visible: true },
+}}
 ```
 
-## Selectable rows
-
-The `selectable` attribute makes rows selectable and adds a checkbox to select all rows. To work with the selected data add a custom tab via the `.actionTabs` property - its `content` callback receives `selectedData`, an array with the information of the selected rows. In this example it is logged in the console. IDs are required when using selectable rows.
+To exclude a column set `includeInExport` to false.
 
 ```js demo
-export const selectableTable = () => {
+export const exportTable = () => {
   return html`
     <owc-table
-      selectable
       .columns=${[
         {
           label: 'Nr.',
           formatter: 'rownum',
+          includeInExport: false,
+        },
+        {
+          label: 'Profession',
+          field: 'profession',
         },
         {
           label: 'First Name',
@@ -692,34 +880,210 @@ export const selectableTable = () => {
           field: 'lastName',
         },
       ]}
+      .data=${personData}
       .actionTabs=${{
-        showSelected: {
-          label: 'Auswahl',
-          visible: true,
-          content: ({ selectedData }) => html`
-            <wa-button
-              size="small"
-              @click=${async () => {
-                console.log(
-                  'Selected Data: ' +
-                    selectedData
-                      .map(data => data.firstName + ' ' + data.lastName + ' (' + data.id + ')')
-                      .join(', '),
-                );
-              }}
-            >
-              Show Selected
-            </wa-button>
-          `,
+        export: { visible: true },
+      }}
+    ></owc-table>
+  `;
+};
+```
+
+### Add your own action tab
+
+You can add your own action by adding an additional key to the `actionTabs`.
+selected data contains the data that has been selected via the checkbox and processed data is the data that is currently shown. i.e.: if a filter is applied, the statistics will be calculated based of that.
+
+```js demo
+export const actionTabTable = () => {
+  return html`
+  <div style="height: 60vh; overflow: auto; ">
+    <owc-table
+      show-info
+      selectable
+      .columns=${[
+        {
+          label: 'Nr.',
+          formatter: 'rownum',
+          includeInExport: false,
+          filterable: true,
+        },
+        {
+          label: 'Profession',
+          field: 'profession',
+          filterable: true,
+        },
+        {
+          label: 'First Name',
+          field: 'firstName',
+          filterable: true,
+        },
+        {
+          label: 'Last Name',
+          field: 'lastName',
+          filterable: true,
+        },
+      ]}
+      .data=${generateMoreData(100)}
+      .actionTabs=${{
+        statistics: {
+          label: 'Gender Statistics',
+          content: ({ selectedData, processedData }) => {
+            const data = selectedData.length > 0 ? selectedData : processedData;
+            const maleCount = data.filter(person => person.gender === 'male').length;
+            const femaleCount = data.filter(person => person.gender === 'female').length;
+            return html`
+              <p>Males: ${maleCount}</p>
+              <p>Females: ${femaleCount}</p>
+            `;
+          },
         },
       }}
+    ></owc-table>
+    </div
+  `;
+};
+```
+
+### Open a specific action tab
+
+You can pre open a tag by setting `.actionTabActive` or `action-tab-active` to the key of the tab.
+Example `<owc-table action-tab-active="statistics"></owc-table>`
+
+```js demo
+export const actionTabOpenTable = () => {
+  return html`
+    <owc-table
+      .columns=${[
+        {
+          label: 'Nr.',
+          formatter: 'rownum',
+          includeInExport: false,
+          filterable: true,
+        },
+        {
+          label: 'Profession',
+          field: 'profession',
+          filterable: true,
+        },
+        {
+          label: 'First Name',
+          field: 'firstName',
+          filterable: true,
+        },
+        {
+          label: 'Last Name',
+          field: 'lastName',
+          filterable: true,
+        },
+      ]}
+      .data=${generateMoreData(10)}
+      .actionTabs=${{
+        export: {
+          visible: true,
+        },
+        settings: {
+          visible: true,
+        },
+        statistics: {
+          label: 'Gender Statistics',
+          content: ({ selectedData, processedData }) => {
+            const data = selectedData.length > 0 ? selectedData : processedData;
+            const maleCount = data.filter(person => person.gender === 'male').length;
+            const femaleCount = data.filter(person => person.gender === 'female').length;
+            return html`
+              <p>Males: ${maleCount}</p>
+              <p>Females: ${femaleCount}</p>
+            `;
+          },
+        },
+      }}
+      action-tab-active="statistics"
+    ></owc-table>
+  `;
+};
+```
+
+### Align column content
+
+Use `align` to align the content in columns. It is possible to align the content as `start` (left bound), `center` (centered), `end` (right bound) and `full` (centered but excluding header) with the default being `start`.
+
+```js demo
+export const alignContent = () => {
+  return html`
+    <owc-table
+      .columns=${[
+        {
+          label: 'Nr.',
+          formatter: 'rownum',
+          align: 'start', // is the default
+        },
+        {
+          label: 'Profession',
+          field: 'profession',
+          align: 'center',
+        },
+        {
+          label: 'First Name',
+          field: 'firstName',
+          align: 'end',
+        },
+        {
+          label: 'Last Name',
+          field: 'lastName',
+          align: 'full',
+        },
+      ]}
       .data=${personData}
     ></owc-table>
   `;
 };
 ```
 
-## Filter
+### Width of columns
+
+Use `width` to change the width of a column and use `resizable` to change if columns are resizable, this is true by default.
+
+```js demo
+export const widthOfColumns = () => {
+  return html`
+    <owc-table
+      .columns=${[
+        {
+          label: 'Nr.',
+          formatter: 'rownum',
+          resizable: false,
+          width: 60,
+        },
+        {
+          label: 'Profession',
+          field: 'profession',
+          resizable: false,
+          width: 300,
+        },
+        {
+          label: 'First Name',
+          field: 'firstName',
+          resizable: true, // is the default
+          width: 400,
+        },
+        {
+          label: 'Last Name',
+          field: 'lastName',
+          resizable: true, // is the default
+        },
+      ]}
+      .data=${personData}
+    ></owc-table>
+  `;
+};
+```
+
+## Filtering and Sorting
+
+this chapter mainly focuses on the sorting and filtering of the data. the filter can ether be submitted as a parameter for an call to the backend or managed by the component. this is determined of how the data is handled, see [Data handling](#data-handling)
+
+### Filter
 
 Use the `.filterMode` property to display a filter. `builder` provides a filter option for every column that filters with the defined filter type. `global-search-with-builder` adds a global search bar that works with the `text` and `number` types. All filter types are: `checkbox` (checkable options), `date` (time span options), `text` (text search, default), `number` (operator search) and `autocomplete` (set of options). For the `autocomplete` and `checkbox` types its required to set `filterOptions`. To make a column filterable set `filterable` true.
 
@@ -815,39 +1179,7 @@ export const filterTable = () => {
 };
 ```
 
-## Extra info
-
-The `show-info` shows a help text that says how many rows are currently being displayed. This works with the filter.
-
-```js demo
-export const showInfoTable = () => {
-  return html`
-    <owc-table
-      show-info
-      .filterMode=${'global-search'}
-      .columns=${[
-        {
-          label: 'Nr.',
-          formatter: 'rownum',
-        },
-        {
-          label: 'First Name',
-          field: 'firstName',
-          filterable: true,
-        },
-        {
-          label: 'Last Name',
-          field: 'lastName',
-          filterable: true,
-        },
-      ]}
-      .data=${personData}
-    ></owc-table>
-  `;
-};
-```
-
-## Sorting
+### Sorting
 
 To sort by a column by default use `sorter` to set the order. `field` is required and is the column to be sorted, `order` is ascending by default but can be set to `asc` or `desc` and `sortType` can be `dateNoYear` to ignore the year in a date when sorting (example below).
 
@@ -900,94 +1232,15 @@ export const sortingTable = () => {
 };
 ```
 
-## Groups
+### Selectable rows
 
-By specifing a list of groups and a selector function, mapping data elements to group keys, you can divide the table up into groups for a better overview. Groups can be opened and closed by clicking. All elements grouped into non specified groups go into a "other" group. By specifying a priority the display order of the groups can be decided. By setting the active property of a group to true, it will be open by default.
-
-```js demo
-export const groupedTable = () => {
-  return html`
-    <owc-table
-      .groupList=${[
-        { key: 'r', label: 'Starts with R', priority: 10, active: true },
-        {
-          key: 'm',
-          label: 'Starts with M',
-          priority: 10,
-          active: false,
-          backgroundColor: 'red',
-          textColor: 'white',
-        },
-      ]}
-      .groupSelector=${row => row.firstName.toLowerCase().substring(0, 1)}
-      .columns=${[
-        {
-          label: 'Nr.',
-          formatter: 'rownum',
-        },
-        {
-          label: 'Status',
-          field: 'status',
-        },
-        {
-          label: 'Meeting date',
-          field: 'meetingDate',
-          formatter: 'datetime',
-          sorter: [{ field: 'meetingDate', order: 'desc', sortType: 'dateNoYear' }],
-        },
-        {
-          label: 'First Name',
-          field: 'firstName',
-        },
-      ]}
-      .data=${[
-        {
-          id: 1,
-          firstName: 'Robert',
-          status: 'Offline',
-          meetingDate: new Date('2022-06-28T14:30:00.000Z'),
-        },
-        {
-          id: 2,
-          firstName: 'Ada',
-          status: 'Online',
-          meetingDate: new Date('2023-05-31T14:30:00.000Z'),
-        },
-        {
-          id: 3,
-          firstName: 'Michelle',
-          status: 'Online',
-          meetingDate: new Date('2022-04-13T12:00:00.000Z'),
-        },
-        {
-          id: 4,
-          firstName: 'Sarah',
-          status: 'Online',
-          meetingDate: new Date('2022-03-13T12:00:00.000Z'),
-        },
-      ]}
-    ></owc-table>
-  `;
-};
-```
-
-## Calculate Sums
-
-By adding `showInCalculateSums` property to a column and adding a action tab
-you can show the total sum of all values of a column
-...
+The `selectable` attribute makes rows selectable and adds a checkbox to select all rows. To work with the selected data add a custom tab via the `.actionTabs` property - its `content` callback receives `selectedData`, an array with the information of the selected rows. In this example it is logged in the console. IDs are required when using selectable rows.
 
 ```js demo
-export const calculateSums = () => {
+export const selectableTable = () => {
   return html`
     <owc-table
-      show-info
-      .filterMode=${'global-search'}
-      .actionTabs=${{
-        calculateSums: {
-          visible: true,
-        },
-      }}
+      selectable
       .columns=${[
         {
           label: 'Nr.',
@@ -996,61 +1249,40 @@ export const calculateSums = () => {
         {
           label: 'First Name',
           field: 'firstName',
-          filterable: true,
         },
         {
           label: 'Last Name',
           field: 'lastName',
-          filterable: true,
-        },
-        {
-          label: 'Age',
-          field: 'age',
-          filterable: true,
-          formatter: 'number',
-          showInCalculateSums: true,
         },
       ]}
+      .actionTabs=${{
+        showSelected: {
+          label: 'Auswahl',
+          visible: true,
+          content: ({ selectedData }) => html`
+            <wa-button
+              size="s"
+              @click=${async () => {
+                console.log(
+                  'Selected Data: ' +
+                    selectedData
+                      .map(data => data.firstName + ' ' + data.lastName + ' (' + data.id + ')')
+                      .join(', '),
+                );
+              }}
+            >
+              Show Selected
+            </wa-button>
+          `,
+        },
+      }}
       .data=${personData}
     ></owc-table>
   `;
 };
 ```
 
-## Sticky header
-
-Use the `sticky-header` attribute to make the header fixed at the top of the table when scrolling.
-
-```js demo
-export const stickyHeaderTable = () => {
-  return html`
-    <owc-table
-      sticky-header
-      .columns=${[
-        {
-          label: 'Nr.',
-          formatter: 'rownum',
-        },
-        {
-          label: 'Profession',
-          field: 'profession',
-        },
-        {
-          label: 'First Name',
-          field: 'firstName',
-        },
-        {
-          label: 'Last Name',
-          field: 'lastName',
-        },
-      ]}
-      .data=${generateMoreData()}
-    ></owc-table>
-  `;
-};
-```
-
-## Save state to URL
+### Save state to URL
 
 Use the attribute `save-state-to-url` to save selected filters and rows to the url in case the page reloads. The name of the stored table can be changed with the `store-name-prefix` attribute.
 
@@ -1061,242 +1293,7 @@ PPS: if you want to handle multiple tables with different states on a single pag
 <owc-table save-state-to-url store-name-prefix="save-state-example"></owc-table>
 ```
 
-## Align column content
-
-Use `align` to align the content in columns. It is possible to align the content as `start` (left bound), `center` (centered), `end` (right bound) and `full` (centered but excluding header) with the default being `start`.
-
-```js demo
-export const alignContent = () => {
-  return html`
-    <owc-table
-      .columns=${[
-        {
-          label: 'Nr.',
-          formatter: 'rownum',
-          align: 'start', // is the default
-        },
-        {
-          label: 'Profession',
-          field: 'profession',
-          align: 'center',
-        },
-        {
-          label: 'First Name',
-          field: 'firstName',
-          align: 'end',
-        },
-        {
-          label: 'Last Name',
-          field: 'lastName',
-          align: 'full',
-        },
-      ]}
-      .data=${personData}
-    ></owc-table>
-  `;
-};
-```
-
-## Width of columns
-
-Use `width` to change the width of a column and use `resizable` to change if columns are resizable, this is true by default.
-
-```js demo
-export const widthOfColumns = () => {
-  return html`
-    <owc-table
-      .columns=${[
-        {
-          label: 'Nr.',
-          formatter: 'rownum',
-          resizable: false,
-          width: 60,
-        },
-        {
-          label: 'Profession',
-          field: 'profession',
-          resizable: false,
-          width: 300,
-        },
-        {
-          label: 'First Name',
-          field: 'firstName',
-          resizable: true, // is the default
-          width: 400,
-        },
-        {
-          label: 'Last Name',
-          field: 'lastName',
-          resizable: true, // is the default
-        },
-      ]}
-      .data=${personData}
-    ></owc-table>
-  `;
-};
-```
-
-## Exporting the Table
-
-Tables can be copied to an Excel Table or downloaded as a `*.csv`. It comes with a built in "Export" Tab action which you can enable by setting it's visibility to true.
-
-```js
-.actionTabs=${{
-  export: { visible: true },
-}}
-```
-
-To exclude a column set `includeInExport` to false.
-
-```js demo
-export const exportTable = () => {
-  return html`
-    <owc-table
-      .columns=${[
-        {
-          label: 'Nr.',
-          formatter: 'rownum',
-          includeInExport: false,
-        },
-        {
-          label: 'Profession',
-          field: 'profession',
-        },
-        {
-          label: 'First Name',
-          field: 'firstName',
-        },
-        {
-          label: 'Last Name',
-          field: 'lastName',
-        },
-      ]}
-      .data=${personData}
-      .actionTabs=${{
-        export: { visible: true },
-      }}
-    ></owc-table>
-  `;
-};
-```
-
-## Add your own action tab
-
-You can add your own action by adding an additional key to the `actionTabs`.
-selected data contains the data that has been selected via the checkbox and processed data is the data that is currently shown. i.e.: if a filter is applied, the statistics will be calculated based of that.
-
-```js demo
-export const actionTabTable = () => {
-  return html`
-  <div style="height: 60vh; overflow: auto; ">
-    <owc-table
-      show-info
-      .filterMode=${'global-search-with-builder'}
-      selectable
-      .columns=${[
-        {
-          label: 'Nr.',
-          formatter: 'rownum',
-          includeInExport: false,
-          filterable: true,
-        },
-        {
-          label: 'Profession',
-          field: 'profession',
-          filterable: true,
-        },
-        {
-          label: 'First Name',
-          field: 'firstName',
-          filterable: true,
-        },
-        {
-          label: 'Last Name',
-          field: 'lastName',
-          filterable: true,
-        },
-      ]}
-      .data=${generateMoreData(100)}
-      .actionTabs=${{
-        statistics: {
-          label: 'Gender Statistics',
-          content: ({ selectedData, processedData }) => {
-            const data = selectedData.length > 0 ? selectedData : processedData;
-            const maleCount = data.filter(person => person.gender === 'male').length;
-            const femaleCount = data.filter(person => person.gender === 'female').length;
-            return html`
-              <p>Males: ${maleCount}</p>
-              <p>Females: ${femaleCount}</p>
-            `;
-          },
-        },
-      }}
-    ></owc-table>
-    </div
-  `;
-};
-```
-
-## Open a specific action tab
-
-You can pre open a tag by setting `.actionTabActive` or `action-tab-active` to the key of the tab.
-Example `<owc-table action-tab-active="statistics"></owc-table>`
-
-```js demo
-export const actionTabOpenTable = () => {
-  return html`
-    <owc-table
-      .columns=${[
-        {
-          label: 'Nr.',
-          formatter: 'rownum',
-          includeInExport: false,
-          filterable: true,
-        },
-        {
-          label: 'Profession',
-          field: 'profession',
-          filterable: true,
-        },
-        {
-          label: 'First Name',
-          field: 'firstName',
-          filterable: true,
-        },
-        {
-          label: 'Last Name',
-          field: 'lastName',
-          filterable: true,
-        },
-      ]}
-      .data=${generateMoreData(10)}
-      .actionTabs=${{
-        export: {
-          visible: true,
-        },
-        settings: {
-          visible: true,
-        },
-        statistics: {
-          label: 'Gender Statistics',
-          content: ({ selectedData, processedData }) => {
-            const data = selectedData.length > 0 ? selectedData : processedData;
-            const maleCount = data.filter(person => person.gender === 'male').length;
-            const femaleCount = data.filter(person => person.gender === 'female').length;
-            return html`
-              <p>Males: ${maleCount}</p>
-              <p>Females: ${femaleCount}</p>
-            `;
-          },
-        },
-      }}
-      action-tab-active="statistics"
-    ></owc-table>
-  `;
-};
-```
-
-## Lexicon for filters
+### Lexicon for filters
 
 Use `description` in the `.columns` property to add a Lexicon next to the search where you can describe the filter options available. `subDescription` adds a dropdown for extra details.
 
@@ -1304,7 +1301,7 @@ Use `description` in the `.columns` property to add a Lexicon next to the search
 export const descriptionTable = () => {
   return html`
     <owc-table
-      .filterMode=${'builder'}
+      filter-mode="global-search-with-builder"
       .columns=${[
         {
           label: 'Nr.',
@@ -1350,7 +1347,11 @@ export const descriptionTable = () => {
 };
 ```
 
-## Editing Table Content
+## Manipulation of data
+
+This chapter talks about how data can be manipulated. this can be set for every column.
+
+### Editing Table Content
 
 In the Table below you can you double click on the First Name to edit it.
 
@@ -1552,148 +1553,76 @@ export const massEdit = () => {
 };
 ```
 
-## Example FAQ
+### Handle data updates
 
-```js client
-const faqList = [
-  {
-    id: '1',
-    question: 'What is a planet?',
-    answer:
-      'A planet is a celestial body that orbits a star, has enough mass to be nearly round in shape, and has cleared its orbit of other debris. Planets can be rocky, like Earth, or gaseous, like Jupiter.',
-  },
-  {
-    id: '2',
-    question: 'How many planets are in our solar system?',
-    answer:
-      'There are eight officially recognized planets in our solar system: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune. Pluto was reclassified as a dwarf planet in 2006.',
-  },
-  {
-    id: '3',
-    question: 'Why is Pluto not considered a planet anymore?',
-    answer:
-      'Pluto was reclassified as a dwarf planet because it does not meet all the criteria set by the International Astronomical Union (IAU). Specifically, it has not cleared its orbit of other debris, which is a requirement for full-fledged planets.',
-  },
-  {
-    id: '4',
-    question: 'Could humans live on any other planet?',
-    answer:
-      'Currently, Earth is the only planet known to support human life. However, scientists are studying Mars as a potential candidate for human colonization due to its relatively Earth-like conditions, such as a day length similar to ours and the presence of water ice. However, challenges like low temperatures, thin atmosphere, and high radiation must be overcome for long-term survival.',
-  },
-];
+ideally, after changing the data, you want the data to be persisted, usually in a database. the attribute `.handleUpdate` provides an callback function, that is called for every row. the fields are like followed:
+
+```js
+html`
+  <owc-table
+    .handleUpdate=${({
+      data, // the entire changed row
+      field, // the field that got changed
+      config, // additional configs that were provided
+      value, // the new value of that field
+      autoSetData, // a function to automatically set the changed data in the table
+    }) => {
+      ...
+    }}
+  ></owc-table>
+`;
 ```
 
-```js demo
-import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-import { highlightSearchTerms } from '@open-wc/components/text/highlightSearchTerms.js';
+in this example, the data is only stored in the table. you can add an async call to an endpoint to for example persist the data.
 
-export const exampleFaq = () => {
+This here simulates an async call to a database via a timeout. after the timeout, it writes into the console.
+
+```js demo
+export const handleDataUpdatesExample = () => {
   return html`
     <owc-table
-      filter-mode="global-search"
+      selectable
+      .handleUpdate=${async ({ data, field, config, value, autoSetData }) => {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        console.log('data has been saved');
+        autoSetData();
+      }}
+      .actionTabs=${{
+        massEdit: { visible: true },
+      }}
       .columns=${[
         {
           label: 'Nr.',
           formatter: 'rownum',
-          visible: 'always',
         },
-        {
-          label: 'Question',
-          field: 'question',
-          filterable: true,
-          formatter: row =>
-            row.question ? html`<strong>${row.question}</strong>` : 'Keine FAQ vorhanden',
-        },
-        {
-          label: 'Answer',
-          field: 'answer',
-          filterable: true,
-          formatter: (row, options) => {
-            const search = options?.custom?.jsonFilters[0].value;
-            return unsafeHTML(
-              highlightSearchTerms({
-                search,
-                text: row.answer,
-              }),
-            );
-          },
-        },
-      ]}
-      .renderDetail=${async (row, { jsonFilters }) => {
-        const search = jsonFilters[0].value || '';
-        return html`
-          <p style="text-align: center;">
-            ${unsafeHTML(
-              highlightSearchTerms({
-                search,
-                text: row.answer,
-                truncate: false,
-              }),
-            )}
-          </p>
-        `;
-      }}
-      render-mode="detail"
-      .data=${faqList}
-    ></owc-table>
-  `;
-};
-```
-
-## Annotation
-
-Use `renderAnnotation` to render custom annotations to the top of the row
-
-```js demo
-import '@awesome.me/webawesome/dist/components/tag/tag.js';
-import '@awesome.me/webawesome/dist/components/icon/icon.js';
-
-export const annotationTable = () => {
-  // filter-mode="global-search-with-builder"
-  //show-info
-  // .actionTabs=${{
-  //   export: { visible: true },
-  //   settings: { visible: true },
-  // }}
-  //save-state-to-url
-  return html`
-    <owc-table
-      selectable
-      sticky-header
-      .columns=${[
         {
           label: 'First Name',
           field: 'firstName',
-          filterable: true,
+          type: 'editable',
         },
         {
           label: 'Last Name',
           field: 'lastName',
-          filterable: true,
+          formatterCompare: (row, { override }) => `${override.lastName}`,
+          editableOptions: {
+            massEdit: true,
+          },
         },
         {
           label: 'Profession',
           field: 'profession',
-        },
-        {
-          label: 'Age',
-          field: 'age',
-          formatter: 'number',
-          showInCalculateSums: true,
+          type: 'editable',
+          editableOptions: {
+            massEdit: true,
+            type: 'autocomplete',
+            data: [
+              { value: 'Teacher', label: 'Teacher' },
+              { value: 'Lawyer', label: 'Lawyer' },
+              { value: 'Developer', label: 'Developer' },
+            ],
+          },
         },
       ]}
-      .renderDetail=${(row, {}) => {
-        return html`${row.profession}`;
-      }}
-      render-mode="detail"
-      .renderAnnotation=${row => {
-        return !row.profession
-          ? html`<wa-tag variant="warning">
-              <wa-icon name="clock"></wa-icon>
-              &nbsp;<span>Warning: Profession field is empty</span>
-            </wa-tag>`
-          : nothing;
-      }}
       .data=${personData}
     ></owc-table>
   `;

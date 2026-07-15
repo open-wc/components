@@ -221,7 +221,7 @@ export const buttonAutocompleteField = () => {
     <wa-button
       variant="brand"
       style="margin-top: 20px"
-      size="small"
+      size="s"
       @click=${() => {
         const buttonAutocomplete = document
           .querySelector('[demo-name=buttonAutocompleteField]')
