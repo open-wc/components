@@ -146,7 +146,7 @@ function generateMoreData(amount = 25) {
 const defaultTableConfig = {};
 ```
 
-# TableNew
+# Table
 
 `owc-table` is a highly configurable table component for displaying structured data. It supports client-side and server-side data loading, filtering, sorting, grouping, inline editing, exporting, custom row rendering, and many additional features while remaining easy to integrate into existing applications.
 
