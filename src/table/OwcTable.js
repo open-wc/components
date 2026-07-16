@@ -97,7 +97,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     insertData: { type: Array },
     allData: { type: Array },
     compareOverrides: { type: Array },
-    renderType: { type: String },
+    _renderType: { type: String },
     sorters: { type: Array },
     jsonSorters: { type: Array },
     filter: { type: Function, attribute: false },
@@ -215,7 +215,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     this.stickyHeader = false;
 
     /**@type {import('../field-path-helper/getFieldPathContent.types.js').getFieldPathContentOptions<T>['renderType']} */
-    this.renderType = 'html';
+    this._renderType = 'html';
 
     /**@type {((row: T) => string) | undefined}*/
     this.groupSelector = undefined;
@@ -1206,7 +1206,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         ${this.renderRowMode(row)}
         ${this.#visibleColumns.map(column => {
           return getFieldPathContent(row, column, {
-            renderType: this.renderType,
+            renderType: this._renderType,
             requiredFields:
               column.type === 'editable'
                 ? this.#visibleColumns
