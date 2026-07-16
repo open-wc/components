@@ -60,7 +60,7 @@ export class OwcTableHeaderCell extends LitElement {
   render() {
     return html`
       <div @click=${this.#clickHandler} id="wrapper">
-        <div id="slot-wrapper"><slot></slot></div>
+        <div id="slot-wrapper" title=${this.textContent ?? ''}><slot></slot></div>
         ${this.sortable ? html`<button aria-label="Sortieren"></button>` : nothing}
       </div>
     `;
@@ -73,21 +73,29 @@ export class OwcTableHeaderCell extends LitElement {
         width: 100%;
       }
 
-      #slot-wrapper {
-        display: flex;
-        justify-content: var(--owc-table-header-cell-align, start);
-        flex-grow: 1;
-      }
-
       #wrapper {
         display: flex;
         align-items: center;
-        gap: 4px;
         width: 100%;
-        height: 100%;
+        gap: 4px;
       }
 
+      #slot-wrapper {
+        display: flex;
+        flex: 1;
+        min-width: 0;
+
+        overflow: hidden;
+      }
+
+      #slot-wrapper ::slotted(*) {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      
       button {
+        flex: 0 0 auto;
         background-color: initial;
         background-position-x: center;
         background-repeat: no-repeat;
