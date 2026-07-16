@@ -1,7 +1,7 @@
 ```js server
 export const config = {
-  path: '/tableNew',
-  title: 'TableNew',
+  path: '/table',
+  title: 'Table',
   menu: {
     parent: 'data',
     order: 10,
