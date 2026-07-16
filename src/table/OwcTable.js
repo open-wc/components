@@ -721,6 +721,21 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     }
   }
 
+  #updateColumnCssVariables() {
+    let tableWidth = 0;
+    const gridTemplateColumns = this.#visibleColumns
+      .map(column => {
+        // same 50px floor the old `.cell { min-width: 50px }` used to enforce
+        const width = Math.max(50, column.width ?? column._calculatedWidth ?? 50);
+        tableWidth += width;
+        return `${width}px`;
+      })
+      .join(' ');
+
+    this.style.setProperty('--owc-table-width', `${tableWidth}px`);
+    this.style.setProperty('--owc-table-grid-template-columns', gridTemplateColumns || 'none');
+  }
+
   #addGlobalSearchJsonFilter() {
     // reassign instead of unshift so Lit sees the change
     this.jsonFilters = [
@@ -745,7 +760,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   render() {
     return html`
       <style>
-        ${this.renderStyles()}
+        ${this.renderSizeTableColumnStyles()}
         ${this.customStyles}
       </style>
       <div id="size-table-wrapper">${this.#renderSizeTable()}</div>
@@ -1041,6 +1056,16 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     `;
   }
 
+  renderSizeTableColumnStyles() {
+    return html`
+      ${this.#visibleColumns.map((column, index) =>
+        column.width
+          ? html`#size-table .row > .cell:nth-child(${index + 2}) { width: ${column.width}px; }`
+          : nothing,
+      )}
+    `;
+  }
+
   #renderSizeTable() {
     return html`
       <div class="table" id="size-table">
@@ -1078,7 +1103,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
               </div>
               ${
                 column.resizable === undefined || column.resizable === true
-                  ? html`<span class="cell-resize" data-visible-column-index=${index}></span>`
+                  ? html`<span class="cell-resize" data-visible-column-index=${index} @dblclick=${this.#resetColumnWidth} ></span></span>`
                   : nothing
               }
             </div>
@@ -1087,6 +1112,30 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       </div>
     `;
   }
+
+  /**
+   * 
+   * @param {Event} ev 
+   * @returns {void}
+   */
+#resetColumnWidth(ev) {
+  ev.stopPropagation();
+
+  const target = /** @type {HTMLElement} */ (ev.currentTarget);
+
+  const index = Number(target.dataset.visibleColumnIndex);
+
+  const column = this.#visibleColumns[index];
+
+  if (!column) {
+    return;
+  }
+
+  // remove manual override
+  delete column.width;
+
+  this.recalculateColumnWidths();
+}
 
   /**
    *
@@ -1420,13 +1469,13 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
           const { clientX } = event;
           const newWidth = width + (clientX - clientXStart);
           column.width = newWidth;
-          this.#updateTableWidthCssVariable();
+          this.#updateColumnCssVariables();
           this.requestUpdate();
         } else if (target.parentElement) {
           const realWidth = target.parentElement.getBoundingClientRect().width;
           column.width = realWidth;
           width = realWidth;
-          this.#updateTableWidthCssVariable();
+          this.#updateColumnCssVariables();
           this.requestUpdate();
         }
       };
@@ -1465,7 +1514,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
     }
 
-    this.#updateTableWidthCssVariable();
+    this.#updateColumnCssVariables();
 
     if (changed) {
       this.requestUpdate();
@@ -1669,6 +1718,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         --owc-table-primary-background-color: #fff;
         --owc-table-header-color: #6b7280;
         --owc-table-width: auto;
+        --owc-table-grid-template-columns: none;
         display: block;
       }
 
@@ -1705,7 +1755,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
 
       .row {
-        display: flex;
+        display: grid;
+        grid-template-columns: var(--owc-table-grid-template-columns, none);
         width: max-content;
         position: relative;
       }
@@ -1721,14 +1772,17 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         background: var(--owc-table-highlighted-hover, #eddc5a);
       }
       .cell {
-        flex-grow: 1;
         outline: 0;
         border: 1px solid var(--owc-table-borderColor);
         border-width: 0 0 1px 0;
-        flex-shrink: 0;
         min-width: 50px;
         display: flex;
         justify-content: center;
+      }
+
+      #data-table .cell {
+        min-width: 0;
+        overflow: hidden;
       }
 
       .cell-content {
@@ -1785,6 +1839,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
 
       .cell-resize {
+        min-width: 20px;
         width: 20px;
         height: 100%;
         cursor: col-resize;
