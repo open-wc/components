@@ -1,12 +1,8 @@
 import {
   LocalizeController,
-  registerTranslation,
 } from '@awesome.me/webawesome/dist/utilities/localize.js';
 
-// Register the table's English terms with the same localization registry that
-// Web Awesome uses. This makes English the fallback for table-specific terms.
-import '../translations/en.js';
-import '../translations/de.js';
+import '../translations/index.js';
 
 class TableLocalizeController extends LocalizeController {
   /**

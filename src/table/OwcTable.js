@@ -31,8 +31,6 @@ import { styleMap } from 'lit/directives/style-map.js';
 import { dateParserForJsonDecode } from './dateParserForJsonDecode.js';
 import { createTableLocalizer, tableTerm } from './localization.js';
 
-
-
 // for smaller views do something like this
 // https://github.com/zachleat/table-saw/
 

@@ -1563,6 +1563,11 @@ export const annotationTable = () => {
 };
 ```
 
+## Localization
+
+owc-table comes with an 
+
+
 ## API
 
 The sections above document each feature with live demos; this is the summary of the public
