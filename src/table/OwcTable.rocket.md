@@ -2138,6 +2138,10 @@ export const massEdit = () => {
 };
 ```
 
+Mass editing respects the same validation and update handling as editing individual cells.
+
+---
+
 ## Localization
 
 owc-table comes with the option to localize on top of the formatter overwrites. it does so by using `webawesome localization`. Currently, it supports german and english. to change it, add a lang tag.
@@ -2198,7 +2202,7 @@ export const localizationEnglish = () => {
 };
 ```
 
-Mass editing respects the same validation and update handling as editing individual cells.
+
 
 ## Localization
 
