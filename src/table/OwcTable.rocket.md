@@ -2138,6 +2138,11 @@ export const massEdit = () => {
 };
 ```
 
+## Localization
+
+owc-table comes with an 
+
+
 Mass editing respects the same validation and update handling as editing individual cells.
 
 ## Localization
