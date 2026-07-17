@@ -9,11 +9,13 @@ import { classMap } from 'lit/directives/class-map.js';
 import '@awesome.me/webawesome/dist/components/details/details.js';
 import '@awesome.me/webawesome/dist/components/input/input.js';
 import { globalSearchField } from './jsonToFilter.js';
+import { createTableLocalizer, tableTerm } from './localization.js';
 
 /**
  * @template {Record<string, unknown>} T
  */
 export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
+  localize = createTableLocalizer(this);
   static scopedElements = {
     'owc-table-filter': OwcTableFilter,
     'owc-separator': OwcSeparator,
@@ -94,7 +96,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
           this.#fireChangeEvent();
         }}
         .value=${globalSearch.value.toString() || ''}
-        placeholder="Suche"
+        placeholder=${tableTerm(this.localize, 'tableSearch')}
       >
         <wa-icon name="search" slot="start"></wa-icon>
       </wa-input>
@@ -111,7 +113,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
     if (isOr) {
       return html`
         <div class="vertical">
-          <owc-separator>UND</owc-separator>
+          <owc-separator>${tableTerm(this.localize, 'tableAnd')}</owc-separator>
           <div class="horizontal">
             ${map(filterList, (filter, index) => {
               if (Array.isArray(filter)) {
@@ -144,7 +146,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
       >
         ${
           parentListIndex && parentListIndex > 0
-            ? html`<owc-separator vertical>ODER</owc-separator>`
+            ? html`<owc-separator vertical>${tableTerm(this.localize, 'tableOr')}</owc-separator>`
             : nothing
         }
         <div class="vertical">
@@ -181,7 +183,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
   renderExistingOr(filterList, index, options = {}) {
     const { showSeparator = true, parentList, parentListIndex } = options;
     return html`
-      ${showSeparator ? html`<owc-separator vertical>ODER</owc-separator>` : nothing}
+      ${showSeparator ? html`<owc-separator vertical>${tableTerm(this.localize, 'tableOr')}</owc-separator>` : nothing}
       <div class="vertical renderExistingOr">
         <owc-table-filter
           type="or"
@@ -225,7 +227,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
   renderExistingAnd(filterList, index, options = {}) {
     const { parentList, parentListIndex } = options;
     return html`
-      ${index !== 0 ? html`<owc-separator>UND</owc-separator>` : nothing}
+      ${index !== 0 ? html`<owc-separator>${tableTerm(this.localize, 'tableAnd')}</owc-separator>` : nothing}
       <div class="horizontal">
         <owc-table-filter
           .columns=${this.columns}
@@ -271,7 +273,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
   renderAdditionalOr(filterList) {
     return html`
       <div class="horizontal separator-on-hover renderAdditionalOr">
-        <owc-separator vertical>ODER</owc-separator>
+        <owc-separator vertical>${tableTerm(this.localize, 'tableOr')}</owc-separator>
         <div class="vertical">
           <owc-table-filter
             type="or"
@@ -302,7 +304,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
   renderConvertingOr(filterList, index) {
     return html`
       <div class="horizontal separator-on-hover renderConvertingOr">
-        <owc-separator vertical>ODER</owc-separator>
+        <owc-separator vertical>${tableTerm(this.localize, 'tableOr')}</owc-separator>
         <div class="vertical">
           <owc-table-filter
             type="or"
@@ -331,7 +333,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
   renderNewAnd(filterList) {
     return html`
       <div class="separator-on-hover renderNewAnd">
-        <owc-separator>UND</owc-separator>
+        <owc-separator>${tableTerm(this.localize, 'tableAnd')}</owc-separator>
         <div style="display: flex; gap: 3rem;">
           <div class="horizontal">
             <owc-table-filter
@@ -362,7 +364,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
       return html`<wa-details class="custom-icons">
         <wa-icon name="book" slot="expand-icon"></wa-icon>
         <wa-icon name="x-circle" slot="collapse-icon"></wa-icon>
-        <h2 class="reduced-margin">Filter Lexikon</h2>
+        <h2 class="reduced-margin">${tableTerm(this.localize, 'tableFilterLexicon')}</h2>
         ${this.renderColumnInfoText(this.columns)}
       </wa-details> `;
     } else {
@@ -412,7 +414,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
   renderConvertingAnd(filterList, index) {
     return html`
       <div class="separator-on-hover renderConvertingAnd">
-        <owc-separator>UND</owc-separator>
+        <owc-separator>${tableTerm(this.localize, 'tableAnd')}</owc-separator>
         <owc-table-filter
           .columns=${this.columns}
           @change=${

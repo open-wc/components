@@ -1,4 +1,5 @@
 import { LitElement, html, css, nothing } from 'lit';
+import { createTableLocalizer, tableTerm } from './localization.js';
 
 /**
  * Sortable column header used by `OwcTable`.
@@ -8,6 +9,7 @@ import { LitElement, html, css, nothing } from 'lit';
  * the table listens for.
  */
 export class OwcTableHeaderCell extends LitElement {
+  localize = createTableLocalizer(this);
   static properties = {
     sortable: { type: Boolean },
     order: { type: String, reflect: true },
@@ -61,7 +63,7 @@ export class OwcTableHeaderCell extends LitElement {
     return html`
       <div @click=${this.#clickHandler} id="wrapper">
         <div id="slot-wrapper" title=${this.textContent ?? ''}><slot></slot></div>
-        ${this.sortable ? html`<button aria-label="Sortieren"></button>` : nothing}
+        ${this.sortable ? html`<button aria-label=${tableTerm(this.localize, 'tableSort')}></button>` : nothing}
       </div>
     `;
   }
