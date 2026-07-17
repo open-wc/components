@@ -301,6 +301,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   #selectedSet = new Set();
   /** @type {import('./OwcTable.types.js').Column<T>[]} */
   #visibleColumns = [];
+  /** @type {Record<string, number>} */
+  #columnWidths = {};
 
   get visibleColumns() {
     return [...this.#visibleColumns];
@@ -458,6 +460,12 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
       if (this.renderMode === 'linkWithDetail') {
         this.addDetailsColumn();
+      }
+      for (const column of this.#visibleColumns) {
+        const width = this.#columnWidths[column.field];
+        if (width != null) {
+          column.width = width;
+        }
       }
     }
     if (changedProperties.has('filter')) {
@@ -644,6 +652,19 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     if (currentActionTabActiveState) {
       this.actionTabActive = currentActionTabActiveState;
     }
+    const currentColumnState = currentUrl.searchParams.get(`${this.storeNamePrefix}-columns`);
+    if (currentColumnState) {
+      try {
+        this.#columnWidths = JSON.parse(currentColumnState);
+        // #columnWidths is a plain private field, not a reactive property, so mutating it
+        // alone won't cause update() to re-run the block that copies these widths onto
+        // #visibleColumns. Force it, so restored widths are actually applied — and so this
+        // keeps working if loadStateFromUrl() is ever called again later (e.g. on popstate).
+        this.requestUpdate('columns', undefined);
+      } catch (e) {
+        // can't parse state => do nothing
+      }
+    }
   }
 
   #saveStateToUrl() {
@@ -690,6 +711,11 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     );
     setOrDeleteParam(`${this.storeNamePrefix}-action-tab-active`, this.actionTabActive);
 
+    setOrDeleteParam(
+      `${this.storeNamePrefix}-columns`,
+      Object.keys(this.#columnWidths).length > 0 ? JSON.stringify(this.#columnWidths) : '',
+    );
+
     if (needsUpdate) {
       history.replaceState({}, '', newUrl);
     }
@@ -728,6 +754,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         return `${width}px`;
       })
       .join(' ');
+
+    this.#saveStateToUrl();
 
     this.style.setProperty('--owc-table-width', `${tableWidth}px`);
     this.style.setProperty('--owc-table-grid-template-columns', gridTemplateColumns || 'none');
@@ -1100,28 +1128,31 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * 
-   * @param {Event} ev 
+   *
+   * @param {Event} ev
    * @returns {void}
    */
-#resetColumnWidth(ev) {
-  ev.stopPropagation();
+  #resetColumnWidth(ev) {
+    ev.stopPropagation();
 
-  const target = /** @type {HTMLElement} */ (ev.currentTarget);
+    const target = /** @type {HTMLElement} */ (ev.currentTarget);
 
-  const index = Number(target.dataset.visibleColumnIndex);
+    const index = Number(target.dataset.visibleColumnIndex);
 
-  const column = this.#visibleColumns[index];
+    const column = this.#visibleColumns[index];
 
-  if (!column) {
-    return;
+    if (!column) {
+      return;
+    }
+
+    // remove manual override
+    delete column.width;
+    delete this.#columnWidths[column.field];
+
+    this.#saveStateToUrl();
+
+    this.recalculateColumnWidths();
   }
-
-  // remove manual override
-  delete column.width;
-
-  this.recalculateColumnWidths();
-}
 
   /**
    *
@@ -1455,11 +1486,13 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
           const { clientX } = event;
           const newWidth = width + (clientX - clientXStart);
           column.width = newWidth;
+          this.#columnWidths[column.field] = newWidth;
           this.#updateColumnCssVariables();
           this.requestUpdate();
         } else if (target.parentElement) {
           const realWidth = target.parentElement.getBoundingClientRect().width;
           column.width = realWidth;
+          this.#columnWidths[column.field] = realWidth;
           width = realWidth;
           this.#updateColumnCssVariables();
           this.requestUpdate();
@@ -1468,11 +1501,21 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
       // @ts-ignore
       const throttledResize = throttle(onResizeMouseMove, 10);
-      const onResizeMouseUp = () => {
-        this.removeEventListener('mousemove', throttledResize);
+      let hasResized = false;
+      const onResizeMouseMoveAndTrack = (/** @type {Event} */ event) => {
+        hasResized = true;
+        throttledResize(event);
+      };
+      const onResizeMouseUp = (/** @type {MouseEvent} */ event) => {
+        // `throttle` intentionally drops intermediate events, so commit the
+        // actual mouse-up position to avoid losing the end of a fast drag.
+        if (hasResized) {
+          onResizeMouseMove(event);
+        }
+        this.removeEventListener('mousemove', onResizeMouseMoveAndTrack);
         this.removeEventListener('mouseup', onResizeMouseUp);
       };
-      this.addEventListener('mousemove', throttledResize);
+      this.addEventListener('mousemove', onResizeMouseMoveAndTrack);
       this.addEventListener('mouseup', onResizeMouseUp);
     }
   }
