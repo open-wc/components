@@ -1565,8 +1565,7 @@ export const annotationTable = () => {
 
 ## Localization
 
-owc-table comes with an 
-
+owc-table comes with an
 
 ## API
 

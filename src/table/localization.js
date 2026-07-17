@@ -1,8 +1,6 @@
-import {
-  LocalizeController,
-} from '@awesome.me/webawesome/dist/utilities/localize.js';
+import { LocalizeController } from '@awesome.me/webawesome/dist/utilities/localize.js';
 
-import '../translations/index.js';
+import '@open-wc/components/define/translations/index.js';
 
 class TableLocalizeController extends LocalizeController {
   /**
@@ -10,9 +8,10 @@ class TableLocalizeController extends LocalizeController {
    */
   lang() {
     // @ts-ignore
-    const host = /** @type {HTMLElement & { lang?: string; getRootNode?: () => ShadowRoot | Document }} */ (
-      this.host
-    );
+    const host =
+      /** @type {HTMLElement & { lang?: string; getRootNode?: () => ShadowRoot | Document }} */ (
+        this.host
+      );
 
     const candidateElements = [];
     let current = host;
