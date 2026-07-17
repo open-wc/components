@@ -1,21 +1,19 @@
 import '@awesome.me/webawesome/dist/translations/de.js';
-import { registerTranslation } from '@awesome.me/webawesome/dist/utilities/localize.js';
 
 const translation = {
   $code: 'de',
   $name: 'Deutsch',
-    /** @type {'ltr' | 'rtl'} */
+  /** @type {'ltr' | 'rtl'} */
   $dir: 'ltr',
 
   tableAddFilter: 'Filter hinzufügen',
   tableAnd: 'UND',
-    /**
-   * 
-   * @param {Number} count 
+  /**
+   *
+   * @param {Number} count
    * @returns {String}
    */
-  tableApplyMassEdit: (count) =>
-    `${count} ${count === 1 ? 'Änderung' : 'Änderungen'} durchführen`,
+  tableApplyMassEdit: count => `${count} ${count === 1 ? 'Änderung' : 'Änderungen'} durchführen`,
   tableCancel: 'Abbrechen',
   tableColumns: 'Spalten',
   tableColumnVisibilityHint: 'Spalten werden in der Tabelle angezeigt, wenn:',
@@ -28,12 +26,12 @@ const translation = {
   tableMassEdit: 'Massenbearbeitung',
   tableMoveColumn: 'Spalte verschieben',
   tableNew: 'Neu',
-    /**
-   * 
-   * @param {String} field 
+  /**
+   *
+   * @param {String} field
    * @returns {String}
    */
-  tableNoFilterFound: (field) => `Kein Filter für ${field} gefunden`,
+  tableNoFilterFound: field => `Kein Filter für ${field} gefunden`,
   tableNot: 'NICHT',
   tableOpenDetails: 'Details öffnen',
   tableOperatorBetween: 'zwischen',
@@ -63,24 +61,24 @@ const translation = {
   tableRefresh: 'Aktualisieren',
   tableReset: 'Zurücksetzen',
   tableSelectAll: 'Alle auswählen',
-    /**
-   * 
-   * @param {Number} count 
+  /**
+   *
+   * @param {Number} count
    * @returns {String}
    */
-  tableSelectedEntries: (count) => `(davon ${count} ausgewählt)`,
+  tableSelectedEntries: count => `(davon ${count} ausgewählt)`,
   tableSettings: 'Einstellungen',
-    /**
-   * 
-   * @param {Number} count 
+  /**
+   *
+   * @param {Number} count
    * @returns {String}
    */
-  tableShowAllEntries: (count) => `Zeige alle ${count} Einträge`,
+  tableShowAllEntries: count => `Zeige alle ${count} Einträge`,
   tableShowAlways: 'Zeige immer',
-    /**
-   * 
-   * @param {Number} current 
-   * @param {Number} total 
+  /**
+   *
+   * @param {Number} current
+   * @param {Number} total
    * @returns {String}
    */
   tableShowEntries: (current, total) => `Zeige ${current} von ${total} Einträgen`,
@@ -90,7 +88,5 @@ const translation = {
   tableSums: 'Summen',
   tableSearch: 'Suche',
 };
-
-registerTranslation(translation);
 
 export default translation;
