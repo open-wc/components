@@ -95,7 +95,7 @@ export class OwcTableHeaderCell extends LitElement {
         white-space: nowrap;
         text-overflow: ellipsis;
       }
-      
+
       button {
         flex: 0 0 auto;
         background-color: initial;
