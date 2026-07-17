@@ -929,27 +929,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     this.#applySorters();
   }
 
-  renderStyles() {
-    return html`
-      ${this.#visibleColumns.map(
-        (column, index) => html`
-          #data-table .row > .cell:nth-child(${index + 2}) { width:
-          ${column.width ?? column._calculatedWidth}px;
-          ${column.width ? 'flex-shrink:0; flex-grow:0;' : ''} } #size-table .row >
-          .cell:nth-child(${index + 2}) { ${column.width ? `width:${column.width}px;` : ''} }
-        `,
-      )}
-    `;
-  }
-
-  #updateTableWidthCssVariable() {
-    const tableWidth = this.#visibleColumns.reduce((sum, column) => {
-      return sum + (column.width ?? column._calculatedWidth ?? 50);
-    }, 0);
-
-    this.style.setProperty('--owc-table-width', `${tableWidth}px`);
-  }
-
   /**
    * @param {{items: T[], renderItem: (item: T, index: number) => import('lit').TemplateResult}} options
    * @returns
