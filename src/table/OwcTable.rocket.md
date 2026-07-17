@@ -615,7 +615,7 @@ export const widthOfColumns = () => {
           label: 'First Name',
           field: 'firstName',
           resizable: true,
-          width: 400,
+          width: 1000,
         },
         {
           label: 'Last Name',
@@ -940,6 +940,7 @@ The following state is preserved:
 - active filters
 - sorting
 - column visibility
+- manually resized column widths
 - other persisted table settings
 
 Sharing the URL restores the same table configuration when it is opened again.
