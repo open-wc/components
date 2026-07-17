@@ -7,11 +7,13 @@ import '@awesome.me/webawesome/dist/components/checkbox/checkbox.js';
 import '@awesome.me/webawesome/dist/components/input/input.js';
 import '@awesome.me/webawesome/dist/components/textarea/textarea.js';
 import { setFieldPath } from '../field-path-helper/setFieldPath.js';
+import { createTableLocalizer, tableTerm } from './localization.js';
 
 /**
  * @template {Record<string, unknown>} T
  */
 export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
+  localize = createTableLocalizer(this);
   static scopedElements = {
     'owc-autocomplete': OwcAutocomplete,
   };
@@ -141,16 +143,16 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
                       @click=${() => {
                         this.preview = true;
                       }}
-                      >Vorschau</wa-button
+                      >${tableTerm(this.localize, 'tablePreview')}</wa-button
                     >`
                   : html`<wa-button
                         @click=${() => {
                           this.preview = false;
                         }}
-                        >Abbrechen</wa-button
+                        >${tableTerm(this.localize, 'tableCancel')}</wa-button
                       >
                       <wa-button @click=${this.executeEdit}
-                        >${this.data?.length || 0} Änderungen durchführen</wa-button
+                        >${tableTerm(this.localize, 'tableApplyMassEdit', this.data?.length || 0)}</wa-button
                       >`
               }
             `

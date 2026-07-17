@@ -29,6 +29,9 @@ import {
 } from '@open-wc/components/OwcClickEditable.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { dateParserForJsonDecode } from './dateParserForJsonDecode.js';
+import { createTableLocalizer, tableTerm } from './localization.js';
+
+
 
 // for smaller views do something like this
 // https://github.com/zachleat/table-saw/
@@ -74,6 +77,7 @@ function scrollIntoViewIfNeeded(target) {
  * @template {Record<string, unknown>} T
  */
 export class OwcTable extends ScopedElementsMixin(LitElement) {
+  localize = createTableLocalizer(this);
   static scopedElements = {
     'owc-table-header-cell': OwcTableHeaderCell,
     'owc-table-filter-builder': OwcTableFilterBuilder,
@@ -204,7 +208,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     this.compareOverrides = undefined;
     this.customStyles = nothing;
 
-    this.emptyMessage = html`<p>Keine Daten vorhanden</p>`;
+    /** @type {import('lit').TemplateResult | undefined} */
+    this.emptyMessage = undefined;
     this.showInfo = false;
     this._hasInfoBlock = false;
     this.saveStateToUrl = false;
@@ -806,7 +811,12 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
                             }
                           }}
                         >
-                          <wa-icon slot="start" name="plus" label="New"></wa-icon>Neu
+                          <wa-icon
+                            slot="start"
+                            name="plus"
+                            label=${tableTerm(this.localize, 'tableNew')}
+                          ></wa-icon
+                          >${tableTerm(this.localize, 'tableNew')}
                         </wa-button>`
                       : nothing
                   }
@@ -932,7 +942,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
                       renderItem: this.#renderItem,
                     })}
                   </div>`
-              : html`<div id="empty-message-wrapper">${this.emptyMessage}</div>`
+              : html`<div id="empty-message-wrapper">
+                  ${this.emptyMessage || html`<p>${tableTerm(this.localize, 'tableEmptyMessage')}</p>`}
+                </div>`
           }
           <div id="loading-indicator">
             <wa-spinner></wa-spinner>
@@ -967,7 +979,11 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       ...[...this.groupList].sort((a, b) => (b?.priority || 0) - (a?.priority || 0)),
     ];
     if (groupRecord['others'].length > 0) {
-      groupListSorted.push({ key: 'others', label: 'Andere', active: this.othersGroupActive });
+      groupListSorted.push({
+        key: 'others',
+        label: tableTerm(this.localize, 'tableOthers'),
+        active: this.othersGroupActive,
+      });
     }
 
     // TODO: This does not work due to the hacky nature of row styling
@@ -1250,7 +1266,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       rowId
         ? html`
             <wa-details
-              summary="Open Details"
+              summary=${tableTerm(this.localize, 'tableOpenDetails')}
               ?open=${this.openDetails?.includes(rowId)}
               @wa-after-show=${this.handleDetailsOpen}
             >
@@ -1453,7 +1469,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
           ?indeterminate=${
             this.#selectedSet.size > 0 && this.#selectedSet.size < this.processedData.length
           }
-          aria-label="Alle auswählen"
+          aria-label=${tableTerm(this.localize, 'tableSelectAll')}
         ></wa-checkbox>`,
       includeInExport: false,
       formatter: (row, options) => {

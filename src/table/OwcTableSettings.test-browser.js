@@ -39,11 +39,11 @@ function cleanup(prefix) {
 }
 
 describe('owc-table-settings', () => {
-  it('shows "Spalten" as its trigger text (regression)', async () => {
+  it('shows the localized columns trigger text', async () => {
     const prefix = nextPrefix();
     const el = await settingsFixture(prefix);
     // the old renderComboBox override was never called by the base class
-    expect(el.shadowRoot.querySelector('#placeholder').textContent.trim()).to.equal('Spalten');
+    expect(el.shadowRoot.querySelector('#placeholder').textContent.trim()).to.equal('Columns');
     expect(
       el.shadowRoot.querySelector('.select').classList.contains('placeholder-visible'),
     ).to.equal(true);

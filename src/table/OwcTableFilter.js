@@ -21,6 +21,7 @@ import { when } from 'lit/directives/when.js';
 import { OwcIconButton } from '@open-wc/components/OwcIconButton.js';
 import { OwcSeparator } from '@open-wc/components/OwcSeparator.js';
 import { classMap } from 'lit/directives/class-map.js';
+import { createTableLocalizer, tableTerm } from './localization.js';
 
 import {
   toLocalDateTimeInputValue,
@@ -35,6 +36,7 @@ import {
  * @template {Record<string, unknown>} T
  */
 export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
+  localize = createTableLocalizer(this);
   static scopedElements = {
     'owc-icon-button': OwcIconButton,
     'owc-autocomplete': OwcAutocomplete,
@@ -233,7 +235,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
       <button @click=${this.addClickHandler}>
         <div class="button-content">
           <wa-icon name="plus-circle"></wa-icon>
-          <span>Filter</span><span>hinzufügen</span>
+          <span>${tableTerm(this.localize, 'tableAddFilter')}</span>
         </div>
       </button>
     `;
@@ -297,7 +299,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
     return html`
       ${this.renderControls()}
       <div id="not-bar" class=${classMap({ disabled: !this.enabled, visible: this.negated })}>
-        <owc-separator vertical>NICHT</owc-separator>
+        <owc-separator vertical>${tableTerm(this.localize, 'tableNot')}</owc-separator>
       </div>
       <div id="main" class=${this.enabled ? '' : 'disabled'}>
         ${this.renderFieldSelector()} ${this.renderFieldFilter()}
@@ -322,7 +324,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
               })}
             </div>`;
           }
-          return html`<p>Kein Filter für ${this.value.field} gefunden</p>`;
+          return html`<p>${tableTerm(this.localize, 'tableNoFilterFound', this.value.field)}</p>`;
         },
       ],
       [
@@ -384,8 +386,8 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
                 this.#fireChangeEvent();
               }}
             >
-              ${Object.entries(ARRAY_OPERATORS).map(
-                ([key, val]) => html`<wa-option .value=${key}>${val}</wa-option>`,
+              ${Object.keys(ARRAY_OPERATORS).map(
+                key => html`<wa-option .value=${key}>${this.#operatorLabel(key)}</wa-option>`,
               )}
             </wa-select>
             <owc-table-filter-builder
@@ -507,11 +509,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
         ${map(
           Object.keys(operators),
           operator =>
-            html`<wa-option .value=${operator}
-              >${
-                operators[/** @type {import('./filter.type.js').operator} */ (operator)]
-              }</wa-option
-            >`,
+            html`<wa-option .value=${operator}>${this.#operatorLabel(operator)}</wa-option>`,
         )}
       </wa-select>
       ${
@@ -802,6 +800,16 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
                 </wa-input>`;
               })}`
       }`;
+  }
+
+  /**
+   * @param {string} operator
+   */
+  #operatorLabel(operator) {
+    return tableTerm(
+      this.localize,
+      `tableOperator${operator[0].toUpperCase()}${operator.slice(1)}`,
+    );
   }
 
   static styles = [

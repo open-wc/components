@@ -13,7 +13,7 @@ describe('owc-table-info', () => {
       ></owc-table-info>`,
     );
     const info = el.shadowRoot.querySelector('#info');
-    expect(info.textContent).to.include('Zeige 4 von 10 Einträgen');
+    expect(info.textContent).to.include('Showing 4 of 10 entries');
   });
 
   it('shows an "all" info text when nothing is filtered out', async () => {
@@ -26,8 +26,8 @@ describe('owc-table-info', () => {
       ></owc-table-info>`,
     );
     const info = el.shadowRoot.querySelector('#info');
-    expect(info.textContent).to.include('Zeige alle 10 Einträge');
-    expect(info.textContent).to.include('(davon 2 ausgewählt)');
+    expect(info.textContent).to.include('Showing all 10 entries');
+    expect(info.textContent).to.include('(2 selected)');
   });
 
   it('renders built-in tabs from getRenderOptions', async () => {
