@@ -1,4 +1,5 @@
 import '@awesome.me/webawesome/dist/translations/en.js';
+import { registerTranslation } from '@awesome.me/webawesome/dist/utilities/localize.js';
 
 const translation = {
   $code: 'en',
@@ -9,11 +10,12 @@ const translation = {
   tableAddFilter: 'Add filter',
   tableAnd: 'AND',
   /**
-   *
-   * @param {Number} count
+   * 
+   * @param {Number} count 
    * @returns {String}
    */
-  tableApplyMassEdit: count => `Apply changes to ${count} ${count === 1 ? 'entry' : 'entries'}`,
+  tableApplyMassEdit: (count) =>
+    `Apply changes to ${count} ${count === 1 ? 'entry' : 'entries'}`,
   tableCancel: 'Cancel',
   tableColumns: 'Columns',
   tableColumnVisibilityHint: 'Columns are displayed in the table when:',
@@ -27,11 +29,11 @@ const translation = {
   tableMoveColumn: 'Move column',
   tableNew: 'New',
   /**
-   *
-   * @param {String} field
+   * 
+   * @param {String} field 
    * @returns {String}
    */
-  tableNoFilterFound: field => `No filter found for ${field}`,
+  tableNoFilterFound: (field) => `No filter found for ${field}`,
   tableNot: 'NOT',
   tableOpenDetails: 'Open details',
   tableOperatorBetween: 'between',
@@ -62,31 +64,33 @@ const translation = {
   tableReset: 'Reset',
   tableSelectAll: 'Select all',
   /**
-   *
-   * @param {Number} count
+   * 
+   * @param {Number} count 
    * @returns {String}
    */
-  tableSelectedEntries: count => `(${count} selected)`,
+  tableSelectedEntries: (count) => `(${count} selected)`,
   tableSettings: 'Settings',
   /**
-   *
-   * @param {Number} count
+   * 
+   * @param {Number} count 
    * @returns {String}
    */
-  tableShowAllEntries: count => `Showing all ${count} entries`,
+  tableShowAllEntries: ( count) => `Showing all ${count} entries`,
   tableShowAlways: 'Show always',
   /**
-   *
-   * @param {Number} current
-   * @param {Number} total
+   * 
+   * @param {Number} current 
+   * @param {Number} total 
    * @returns {String}
    */
-  tableShowEntries: (current, total) => `Showing ${current} of ${total} entries`,
+  tableShowEntries: ( current, total) => `Showing ${current} of ${total} entries`,
   tableShowNever: 'Show never',
   tableShowWhenFiltered: 'Show when filtered',
   tableSort: 'Sort',
   tableSums: 'Sums',
   tableSearch: 'Search',
 };
+
+registerTranslation(translation);
 
 export default translation;
