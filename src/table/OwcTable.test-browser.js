@@ -45,7 +45,7 @@ describe('owc-table', () => {
     const el = await tableFixture(html`<owc-table .columns=${columns} .data=${[]}></owc-table>`);
     const emptyMessage = el.shadowRoot.querySelector('#data-table #empty-message-wrapper');
     expect(emptyMessage).to.exist;
-    expect(emptyMessage.textContent).to.include('Keine Daten vorhanden');
+    expect(emptyMessage.textContent).to.include('No data available');
   });
 
   it('fires owc-table-data-ready after data is assigned', async () => {

@@ -6,11 +6,13 @@ import { OwcTableSettings } from './OwcTableSettings.js';
 import { getFieldPathContent } from '../field-path-helper/getFieldPathContent.js';
 import { getFieldPath } from '../field-path-helper/getFieldPath.js';
 import { setFieldPath } from '../field-path-helper/setFieldPath.js';
+import { createTableLocalizer, tableTerm } from './localization.js';
 
 /**
  * @template {Record<string, unknown>} T
  */
 export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
+  #localize = createTableLocalizer(this);
   static scopedElements = {
     'owc-tabs': OwcTabs,
     'owc-table-mass-edit': OwcTableMassEdit,
@@ -74,7 +76,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
       calculateSums: {
         visible: false,
         order: 750,
-        label: 'Summen',
+        label: 'Sums',
         content: ({ processedData, selectedData, columns }) => {
           const data = selectedData?.length > 0 ? selectedData : processedData;
           const sumList = [];
@@ -124,7 +126,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
                 this.table?.copyAsExcel();
               }}
             >
-              Copy (Excel)
+              ${tableTerm(this.#localize, 'tableCopyExcel')}
             </wa-button>
 
             <wa-button
@@ -134,14 +136,14 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
                 this.table?.downloadAsCsv();
               }}
             >
-              Export (CSV)
+              ${tableTerm(this.#localize, 'tableExportCsv')}
             </wa-button>
           </div>`,
         visible: false,
         order: 800,
       },
       massEdit: {
-        label: 'Massenbearbeitung',
+        label: 'Bulk edit',
         content: ({ selectedData, processedData }) => {
           return html`<owc-table-mass-edit
             .columns=${this.columns}
@@ -154,7 +156,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
         order: 850,
       },
       settings: {
-        label: 'Einstellungen',
+        label: 'Settings',
         content: () => html`
           <owc-table-settings
             style="width: 400px"
@@ -174,6 +176,23 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
 
   render() {
     const tabIndex = { ...this.builtInTabs };
+    const localizedTabIndex = /** @type {any} */ (tabIndex);
+    localizedTabIndex.calculateSums = {
+      ...tabIndex.calculateSums,
+      label: tableTerm(this.#localize, 'tableSums'),
+    };
+    localizedTabIndex.export = {
+      ...tabIndex.export,
+      label: tableTerm(this.#localize, 'tableExport'),
+    };
+    localizedTabIndex.massEdit = {
+      ...tabIndex.massEdit,
+      label: tableTerm(this.#localize, 'tableMassEdit'),
+    };
+    localizedTabIndex.settings = {
+      ...tabIndex.settings,
+      label: tableTerm(this.#localize, 'tableSettings'),
+    };
     if (this.actionTabs && Object.keys(this.actionTabs).length > 0) {
       for (const [_key, tab] of Object.entries(this.actionTabs)) {
         const key = /** @type {keyof tabIndex} */ (_key);
@@ -202,7 +221,10 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
                     appearance="plain"
                     ?loading="${this.loading}"
                     @click="${this.#handleRefreshButtonClick}"
-                    ><wa-icon name="arrow-clockwise" label="Aktualisieren"></wa-icon
+                    ><wa-icon
+                      name="arrow-clockwise"
+                      label=${tableTerm(this.#localize, 'tableRefresh')}
+                    ></wa-icon
                   ></wa-button>
                 `
               : nothing
@@ -255,17 +277,21 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
   renderInfo() {
     const selectedInfo =
       this.dataSelectedSize > 0
-        ? html`<span>(davon ${this.dataSelectedSize} ausgewählt)</span>`
+        ? html`<span
+            >${tableTerm(this.#localize, 'tableSelectedEntries', this.dataSelectedSize)}</span
+          >`
         : nothing;
 
     if (this.dataFullSize === this.dataCurrentSize) {
       return html`<div id="info">
-        <span>Zeige alle ${this.dataFullSize} Einträge</span>
+        <span>${tableTerm(this.#localize, 'tableShowAllEntries', this.dataFullSize)}</span>
         ${selectedInfo}
       </div>`;
     }
     return html`<div id="info">
-      <span>Zeige ${this.dataCurrentSize} von ${this.dataFullSize} Einträgen</span>
+      <span
+        >${tableTerm(this.#localize, 'tableShowEntries', this.dataCurrentSize, this.dataFullSize)}</span
+      >
       ${selectedInfo}
     </div>`;
   }

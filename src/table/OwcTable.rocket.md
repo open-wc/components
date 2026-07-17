@@ -161,7 +161,7 @@ Columns are defined using the `.columns` property, while row data is provided th
 ```js demo
 export const simpleTable = () => {
   return html`
-    <div style="height: 60vh; overflow: auto; ">
+    <div style="height: 60vh; overflow: auto;">
       <owc-table
         selectable
         filter-mode="global-search-with-builder"
