@@ -163,6 +163,7 @@ export const simpleTable = () => {
   return html`
     <div style="height: 60vh; overflow: auto; ">
       <owc-table
+        virtualizer-mode="always"
         selectable
         filter-mode="global-search-with-builder"
         save-state-to-url
@@ -173,6 +174,10 @@ export const simpleTable = () => {
           settings: { visible: true },
         }}
         .columns=${[
+          {
+            label: 'Nr.',
+            formatter: 'rownum',
+          },
           {
             label: 'First Name',
             field: 'firstName',
@@ -206,7 +211,7 @@ export const simpleTable = () => {
             formatter: 'date',
           },
         ]}
-        .data=${generateMoreData()}
+        .data=${generateMoreData(200)}
       ></owc-table>
     </div>
   `;
@@ -668,26 +673,31 @@ export const hideColumnsTable = () => {
           label: 'Nr.',
           formatter: 'rownum',
           visible: 'always',
+          filterable: true,
         },
         {
           label: 'Profession',
           field: 'profession',
           visible: 'never',
+          filterable: true,
         },
         {
           label: 'First Name',
           field: 'firstName',
           visible: 'always',
+          filterable: true,
         },
         {
           label: 'Last Name',
           field: 'lastName',
           visible: 'ifFiltered',
+          filterable: true,
         },
         {
           label: 'Age',
           field: 'age',
           visible: 'ifFiltered',
+          filterable: true,
         },
       ]}
       .data=${personData}
@@ -1252,6 +1262,10 @@ export const asyncShowDetails = () => {
           label: 'Last Name',
           field: 'lastName',
         },
+        {
+          label: 'Profession',
+          field: 'profession',
+        },
       ]}
       .data=${personData}
     ></owc-table>
@@ -1331,6 +1345,10 @@ export const annotation = () => {
           label: 'Last Name',
           field: 'lastName',
         },
+        {
+          label: 'Profession',
+          field: 'profession',
+        },
       ]}
       .data=${personData}
     ></owc-table>
@@ -1354,9 +1372,11 @@ table.groupSelector = row => row.profession;
 
 Rows sharing the same group identifier are rendered together. In order to make it work, you need in addition provide the groups
 
-```js demo
+```js client
 const groupedTableArray = [...generateMoreData(100), ...personData];
+```
 
+```js demo
 export const groupedTable = () => {
   return html`
     <div style="height: 60vh; overflow: auto; ">

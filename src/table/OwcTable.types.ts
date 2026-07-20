@@ -112,7 +112,7 @@ export type FilterRenderer = (
   updateFilter: (filter: JsonFilter) => void,
 ) => TemplateResult;
 
-type SorterParam = Record<string, unknown>;
+export type SorterParam = Record<string, unknown>;
 
 export type Sorter = (a: SorterParam, b: SorterParam) => number;
 
