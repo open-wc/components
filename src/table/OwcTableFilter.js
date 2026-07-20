@@ -137,6 +137,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
       );
     return html`
       <owc-autocomplete
+        lang=${this.lang}
         class="field-selector"
         .value=${this.value.field}
         .data=${data}
@@ -299,7 +300,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
     return html`
       ${this.renderControls()}
       <div id="not-bar" class=${classMap({ disabled: !this.enabled, visible: this.negated })}>
-        <owc-separator vertical>${this.#localize.term('tableNot')}</owc-separator>
+        <owc-separator lang=${this.lang} vertical>${this.#localize.term('tableNot')}</owc-separator>
       </div>
       <div id="main" class=${this.enabled ? '' : 'disabled'}>
         ${this.renderFieldSelector()} ${this.renderFieldFilter()}
@@ -331,6 +332,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
         'checkbox',
         () =>
           html`<owc-multi-checkbox
+            lang=${this.lang}
             class="field-filter"
             .options=${this.column.filterOptions}
             .value=${this.value}
@@ -347,6 +349,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
         'autocomplete',
         () => {
           return html`<owc-autocomplete
+            lang=${this.lang}
             class="field-filter"
             .data=${this.column.filterOptions}
             .value=${this.value.value}

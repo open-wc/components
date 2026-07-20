@@ -795,6 +795,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
           this.filterMode !== 'hidden'
             ? html`
                 <owc-table-filter-builder
+                  lang=${this.lang}
                   @change=${this.#filterChanged}
                   .columns=${this.columns.filter(column => column.filterable)}
                   .value=${this.jsonFilters}
@@ -863,6 +864,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
                       : nothing
                   }
                   <owc-table-info
+                    lang=${this.lang}
                     .table=${this}
                     .columns=${this.columns}
                     .dataFullSize=${this.data.length}
@@ -1096,6 +1098,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
             <div class="cell">
               <div class="cell-content">
                 <owc-table-header-cell
+                  lang=${this.lang}
                   style="--owc-table-header-cell-align: ${column.align}"
                   .field=${column.field}
                   data-sorter

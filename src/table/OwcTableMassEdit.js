@@ -120,6 +120,7 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
       }));
     return html`
       <owc-autocomplete
+        lang=${this.lang}
         .data=${columnData}
         .value=${this.column?.field}
         @change=${(/** @type {Event} */ ev) => {
@@ -219,6 +220,7 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
     } else if (column.editableOptions.type === 'autocomplete') {
       clickEditableContent = html`
         <owc-autocomplete
+          lang=${this.lang}
           .data=${column.editableOptions?.data}
           @change=${(/** @type {{ target: any; }} */ ev) => {
             this.value = ev.target.value;
