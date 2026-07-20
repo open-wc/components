@@ -1,8 +1,8 @@
 import { LocalizeController } from '@awesome.me/webawesome/dist/utilities/localize.js';
 
-import '@open-wc/components/define/translations/index.js';
+import '@open-wc/components/register/en.js';
 
-class TableLocalizeController extends LocalizeController {
+export class OwcLocalizeController extends LocalizeController {
   /**
    * @returns {string}
    */
@@ -38,20 +38,12 @@ class TableLocalizeController extends LocalizeController {
 
     return super.lang();
   }
-}
-
-/**
- * @param {import('lit').ReactiveControllerHost & HTMLElement} host
- */
-export function createTableLocalizer(host) {
-  return new TableLocalizeController(host);
-}
-
-/**
- * @param {ReturnType<typeof createTableLocalizer>} localize
- * @param {string} key
- * @param {...unknown} args
- */
-export function tableTerm(localize, key, ...args) {
-  return /** @type {any} */ (localize).term(key, ...args);
+  /**
+   * @param {String} key
+   * @param {...unknown} args
+   */
+  term(key, ...args) {
+    // @ts-ignore
+    return super.term(key, ...args);
+  }
 }

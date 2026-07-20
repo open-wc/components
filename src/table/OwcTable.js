@@ -30,7 +30,7 @@ import {
 } from '@open-wc/components/OwcClickEditable.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { dateParserForJsonDecode } from './dateParserForJsonDecode.js';
-import { createTableLocalizer, tableTerm } from './localization.js';
+import { OwcLocalizeController } from '@open-wc/components/localization.js';
 
 // for smaller views do something like this
 // https://github.com/zachleat/table-saw/
@@ -76,7 +76,7 @@ function scrollIntoViewIfNeeded(target) {
  * @template {Record<string, unknown>} T
  */
 export class OwcTable extends ScopedElementsMixin(LitElement) {
-  localize = createTableLocalizer(this);
+  #localize = new OwcLocalizeController(this);
   static scopedElements = {
     'owc-table-header-cell': OwcTableHeaderCell,
     'owc-table-filter-builder': OwcTableFilterBuilder,
@@ -110,7 +110,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     saveStateToUrl: { type: Boolean, attribute: 'save-state-to-url', reflect: true },
     stickyHeader: { type: Boolean, attribute: 'sticky-header', reflect: true },
     getRowLinkSettings: { attribute: false },
-    emptyMessage: { type: Object },
     handleInsert: { type: Function },
     overrides: { type: Array, state: true },
     showInfo: { type: Boolean, attribute: 'show-info', reflect: true },
@@ -207,8 +206,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     this.compareOverrides = undefined;
     this.customStyles = nothing;
 
-    /** @type {import('lit').TemplateResult | undefined} */
-    this.emptyMessage = undefined;
     this.showInfo = false;
     this._hasInfoBlock = false;
     this.saveStateToUrl = false;
@@ -859,9 +856,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
                           <wa-icon
                             slot="start"
                             name="plus"
-                            label=${tableTerm(this.localize, 'tableNew')}
+                            label=${this.#localize.term('tableNew')}
                           ></wa-icon
-                          >${tableTerm(this.localize, 'tableNew')}
+                          >${this.#localize.term('tableNew')}
                         </wa-button>`
                       : nothing
                   }
@@ -973,7 +970,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
                     })}
                   </div>`
               : html`<div id="empty-message-wrapper">
-                  ${this.emptyMessage || html`<p>${tableTerm(this.localize, 'tableEmptyMessage')}</p>`}
+                  <p>${this.#localize.term('tableEmptyMessage')}</p>
                 </div>`
           }
           <div id="loading-indicator">
@@ -1011,7 +1008,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     if (groupRecord['others'].length > 0) {
       groupListSorted.push({
         key: 'others',
-        label: tableTerm(this.localize, 'tableOthers'),
+        label: this.#localize.term('tableOthers'),
         active: this.othersGroupActive,
       });
     }
@@ -1333,7 +1330,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       rowId
         ? html`
             <wa-details
-              summary=${tableTerm(this.localize, 'tableOpenDetails')}
+              summary=${this.#localize.term('tableOpenDetails')}
               ?open=${this.openDetails?.includes(rowId)}
               @wa-after-show=${this.handleDetailsOpen}
             >
@@ -1570,7 +1567,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
           ?indeterminate=${
             this.#selectedSet.size > 0 && this.#selectedSet.size < this.processedData.length
           }
-          aria-label=${tableTerm(this.localize, 'tableSelectAll')}
+          aria-label=${this.#localize.term('tableSelectAll')}
         ></wa-checkbox>`,
       includeInExport: false,
       formatter: (row, options) => {

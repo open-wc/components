@@ -17,6 +17,7 @@ export const layout = pageData => docLayout(pageData, docsData);
 
 ```js client
 import { html, nothing } from 'lit';
+import '@open-wc/components/register/de.js';
 
 import '@open-wc/components/define/owc-table.js';
 const personData = [
@@ -2215,7 +2216,6 @@ Unless stated otherwise, properties can be configured declaratively as HTML attr
 | `processedData`     | `Array<T>`                                                        | the data after it has been processed by a filter                                                                  |
 | `allData`           | `Array<T>`                                                        | contains every entry                                                                                              |
 | `insertData`        | `Array<T>`                                                        | used to insert data                                                                                               |
-| `emptyMessage`      | `TemplateResult`                                                  | The message to render if there are no rows                                                                        |
 | `handleData`        | `(options?: { jsonFilters?: NestedJsonFilters }) => Promise<T[]>` | Async data provider function ([see Loading Data with handleData](#loading-data-with-handledata))                  |
 | `handleDataOptions` | `HandleDataOptions`                                               | the options to `handleData` ([see Handle Data Mode](#handle-data-mode-initiallyonce))                             |
 | `save-state-to-url` | `boolean`                                                         | saves active options into the url ([see Save State to Url](#save-state-to-url))                                   |

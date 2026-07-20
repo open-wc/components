@@ -7,13 +7,13 @@ import '@awesome.me/webawesome/dist/components/checkbox/checkbox.js';
 import '@awesome.me/webawesome/dist/components/input/input.js';
 import '@awesome.me/webawesome/dist/components/textarea/textarea.js';
 import { setFieldPath } from '../field-path-helper/setFieldPath.js';
-import { createTableLocalizer, tableTerm } from './localization.js';
+import { OwcLocalizeController } from '@open-wc/components/localization.js';
 
 /**
  * @template {Record<string, unknown>} T
  */
 export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
-  localize = createTableLocalizer(this);
+  #localize = new OwcLocalizeController(this);
   static scopedElements = {
     'owc-autocomplete': OwcAutocomplete,
   };
@@ -143,16 +143,16 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
                       @click=${() => {
                         this.preview = true;
                       }}
-                      >${tableTerm(this.localize, 'tablePreview')}</wa-button
+                      >${this.#localize.term('tablePreview')}</wa-button
                     >`
                   : html`<wa-button
                         @click=${() => {
                           this.preview = false;
                         }}
-                        >${tableTerm(this.localize, 'tableCancel')}</wa-button
+                        >${this.#localize.term('tableCancel')}</wa-button
                       >
                       <wa-button @click=${this.executeEdit}
-                        >${tableTerm(this.localize, 'tableApplyMassEdit', this.data?.length || 0)}</wa-button
+                        >${this.#localize.term('tableApplyMassEdit', this.data?.length || 0)}</wa-button
                       >`
               }
             `
