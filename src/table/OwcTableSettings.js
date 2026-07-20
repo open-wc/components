@@ -6,7 +6,7 @@ import { mergeVisibility, nextVisibility } from './overrideHelpers.js';
 import '@awesome.me/webawesome/dist/components/checkbox/checkbox.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 import { createRef, ref } from 'lit/directives/ref.js';
-import { createTableLocalizer, tableTerm } from './localization.js';
+import { OwcLocalizeController } from '@open-wc/components/localization.js';
 
 /**
  * Modified version of https://jsfiddle.net/RubaXa/zLq5J/6 from
@@ -72,7 +72,7 @@ function sortable(rootEl, update) {
  * @extends {OwcAutocomplete<T>}
  */
 export class OwcTableSettings extends OwcAutocomplete {
-  tableLocalize = createTableLocalizer(this);
+  #localize = new OwcLocalizeController(this);
   /** @type {Record<string, {type: any, attribute?: any, converter?: any}>} */
   static properties = {
     storeNamePrefix: { type: String },
@@ -83,7 +83,7 @@ export class OwcTableSettings extends OwcAutocomplete {
     super();
     this.storeNamePrefix = 'owc-table';
     // Static trigger text - the settings dropdown never has a "selected" value
-    this.placeholder = tableTerm(this.tableLocalize, 'tableColumns');
+    this.placeholder = this.#localize.term('tableColumns');
     /** @type {import('./OwcTable.types.js').Overrides} */
     this.overrides = this.emptyOverrides();
     /** @type {import('./OwcTable.types.js').Overrides} */
@@ -97,21 +97,18 @@ export class OwcTableSettings extends OwcAutocomplete {
           <div id="footer-actions">
             <wa-button size="s" appearance="outlined" @click=${this.toggleLegend}> ? </wa-button>
             <wa-button size="s" appearance="outlined" @click=${this.reset}
-              >${tableTerm(this.tableLocalize, 'tableReset')}</wa-button
+              >${this.#localize.term('tableReset')}</wa-button
             >
           </div>
           <div id="footer-legend" hidden>
-            <p>${tableTerm(this.tableLocalize, 'tableColumnVisibilityHint')}</p>
+            <p>${this.#localize.term('tableColumnVisibilityHint')}</p>
             <ul>
-              <li>
-                <wa-checkbox checked></wa-checkbox
-                >${tableTerm(this.tableLocalize, 'tableShowAlways')}
-              </li>
+              <li><wa-checkbox checked></wa-checkbox>${this.#localize.term('tableShowAlways')}</li>
               <li>
                 <wa-checkbox .indeterminate=${true}></wa-checkbox
-                >${tableTerm(this.tableLocalize, 'tableShowWhenFiltered')}
+                >${this.#localize.term('tableShowWhenFiltered')}
               </li>
-              <li><wa-checkbox></wa-checkbox>${tableTerm(this.tableLocalize, 'tableShowNever')}</li>
+              <li><wa-checkbox></wa-checkbox>${this.#localize.term('tableShowNever')}</li>
             </ul>
           </div>
         </div>
@@ -134,7 +131,7 @@ export class OwcTableSettings extends OwcAutocomplete {
       <wa-icon
         ?hidden=${this.search.value !== ''}
         name="grip-horizontal"
-        label=${tableTerm(this.tableLocalize, 'tableMoveColumn')}
+        label=${this.#localize.term('tableMoveColumn')}
         class="grip"
         @mouseenter=${() => row.value?.setAttribute('draggable', 'true')}
         @mouseleave=${() => row.value?.removeAttribute('draggable')}
@@ -195,7 +192,7 @@ export class OwcTableSettings extends OwcAutocomplete {
    * @param {import('lit').PropertyValues} changedProperties
    */
   update(changedProperties) {
-    this.placeholder = tableTerm(this.tableLocalize, 'tableColumns');
+    this.placeholder = this.#localize.term('tableColumns');
     super.update(changedProperties);
   }
 

@@ -1,6 +1,4 @@
-import '@awesome.me/webawesome/dist/translations/en.js';
-
-const translation = {
+export const en = {
   $code: 'en',
   $name: 'English',
   /** @type {'ltr' | 'rtl'} */
@@ -88,5 +86,3 @@ const translation = {
   tableSums: 'Sums',
   tableSearch: 'Search',
 };
-
-export default translation;

@@ -6,13 +6,13 @@ import { OwcTableSettings } from './OwcTableSettings.js';
 import { getFieldPathContent } from '../field-path-helper/getFieldPathContent.js';
 import { getFieldPath } from '../field-path-helper/getFieldPath.js';
 import { setFieldPath } from '../field-path-helper/setFieldPath.js';
-import { createTableLocalizer, tableTerm } from './localization.js';
+import { OwcLocalizeController } from '@open-wc/components/localization.js';
 
 /**
  * @template {Record<string, unknown>} T
  */
 export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
-  #localize = createTableLocalizer(this);
+  #localize = new OwcLocalizeController(this);
   static scopedElements = {
     'owc-tabs': OwcTabs,
     'owc-table-mass-edit': OwcTableMassEdit,
@@ -126,7 +126,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
                 this.table?.copyAsExcel();
               }}
             >
-              ${tableTerm(this.#localize, 'tableCopyExcel')}
+              ${this.#localize.term('tableCopyExcel')}
             </wa-button>
 
             <wa-button
@@ -136,7 +136,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
                 this.table?.downloadAsCsv();
               }}
             >
-              ${tableTerm(this.#localize, 'tableExportCsv')}
+              ${this.#localize.term('tableExportCsv')}
             </wa-button>
           </div>`,
         visible: false,
@@ -179,19 +179,19 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
     const localizedTabIndex = /** @type {any} */ (tabIndex);
     localizedTabIndex.calculateSums = {
       ...tabIndex.calculateSums,
-      label: tableTerm(this.#localize, 'tableSums'),
+      label: this.#localize.term('tableSums'),
     };
     localizedTabIndex.export = {
       ...tabIndex.export,
-      label: tableTerm(this.#localize, 'tableExport'),
+      label: this.#localize.term('tableExport'),
     };
     localizedTabIndex.massEdit = {
       ...tabIndex.massEdit,
-      label: tableTerm(this.#localize, 'tableMassEdit'),
+      label: this.#localize.term('tableMassEdit'),
     };
     localizedTabIndex.settings = {
       ...tabIndex.settings,
-      label: tableTerm(this.#localize, 'tableSettings'),
+      label: this.#localize.term('tableSettings'),
     };
     if (this.actionTabs && Object.keys(this.actionTabs).length > 0) {
       for (const [_key, tab] of Object.entries(this.actionTabs)) {
@@ -223,7 +223,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
                     @click="${this.#handleRefreshButtonClick}"
                     ><wa-icon
                       name="arrow-clockwise"
-                      label=${tableTerm(this.#localize, 'tableRefresh')}
+                      label=${this.#localize.term('tableRefresh')}
                     ></wa-icon
                   ></wa-button>
                 `
@@ -277,20 +277,18 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
   renderInfo() {
     const selectedInfo =
       this.dataSelectedSize > 0
-        ? html`<span
-            >${tableTerm(this.#localize, 'tableSelectedEntries', this.dataSelectedSize)}</span
-          >`
+        ? html`<span>${this.#localize.term('tableSelectedEntries', this.dataSelectedSize)}</span>`
         : nothing;
 
     if (this.dataFullSize === this.dataCurrentSize) {
       return html`<div id="info">
-        <span>${tableTerm(this.#localize, 'tableShowAllEntries', this.dataFullSize)}</span>
+        <span>${this.#localize.term('tableShowAllEntries', this.dataFullSize)}</span>
         ${selectedInfo}
       </div>`;
     }
     return html`<div id="info">
       <span
-        >${tableTerm(this.#localize, 'tableShowEntries', this.dataCurrentSize, this.dataFullSize)}</span
+        >${this.#localize.term('tableShowEntries', this.dataCurrentSize, this.dataFullSize)}</span
       >
       ${selectedInfo}
     </div>`;
