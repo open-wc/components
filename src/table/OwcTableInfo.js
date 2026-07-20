@@ -146,6 +146,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
         label: 'Bulk edit',
         content: ({ selectedData, processedData }) => {
           return html`<owc-table-mass-edit
+            lang=${this.lang}
             .columns=${this.columns}
             .data=${selectedData}
             .allData=${processedData}
@@ -159,6 +160,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
         label: 'Settings',
         content: () => html`
           <owc-table-settings
+            lang=${this.lang}
             style="width: 400px"
             .columns=${this.columns}
             .storeNamePrefix=${this.table?.storeNamePrefix}
@@ -205,6 +207,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
     }
     return html`
       <owc-tabs
+        lang=${this.lang}
         .tabs=${tabIndex}
         .active=${this.actionTabActive}
         .getRenderOptions=${this.getRenderOptions}

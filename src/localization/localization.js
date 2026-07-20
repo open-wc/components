@@ -3,29 +3,29 @@ import { LocalizeController } from '@awesome.me/webawesome/dist/utilities/locali
 import '@open-wc/components/register/en.js';
 
 export class OwcLocalizeController extends LocalizeController {
+  /** @type {string | undefined} */
+  #termLanguage;
+
   /**
    * @returns {string}
    */
   lang() {
-    // @ts-ignore
-    const host =
-      /** @type {HTMLElement & { lang?: string; getRootNode?: () => ShadowRoot | Document }} */ (
-        this.host
-      );
+    if (this.#termLanguage) {
+      return this.#termLanguage;
+    }
 
     const candidateElements = [];
-    let current = host;
+    /** @type {HTMLElement | null} */
+    let current = this.host;
     const seen = new Set();
     while (current && !seen.has(current)) {
       seen.add(current);
       candidateElements.push(current);
-      const rootNode = current.getRootNode?.();
+      const rootNode = current.getRootNode();
       if (rootNode instanceof ShadowRoot && rootNode.host) {
-        // @ts-ignore
         current = /** @type {HTMLElement} */ (rootNode.host);
       } else {
-        // @ts-ignore
-        current = /** @type {HTMLElement | null} */ (current.parentElement);
+        current = current.parentElement;
       }
     }
 
@@ -35,15 +35,29 @@ export class OwcLocalizeController extends LocalizeController {
         return explicitLang.toLowerCase();
       }
     }
-
     return super.lang();
   }
   /**
-   * @param {String} key
+   * @param {string} key
    * @param {...unknown} args
+   * @returns {string}
    */
   term(key, ...args) {
-    // @ts-ignore
+    // @ts-expect-error Owc translation keys extend Web Awesome's closed Translation interface.
+    if (!super.exists(key, { lang: this.lang() })) {
+      // @ts-expect-error Owc translation keys extend Web Awesome's closed Translation interface.
+      if (super.exists(key, { lang: 'en' })) {
+        this.#termLanguage = 'en';
+        try {
+          // @ts-expect-error Owc translation keys extend Web Awesome's closed Translation interface.
+          return super.term(key, ...args);
+        } finally {
+          this.#termLanguage = undefined;
+        }
+      }
+    }
+
+    // @ts-expect-error Owc translation keys extend Web Awesome's closed Translation interface.
     return super.term(key, ...args);
   }
 }

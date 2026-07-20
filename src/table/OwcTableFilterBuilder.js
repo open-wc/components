@@ -186,6 +186,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
       ${showSeparator ? html`<owc-separator vertical>${this.#localize.term('tableOr')}</owc-separator>` : nothing}
       <div class="vertical renderExistingOr">
         <owc-table-filter
+          lang=${this.lang}
           type="or"
           .columns=${this.columns}
           .value=${filterList[index]}
@@ -230,6 +231,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
       ${index !== 0 ? html`<owc-separator>${this.#localize.term('tableAnd')}</owc-separator>` : nothing}
       <div class="horizontal">
         <owc-table-filter
+          lang=${this.lang}
           .columns=${this.columns}
           .value=${filterList[index]}
           @change=${
@@ -276,6 +278,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
         <owc-separator vertical>${this.#localize.term('tableOr')}</owc-separator>
         <div class="vertical">
           <owc-table-filter
+            lang=${this.lang}
             type="or"
             .columns=${this.columns}
             @change=${
@@ -307,6 +310,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
         <owc-separator vertical>${this.#localize.term('tableOr')}</owc-separator>
         <div class="vertical">
           <owc-table-filter
+            lang=${this.lang}
             type="or"
             .columns=${this.columns}
             @change=${
@@ -337,6 +341,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
         <div style="display: flex; gap: 3rem;">
           <div class="horizontal">
             <owc-table-filter
+              lang=${this.lang}
               .columns=${this.columns}
               @change=${
                 /** @param {Event} ev **/
@@ -416,6 +421,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
       <div class="separator-on-hover renderConvertingAnd">
         <owc-separator>${this.#localize.term('tableAnd')}</owc-separator>
         <owc-table-filter
+          lang=${this.lang}
           .columns=${this.columns}
           @change=${
             /** @param {Event} ev **/
