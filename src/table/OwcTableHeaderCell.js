@@ -86,7 +86,6 @@ export class OwcTableHeaderCell extends LitElement {
         display: flex;
         flex: 1;
         min-width: 0;
-
         overflow: hidden;
       }
 

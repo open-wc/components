@@ -24,3 +24,5 @@ assets/icons/*
 **/generated.*
 
 .codex
+*.tgz
+.vscode

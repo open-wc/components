@@ -23,6 +23,7 @@ import { globalSearchField } from './jsonToFilter.js';
 import { copyAsExcel } from '@open-wc/components/table/excel.js';
 import { filterFieldValue } from './filterFieldValue.js';
 import { OwcTableInfo } from './OwcTableInfo.js';
+import { OwcIconButton } from '../icon-button/OwcIconButton.js';
 import {
   OwcClickEditableAutocomplete,
   OwcClickEditableInput,
@@ -84,6 +85,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     'owc-click-editable-autocomplete': OwcClickEditableAutocomplete,
     'owc-click-editable-input': OwcClickEditableInput,
     'owc-click-editable-textarea': OwcClickEditableTextarea,
+    'owc-icon-button': OwcIconButton,
   };
 
   static properties = {
@@ -131,6 +133,14 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   };
 
   #initialSetFilterFields = new Set();
+
+  #resizeTimeout = 0;
+  #handleWindowResize = () => {
+    clearTimeout(this.#resizeTimeout);
+    this.#resizeTimeout = window.setTimeout(() => {
+      void this.recalculateColumnWidths().then(() => this.resetVirtualizer());
+    }, 50);
+  };
 
   /**
    * @param {import('./OwcTable.types.js').HandleDataOptions} value
@@ -293,9 +303,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
     /** @type {'always' | 'never' | 'auto'} */
     this.virtualizerMode = 'auto';
-
-    /** @type {number} */
-    this.tableWidth = 0;
   }
 
   #selectedSet = new Set();
@@ -304,8 +311,24 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   /** @type {Record<string, number>} */
   #columnWidths = {};
 
+  /**
+    @type {Record<string, number>}
+   */
+  #defaultColumnWidths = {};
+
+  #MIN_COLUMN_WIDTH = 50;
+
   get visibleColumns() {
     return [...this.#visibleColumns];
+  }
+
+  /** @type {ResizeObserver | undefined} */
+  #infoResizeObserver;
+
+  #updateInfoHeight() {
+    const wrapper = this.shadowRoot?.querySelector('#info-outer-wrapper');
+    const height = wrapper?.getBoundingClientRect().height ?? 0;
+    this.style.setProperty('--info-height', `${height}px`);
   }
 
   /**
@@ -355,6 +378,17 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       columnElements[index].order =
         this.jsonSorters.find(sorter => sorter.field === column.field)?.order || undefined;
     });
+
+    this.#updateInfoHeight();
+
+    const wrapper = this.shadowRoot?.querySelector('#info-outer-wrapper');
+    if (wrapper) {
+      this.#infoResizeObserver = new ResizeObserver(() => {
+        this.#updateInfoHeight();
+      });
+      this.#infoResizeObserver.observe(wrapper);
+    }
+
     super.firstUpdated(changedProperties);
   }
 
@@ -417,9 +451,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       this.#applySorters();
       this.recalculateColumnWidths();
     }
-    if (changedProperties.has('overrides')) {
-      this.recalculateColumnWidths();
-    }
     if (changedProperties.has('actionTabActive')) {
       this.#saveStateToUrl();
     }
@@ -428,6 +459,17 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       changedProperties.has('jsonFilters') ||
       changedProperties.has('overrides')
     ) {
+      if (changedProperties.has('columns')) {
+        for (const column of this.columns) {
+          if (
+            column.field &&
+            column.width != null &&
+            !(column.field in this.#defaultColumnWidths)
+          ) {
+            this.#defaultColumnWidths[column.field] = column.width;
+          }
+        }
+      }
       let columns = this.columns;
       if (this.overrides.order) {
         columns = [];
@@ -468,6 +510,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         }
       }
     }
+    if (changedProperties.has('overrides')) {
+      this.recalculateColumnWidths();
+    }
     if (changedProperties.has('filter')) {
       if (this.filterMode === 'global-search-with-builder' || this.filterMode === 'global-search') {
         if (this.jsonFilters.length === 0) {
@@ -497,6 +542,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       );
     }
     super.update(changedProperties);
+
+    this.updateComplete.then(() => this.#updateInfoHeight());
   }
 
   /**
@@ -586,11 +633,21 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   connectedCallback() {
     super.connectedCallback();
+    window.addEventListener('resize', this.#handleWindowResize);
     this.handleInitialData();
     this.loadStateFromUrl();
   }
 
+  disconnectedCallback() {
+    window.removeEventListener('resize', this.#handleWindowResize);
+    clearTimeout(this.#resizeTimeout);
+    super.disconnectedCallback();
+  }
+
   loadStateFromUrl() {
+    if (!this.saveStateToUrl) {
+      return;
+    }
     const currentUrl = new URL(location.href);
     const currentFilterState = currentUrl.searchParams.get(`${this.storeNamePrefix}-filter`);
     if (currentFilterState) {
@@ -746,19 +803,36 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   #updateColumnCssVariables() {
     let tableWidth = 0;
-    const gridTemplateColumns = this.#visibleColumns
-      .map(column => {
-        // same 50px floor the old `.cell { min-width: 50px }` used to enforce
-        const width = Math.max(50, column.width ?? column._calculatedWidth ?? 50);
+
+    for (const column of this.#visibleColumns) {
+      const width = column.width ?? column._calculatedWidth;
+
+      if (width != null) {
         tableWidth += width;
-        return `${width}px`;
-      })
-      .join(' ');
+      }
+    }
 
     this.#saveStateToUrl();
 
     this.style.setProperty('--owc-table-width', `${tableWidth}px`);
-    this.style.setProperty('--owc-table-grid-template-columns', gridTemplateColumns || 'none');
+
+    this.requestUpdate();
+  }
+
+  renderSizeTableColumnStyles() {
+    return html`
+      ${this.#visibleColumns.map((column, index) => {
+        const width = column.width ?? column._calculatedWidth;
+
+        return width != null
+          ? html`
+              .table-header > .header-cell:nth-child(${index + 2}), .row >
+              .cell:nth-child(${index + 2}) { width: ${width}px; min-width: ${width}px; max-width:
+              ${width}px; flex: 0 0 ${width}px; box-sizing: border-box; }
+            `
+          : nothing;
+      })}
+    `;
   }
 
   #addGlobalSearchJsonFilter() {
@@ -788,8 +862,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         ${this.renderSizeTableColumnStyles()}
         ${this.customStyles}
       </style>
-      <div id="size-table-wrapper">${this.#renderSizeTable()}</div>
-
       <div id="header">
         ${
           this.filterMode !== 'hidden'
@@ -948,7 +1020,10 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       return html`${virtualize({ items, renderItem })}`;
     }
 
-    return html`${items.map(renderItem)}`;
+    return html`${items.map((item, index) => {
+      const result = renderItem(item, index);
+      return result;
+    })}`;
   }
 
   #renderDataTable() {
@@ -1047,45 +1122,17 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
               ? html`<div class="group-rows-container data-container">
                   ${this.#renderList({
                     items: groupRecord[group.key] || [],
-                    renderItem: (item, index) => {
-                      return this.#renderItem(item, index, {
+                    renderItem: (item, index) =>
+                      this.#renderItem(item, index, {
                         setLast: groupIndex === groupListSorted.length - 1,
                         lastIndex: (groupRecord[group.key] || []).length - 1,
-                      });
-                    },
+                      }),
                   })}
                 </div>`
               : html`<div class="group-rows-container"></div>`
           }
         `,
       )}
-    `;
-  }
-
-  renderSizeTableColumnStyles() {
-    return html`
-      ${this.#visibleColumns.map((column, index) =>
-        column.width
-          ? html`#size-table .row > .cell:nth-child(${index + 2}) { width: ${column.width}px; }`
-          : nothing,
-      )}
-    `;
-  }
-
-  #renderSizeTable() {
-    return html`
-      <div class="table" id="size-table">
-        <div class="table-header">${this.#renderHeader()}</div>
-        <div class="table-body">
-          ${
-            this.sizeData && this.sizeData.length > 0
-              ? this.sizeData.map((row, index) =>
-                  this.#renderItem(row, index, { mode: 'size-table' }),
-                )
-              : nothing
-          }
-        </div>
-      </div>
     `;
   }
 
@@ -1129,21 +1176,24 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     ev.stopPropagation();
 
     const target = /** @type {HTMLElement} */ (ev.currentTarget);
-
     const index = Number(target.dataset.visibleColumnIndex);
-
     const column = this.#visibleColumns[index];
 
     if (!column) {
       return;
     }
 
-    // remove manual override
-    delete column.width;
+    // fall back to the column's originally configured width (if any),
+    // otherwise let it be recalculated from the rendered content
+    const defaultWidth = this.#defaultColumnWidths[column.field];
+    if (defaultWidth != null) {
+      column.width = defaultWidth;
+    } else {
+      delete column.width;
+    }
     delete this.#columnWidths[column.field];
 
     this.#saveStateToUrl();
-
     this.recalculateColumnWidths();
   }
 
@@ -1158,7 +1208,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     return this.highlightFilter(row);
   }
 
-  /**
+ /**
    *
    * @param {T} row
    * @returns {import('lit').TemplateResult}
@@ -1184,6 +1234,47 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     }
 
     return html`<div class="row-no-click"></div>`;
+  }
+
+
+  /**
+   * @param {Event} ev
+   * @param {T} row
+   */
+  #handleRowClick(ev, row) {
+    const target = /** @type {HTMLElement} */ (ev.target);
+    // Don't navigate while selecting text.
+    if (window.getSelection()?.type === 'Range') {
+      return;
+    }
+
+    // Only clicks coming from a table cell should trigger.
+    const cell = target.closest('.cell');
+    if (!cell) {
+      return;
+    }
+
+    // Ignore explicitly interactive content.
+    if (target.closest('.cell-non-click')) {
+      return;
+    }
+
+    switch (this.renderMode) {
+      case 'detail':
+      case 'detailDeferred':
+        this.#handleDetailsClick(ev, row);
+        break;
+
+      case 'link':
+      case 'linkWithDetail': {
+        const settings = this.getRowLinkSettings?.(row);
+
+        if (settings?.href) {
+          window.location.assign(settings.href);
+        }
+        break;
+      }
+    }
   }
 
   /**
@@ -1256,74 +1347,19 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     index,
     { mode = 'data-table', setLast = true, lastIndex = this.allData.length - 1 } = {},
   ) => {
-    const annotationContent =
-      this.renderAnnotation(row) === nothing
-        ? nothing
-        : html`<div class="row-annotation">${this.renderAnnotation(row)}</div>`;
-    const rawRowContent = html`
-      <div class=${this.#shouldBeHighlighted(row) ? 'row highlighted' : 'row'} data-index=${index}>
-        ${this.renderRowMode(row)}
-        ${this.#visibleColumns.map(column => {
-          return getFieldPathContent(row, column, {
-            renderType: this._renderType,
-            requiredFields:
-              column.type === 'editable'
-                ? this.#visibleColumns
-                    .filter(col => col.editableOptions?.required)
-                    .map(col => col.field)
-                : [],
-            render: ({ config, content }) => {
-              if (config.type === 'editable') {
-                return html`<div class="cell ${column.cellClass}">
-                  <div class="cell-content ${'align-' + (column.align || 'start')}">
-                    <span class="cell-text"> ${content}</span>
-                  </div>
-                </div>`;
-              }
-              return html`
-                <div class="cell ${column.cellClass}">
-                  <div class="cell-content ${'align-' + (column.align || 'start')}">
-                    ${
-                      column.align === 'full'
-                        ? html`<div class="cell-full">${content}</div>`
-                        : html`<span class="cell-text"> ${content} </span>`
-                    }
-                  </div>
-                </div>
-              `;
-            },
-            isInsert: this.isInsert.bind(this),
-            handleUpdate: this.handleUpdate,
-            renderInitiallyAsEditableCondition: ({ data }) => this.isInsert({ data }),
-            additionalFormatterOptions: ({ data, config }) => ({
-              fieldValueFiltered: config.field
-                ? filterFieldValue(
-                    data,
-                    config.field,
-                    config.fieldFilteredReturn || config.field,
-                    this.jsonFilters,
-                    this.jsonSorters,
-                  )
-                : [],
-            }),
-            additionalFormatter: (_data, { config, content, custom }) => {
-              if (config.formatter === 'rownum') {
-                const index = /** @type {number} */ (custom?.index || 0);
-                return `${index + 1}`;
-              }
-              return content;
-            },
-            custom: { index, jsonFilters: this.jsonFilters },
-            compareOverrides: this.compareOverrides,
-            dateFormatter: this.dateFormatter,
-            dateTimeFormatter: this.dateTimeFormatter,
-            currencyFormatter: this.currencyFormatter,
-            numberFormatter: this.numberFormatter,
-            percentFormatter: this.percentFormatter,
-          });
-        })}
-      </div>
-    `;
+    const hasAnnotation = this.renderAnnotation(row) !== nothing;
+    const annotationContent = hasAnnotation
+      ? html`<div class="row-annotation">${this.renderAnnotation(row)}</div>`
+      : nothing;
+
+    const rawRowContent = html` <div
+            class=${this.#shouldBeHighlighted(row) ? 'row highlighted' : 'row'}
+            data-index=${index}
+          >
+          ${this.renderRowMode(row)}
+            ${this.#visibleColumns.map(column => this.#renderCell(row, column, index))}
+          </div>`
+        
     const rowId = this.getRowId(row);
     const rowDetail =
       mode === 'data-table' &&
@@ -1365,6 +1401,68 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         </div>`
       : rawRowContent;
   };
+
+  /**
+   * @param {T} row
+   * @param {import('./OwcTable.types.js').Column<T>} column
+   * @param {number} index
+   */
+  #renderCell(row, column, index) {
+    return getFieldPathContent(row, column, {
+      renderType: this._renderType,
+      requiredFields:
+        column.type === 'editable'
+          ? this.#visibleColumns.filter(col => col.editableOptions?.required).map(col => col.field)
+          : [],
+      render: ({ config, content }) => {
+        if (config.type === 'editable') {
+          return html`<div class="cell ${column.cellClass}">
+            <div class="cell-content ${'align-' + (column.align || 'start')}">
+              <span class="cell-text"> ${content}</span>
+            </div>
+          </div>`;
+        }
+        return html`
+          <div class="cell ${column.cellClass}">
+            <div class="cell-content ${'align-' + (column.align || 'start')}">
+              ${
+                column.align === 'full'
+                  ? html`<div class="cell-full">${content}</div>`
+                  : html`<span class="cell-text"> ${content} </span>`
+              }
+            </div>
+          </div>
+        `;
+      },
+      isInsert: this.isInsert.bind(this),
+      handleUpdate: this.handleUpdate,
+      renderInitiallyAsEditableCondition: ({ data }) => this.isInsert({ data }),
+      additionalFormatterOptions: ({ data, config }) => ({
+        fieldValueFiltered: config.field
+          ? filterFieldValue(
+              data,
+              config.field,
+              config.fieldFilteredReturn || config.field,
+              this.jsonFilters,
+              this.jsonSorters,
+            )
+          : [],
+      }),
+      additionalFormatter: (_data, { config, content, custom }) => {
+        if (config.formatter === 'rownum') {
+          return `${(custom?.index || 0) + 1}`;
+        }
+        return content;
+      },
+      custom: { index, jsonFilters: this.jsonFilters },
+      compareOverrides: this.compareOverrides,
+      dateFormatter: this.dateFormatter,
+      dateTimeFormatter: this.dateTimeFormatter,
+      currencyFormatter: this.currencyFormatter,
+      numberFormatter: this.numberFormatter,
+      percentFormatter: this.percentFormatter,
+    });
+  }
 
   /**
    * @param {Event} ev
@@ -1469,7 +1567,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         return;
       }
       const { clientX: clientXStart } = ev;
-      let width = column.width ? column.width : column._calculatedWidth || 50;
+      let width = column.width ? column.width : column._calculatedWidth || this.#MIN_COLUMN_WIDTH;
 
       /**
        * @param {MouseEvent} event
@@ -1477,13 +1575,16 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       const onResizeMouseMove = event => {
         if (column.width) {
           const { clientX } = event;
-          const newWidth = width + (clientX - clientXStart);
+          const newWidth = Math.max(this.#MIN_COLUMN_WIDTH, width + (clientX - clientXStart));
           column.width = newWidth;
           this.#columnWidths[column.field] = newWidth;
           this.#updateColumnCssVariables();
           this.requestUpdate();
         } else if (target.parentElement) {
-          const realWidth = target.parentElement.getBoundingClientRect().width;
+          const realWidth = Math.max(
+            this.#MIN_COLUMN_WIDTH,
+            target.parentElement.getBoundingClientRect().width,
+          );
           column.width = realWidth;
           this.#columnWidths[column.field] = realWidth;
           width = realWidth;
@@ -1514,27 +1615,51 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   }
 
   async recalculateColumnWidths() {
-    this.sizeData = this.processedData.slice(0, 100);
+    for (const column of this.#visibleColumns) {
+      if (column.width == null) {
+        delete column._calculatedWidth;
+      }
+    }
+    this.#updateColumnCssVariables();
+
     this.requestUpdate();
     await this.updateComplete;
 
-    const headers = this.shadowRoot?.querySelectorAll('#size-table .table-header .row > .cell');
-
-    if (!headers) {
+    const headerCells = this.shadowRoot?.querySelectorAll('#data-table .table-header .row > .cell');
+    if (!headerCells || headerCells.length === 0) {
       return;
+    }
+
+    /** @type {number[]} */
+    const measuredWidths = Array.from(headerCells).map(cell =>
+      Math.ceil(cell.getBoundingClientRect().width),
+    );
+
+    const bodyRows = this.shadowRoot?.querySelectorAll('#data-table .table-body .row') || [];
+    for (const row of Array.from(bodyRows)) {
+      const cells = row.querySelectorAll(':scope > .cell');
+      cells.forEach((cell, index) => {
+        const width = Math.ceil(cell.getBoundingClientRect().width);
+        if (width > (measuredWidths[index] ?? 0)) {
+          measuredWidths[index] = width;
+        }
+      });
     }
 
     let changed = false;
 
-    for (const [index, header] of Array.from(headers).entries()) {
-      const newWidth = parseInt(getComputedStyle(header).width);
-      const currentWidth = this.#visibleColumns[index]._calculatedWidth;
+    this.#visibleColumns.forEach((column, index) => {
+      if (column.width != null) {
+        return;
+      }
 
-      if (newWidth !== currentWidth) {
-        this.#visibleColumns[index]._calculatedWidth = newWidth;
+      const newWidth = Math.max(measuredWidths[index] ?? 0, this.#MIN_COLUMN_WIDTH);
+
+      if (newWidth !== column._calculatedWidth) {
+        column._calculatedWidth = newWidth;
         changed = true;
       }
-    }
+    });
 
     this.#updateColumnCssVariables();
 
@@ -1734,13 +1859,15 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     contentFormatterStyles,
     css`
       :host {
+        width: 100%;
+        max-width: var(--owc-max-content-width, 100%);
+        min-width: 0;
         --owc-table-borderColor: #e5e7eb;
         --owc-table-loadingColor: rgba(200, 200, 200, 0.3);
         --owc-table-important-row-background-color: #f9fafb;
         --owc-table-primary-background-color: #fff;
         --owc-table-header-color: #6b7280;
         --owc-table-width: auto;
-        --owc-table-grid-template-columns: none;
         display: block;
       }
 
@@ -1756,10 +1883,12 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         position: absolute;
         top: 0;
         left: 0;
-        width: 100%;
+        width: var(--owc-table-width);
         height: 100%;
+        inset: 0;
         cursor: pointer;
       }
+
       .row-no-click {
         position: absolute;
         top: 0;
@@ -1777,13 +1906,15 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
 
       .row {
-        display: grid;
-        grid-template-columns: var(--owc-table-grid-template-columns, none);
-        width: max-content;
+        display: flex;
         position: relative;
       }
 
-      .row:has(.row-click):hover {
+      #virtualize-container {
+        display: block;
+      }
+
+      .row:has(.row-click):hover > .cell {
         background: var(--owc-table-important-row-background-color);
       }
 
@@ -1820,6 +1951,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         justify-content: center;
       }
 
+
+
       .cell-full {
         position: relative;
         width: 100%;
@@ -1838,6 +1971,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         display: flex;
         align-items: center;
         border-width: 0 1px 1px 1px;
+        width: var(--owc-table-width);
       }
 
       .group-label {
@@ -1855,7 +1989,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
 
       .group-rows-container {
-        /* transition: 2s ease-in-out; */
         min-height: 0;
         position: relative;
       }
@@ -1892,6 +2025,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       .row > .cell:nth-child(2) {
         border-left-width: 1px;
       }
+
       .row > .cell:last-child {
         border-right-width: 1px;
       }
@@ -1900,11 +2034,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         font-weight: bold;
         background-color: var(--owc-table-important-row-background-color);
       }
-      .table-header .cell {
-        display: inline-flex;
-      }
       .table-body {
         position: relative;
+        display: block;
       }
 
       .last-row .cell:nth-child(2) {
@@ -1912,6 +2044,10 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
       .last-row .cell:last-child {
         border-radius: 0 0 8px 0;
+      }
+
+      .last-row > wa-details::part(content) {
+        border-radius: 0 0 8px 8px;
       }
 
       .last-row {
@@ -1924,33 +2060,11 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       .table-header .row:first-child > .cell:nth-child(2) {
         border-radius: 8px 0 0 0;
       }
-      .table-header .row:first-child > .cell:last-child {
+      .table-header .row:last-child > .cell:last-child {
         border-radius: 0 8px 0 0;
       }
       #data-table .table-header .cell-content {
         padding-right: 2px;
-      }
-
-      #size-table-wrapper {
-        height: 0;
-        overflow: hidden;
-      }
-      #size-table-wrapper .table {
-        display: table;
-        width: 100%;
-      }
-      #size-table-wrapper .table-header {
-        display: table-header-group;
-      }
-      #size-table-wrapper .table-body {
-        display: table-row-group;
-      }
-      #size-table-wrapper .row {
-        display: table-row;
-        position: relative;
-      }
-      #size-table-wrapper .cell {
-        display: table-cell;
       }
 
       #info-wrapper {
@@ -1966,15 +2080,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         color: var(--owc-table-header-color);
         margin: 0.5em 0;
         padding-left: 1em;
-      }
-
-      #actions > * {
-        margin: 0.3em;
-      }
-
-      #actions > .connected-before {
-        margin-left: -10px;
-        margin-right: 0;
       }
 
       .open-details-button {
@@ -2015,6 +2120,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         align-items: center;
       }
 
+      /* used in renderSubList */
       .list-content {
         display: flex;
         justify-content: space-between;
@@ -2036,7 +2142,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         z-index: 100;
       }
       :host([_has-info-block][sticky-header]) .table-header {
-        top: 40px;
+        top: var(--info-height, 40px);
       }
       :host([sticky-header]) #info-outer-wrapper {
         position: sticky;
@@ -2064,11 +2170,11 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         display: inline-flex;
       }
       .row-container {
-        width: fit-content;
+        display: block;
       }
 
       .row-annotation {
-        width: 100%;
+        width: var(--owc-table-width);
         border: 1px solid var(--owc-table-borderColor);
         border-width: 0 1px 0px 1px;
         padding-top: 0.5rem;
@@ -2116,6 +2222,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
 
       wa-details {
+        /* grid-column: 1 / -1; */
         display: block;
         width: var(--owc-table-width);
         max-width: var(--owc-table-width);

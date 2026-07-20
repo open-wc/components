@@ -7,7 +7,9 @@ import { resolveFieldPath } from './resolveFieldPath.js';
 export function jsonToSorters(jsonSorter) {
   /** @type {import('./OwcTable.types.js').Sorter} */
   function sorter(a, b) {
-    if (jsonSorter.order === undefined) return 0;
+    if (jsonSorter.order === undefined) {
+      return 0;
+    }
 
     let aValue = resolveFieldPath(a, jsonSorter.field);
     let bValue = resolveFieldPath(b, jsonSorter.field);
@@ -17,11 +19,18 @@ export function jsonToSorters(jsonSorter) {
     }
 
     if (jsonSorter.sortType === 'dateNoYear') {
-      if (aValue instanceof Date && bValue instanceof Date) {
+      let aParse = parseDate(aValue);
+      let bParse = parseDate(bValue);
+
+      if (aParse !== undefined && bParse !== undefined) {
+        aValue = aParse;
+        bValue = bParse;
         aValue = structuredClone(aValue);
-        aValue.setFullYear(2000);
+        aValue.setFullYear(0);
         bValue = structuredClone(bValue);
-        bValue.setFullYear(2000);
+        bValue.setFullYear(0);
+        aValue = aValue.getTime();
+        bValue = bValue.getTime();
       }
     }
     if (typeof aValue === 'string' && typeof bValue === 'string') {
@@ -78,4 +87,30 @@ export function jsonToSorters(jsonSorter) {
     return arraySorter;
   }
   return sorter;
+}
+
+/**
+ *
+ * @param {string | number | boolean | Date | undefined | import('lit').TemplateResult | unknown[]} param
+ * @returns {Date | undefined}
+ */
+function parseDate(param) {
+  switch (typeof param) {
+    case 'boolean':
+    case 'undefined':
+    case 'function':
+    case 'symbol':
+      return undefined;
+    case 'string':
+      param = Date.parse(param);
+    // eslint-disable-next-line no-fallthrough
+    case 'bigint':
+    case 'number':
+      if (isNaN(param)) {
+        return undefined;
+      }
+      return new Date(param);
+    case 'object':
+      return param instanceof Date ? param : undefined;
+  }
 }
