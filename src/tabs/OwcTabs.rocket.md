@@ -189,16 +189,104 @@ export const tabsVisibilityOrder = () => {
 };
 ```
 
+## Render Mode
+
+tabs can be rendered in two different modes: eager or deferred. eager loading means, that every tab content gets rendered immediately. this also runs every function if any functions are defined. on the other side, deferred loading only renders it if the tab gets opened, which may result in a longer loading time when opening the tab for the first time.
+
+### Eager loading
+
+here the dates get set without opening the tabs. if you compare both tabs, both times are nearly indent since the content function has been called when the tab itself has been rendered.
+
+``` js client
+
+function setFirstLoadedDate(dateToSet){
+  if (dateToSet === undefined){
+    return new Date();
+  }
+  else {
+    return dateToSet;
+  }
+}
+
+```
+
+```js demo
+
+var one, two
+
+export const tabsEagerLoading = () => {
+  return html`
+    <owc-tabs
+      render-mode="eager"
+      .tabs=${{
+        general: {
+          label: 'Date one',
+          content: () => {
+            one = setFirstLoadedDate(one)
+            return html`<p>I got rendered the first time at ${one}</p>`
+            },
+        },
+        other: {
+          label: 'date two',
+          content: () => {
+             two = setFirstLoadedDate(two)
+            return html`<p>but I got rendered the first time at ${two}</p>`
+            },
+        },
+      }}
+    >
+      <div slot="tab-list-prefix">Info About 10/1300</div>
+    </owc-tabs>
+  `;
+};
+```
+
+### deferred loading
+
+now using deferred rendering, the time will only be calculated to when the tab is opened. this can save unnecessary loading when using big calculations.
+
+```js demo
+
+var three, four
+
+export const tabsDeferredLoading = () => {
+  return html`
+    <owc-tabs
+      render-mode="deferred"
+      .tabs=${{
+        general: {
+          label: 'Date one',
+          content: () => {
+            three = setFirstLoadedDate(three)
+            return html`<p>I got rendered the first time at ${three}</p>`
+            },
+        },
+        other: {
+          label: 'date two',
+                content: () => {
+             four = setFirstLoadedDate(four)
+            return html`<p>but I got rendered the first time at ${four}</p>`
+            },
+        },
+      }}
+    >
+      <div slot="tab-list-prefix">Info About 10/1300</div>
+    </owc-tabs>
+  `;
+};
+```
+
 ## API
 
 ### Attributes & properties
 
-| Attribute | Property           | Type                  | Default      | Description                                                                |
-| --------- | ------------------ | --------------------- | ------------ | -------------------------------------------------------------------------- |
-| `active`  | `active`           | `string`              | `''`         | Key of the open tab; an empty string means all tabs are closed. Reflected. |
-| -         | `tabs`             | `Tabs<T>`             | `{}`         | The tab definitions, keyed by tab id (see below).                          |
-| -         | `getRenderOptions` | `() => T`             | `() => ({})` | Provides the options passed to `visible` and `content` functions.          |
-| -         | `customStyles`     | `CSSResult \| string` | empty        | Extra CSS applied inside the shadow root (e.g. to style tab content).      |
+| Attribute     | Property           | Type                           | Default      | Description                                                                |
+| ------------- | ------------------ | ------------------------------ | ------------ | -------------------------------------------------------------------------- |
+| `active`      | `active`           | `string`                       | `''`         | Key of the open tab; an empty string means all tabs are closed. Reflected. |
+| -             | `tabs`             | `Tabs<T>`                      | `{}`         | The tab definitions, keyed by tab id (see below).                          |
+| -             | `getRenderOptions` | `() => T`                      | `() => ({})` | Provides the options passed to `visible` and `content` functions.          |
+| -             | `customStyles`     | `CSSResult \| string`          | empty        | Extra CSS applied inside the shadow root (e.g. to style tab content).      |
+| `render-mode` | `renderMode`       | `eager` \| `deferred` (String) | `eager`      | The mode that is used to render the tab content                            |
 
 ### Tab definition (`Tab<T>`)
 

@@ -13,6 +13,7 @@ export class OwcTabs extends LitElement {
     active: { type: String, reflect: true },
     tabs: { type: Object },
     customStyles: { attribute: false },
+    renderMode: { type: String, attribute: 'render-mode' },
   };
 
   constructor() {
@@ -24,6 +25,7 @@ export class OwcTabs extends LitElement {
     this.getRenderOptions = () => {
       return /** @type {T} */ ({});
     };
+    this.renderMode = 'eager';
   }
 
   render() {
@@ -57,9 +59,14 @@ export class OwcTabs extends LitElement {
             <wa-details summary=${key} part="content-wrapper" ?open=${this.active === key}>
               <div class="details-content">
                 ${
-                  tab.content
-                    ? tab.content({ ...options, open: this.active === key })
-                    : `Please define a content function for the tab "${key}"`
+                  this.renderMode === 'eager' || this.active === key
+                    ? tab.content
+                      ? tab.content({
+                          ...options,
+                          open: this.active === key,
+                        })
+                      : `Please define a content function for the tab "${key}"`
+                    : nothing
                 }
               </div>
             </wa-details>
