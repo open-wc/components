@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/detail-card',
+  path: '/data/detail-card',
   title: 'Detail Card',
   menu: {
-    parent: 'data',
+    parent: '/data',
     order: 80,
     iconName: 'postcard',
   },
@@ -41,16 +41,15 @@ export const simpleDetailCard = () => html`
   <owc-detail-card accent-color="var(--wa-color-success-fill-loud)" open>
     <wa-icon slot="icon" name="check-circle"></wa-icon>
     <div slot="text">
-      <div><strong>Rechtsschutz Versicherung</strong></div>
-      <div>Generali</div>
+      <div><strong>I am a basic card</strong></div>
+      <div>lorem ipsum</div>
     </div>
     <div slot="detail">
-      <div><strong>EUR 15</strong></div>
-      <div>im Quartal</div>
+      <div><strong>Having a nice text over here</strong></div>
+      <div>click the arrow</div>
     </div>
     <div>
-      Der gesamte Eintrag ist klickbar. Dieser Bereich kommt aus dem Default-Slot und wird unter der
-      Summary aufgeklappt angezeigt.
+      I am an expandable text, that contains some info
     </div>
   </owc-detail-card>
 `;
@@ -66,14 +65,14 @@ export const neutralDetailCard = () => html`
   <owc-detail-card accent-color="#D67A1F">
     <wa-icon slot="icon" name="info-circle"></wa-icon>
     <div slot="text">
-      <div><strong>Rueckfrage erforderlich</strong></div>
-      <div>Generali</div>
+      <div><strong>Something important</strong></div>
+      <div>Check me out</div>
     </div>
     <div slot="detail">
-      <div><strong>Offen</strong></div>
-      <div>Aktion noetig</div>
+      <div><strong>Open</strong></div>
+      <div>actions required</div>
     </div>
-    <div>Bitte pruefe die fehlende Information im Warenkorb, bevor du fortfaehrst.</div>
+    <div>A detailed description why i am orange</div>
   </owc-detail-card>
 `;
 ```
@@ -88,12 +87,11 @@ export const summaryOnlyDetailCard = () => html`
   <owc-detail-card accent-color="var(--wa-color-brand-fill-loud)">
     <wa-icon slot="icon" name="shield-check"></wa-icon>
     <div slot="text">
-      <div><strong>Haushalt Versicherung</strong></div>
-      <div>Aktiv seit 01.01.2026</div>
+      <div><strong>Nothing to expand here</strong></div>
+      <div>it's all chill here</div>
     </div>
     <div slot="detail">
-      <div><strong>Aktiv</strong></div>
-      <div>Keine Aktion</div>
+      <div><strong>closed</strong></div>
     </div>
   </owc-detail-card>
 `;
@@ -108,12 +106,10 @@ the summary copy in `slot="text"` and the longer copy in the default slot.
 export const textOnlyDetailCard = () => html`
   <owc-detail-card>
     <div slot="text">
-      <div><strong>Zahlungsweise geaendert</strong></div>
-      <div>Die naechste Abbuchung erfolgt monatlich.</div>
+      <div><strong>lorem Ipsum</strong></div>
     </div>
     <div>
-      Diese Variante nutzt nur die Textspalte. Die reservierten Bereiche fuer Icon und Detail werden
-      automatisch ausgeblendet.
+      This card is way more simple
     </div>
   </owc-detail-card>
 `;
@@ -129,17 +125,16 @@ export const customSuffixDetailCard = () => html`
   <owc-detail-card accent-color="var(--wa-color-warning-fill-loud)">
     <wa-icon slot="icon" name="triangle-exclamation"></wa-icon>
     <div slot="text">
-      <div><strong>Dokument fehlt</strong></div>
-      <div>Polizze kann noch nicht abgeschlossen werden</div>
+      <div><strong>Customizeable all the way</strong></div>
+      <div>use any symbol you like</div>
     </div>
     <div slot="detail">
-      <div><strong>Ausstehend</strong></div>
-      <div>Heute pruefen</div>
+      <div><strong>a new icon</strong></div>
+      <div>how refreshing</div>
     </div>
     <wa-icon slot="suffix" name="circle-exclamation"></wa-icon>
     <div>
-      Lade das fehlende Dokument hoch oder markiere den Eintrag als nicht relevant, bevor du den
-      Abschluss fortsetzt.
+      lorem ipsum maximus
     </div>
   </owc-detail-card>
 `;
@@ -154,47 +149,37 @@ quickly.
 ```js demo
 export const detailCardList = () => html`
   <div style="display: grid; gap: 0.75rem;">
-    <owc-detail-card accent-color="var(--wa-color-success-fill-loud)">
-      <wa-icon slot="icon" name="circle-check"></wa-icon>
-      <div slot="text">
-        <div><strong>Kfz Versicherung</strong></div>
-        <div>UNIQA</div>
-      </div>
-      <div slot="detail">
-        <div><strong>EUR 48</strong></div>
-        <div>monatlich</div>
-      </div>
-      <div>Vertrag laeuft bis 31.12.2026 und verlaengert sich automatisch.</div>
-    </owc-detail-card>
-
-    <owc-detail-card accent-color="var(--wa-color-warning-fill-loud)" open>
-      <wa-icon slot="icon" name="clock"></wa-icon>
-      <div slot="text">
-        <div><strong>Lebensversicherung</strong></div>
-        <div>Generali</div>
-      </div>
-      <div slot="detail">
-        <div><strong>In Pruefung</strong></div>
-        <div>2 offene Punkte</div>
-      </div>
-      <div>
-        Die Gesundheitsfragen wurden beantwortet. Eine Rueckmeldung zur Risikopruefung ist noch
-        offen.
-      </div>
-    </owc-detail-card>
-
     <owc-detail-card accent-color="var(--wa-color-danger-fill-loud)">
-      <wa-icon slot="icon" name="circle-xmark"></wa-icon>
       <div slot="text">
-        <div><strong>Reiseversicherung</strong></div>
-        <div>Abgelaufen</div>
+        <div><strong>Huey</strong></div>
       </div>
       <div slot="detail">
-        <div><strong>Keine Deckung</strong></div>
-        <div>seit 15.06.2026</div>
+        <div><strong>brother one</strong></div>
+      </div>
+      <div>I am Huey</div>
+    </owc-detail-card>
+
+    <owc-detail-card accent-color="var(--wa-color-brand-fill-loud)" open>
+      <div slot="text">
+        <div><strong>Dewey</strong></div>
+      </div>
+      <div slot="detail">
+        <div><strong>brother two</strong></div>
       </div>
       <div>
-        Der Vertrag ist beendet und kann nicht mehr fuer neue Schadensfaelle genutzt werden.
+        I am Dewey
+      </div>
+    </owc-detail-card>
+
+    <owc-detail-card accent-color="var(--wa-color-success-fill-loud)">
+      <div slot="text">
+        <div><strong>Louie</strong></div>
+      </div>
+      <div slot="detail">
+        <div><strong>brother three</strong></div>
+      </div>
+      <div>
+        And i am Louie
       </div>
     </owc-detail-card>
   </div>

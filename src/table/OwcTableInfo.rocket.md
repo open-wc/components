@@ -1,10 +1,10 @@
 ```js server
 export const config = {
-  path: '/table-info',
+  path: '/internal/table-info',
   title: 'Table Info',
   menu: {
-    parent: 'data',
-    order: 20,
+    parent: '/internal',
+    order: 10000,
     iconName: 'info-square',
   },
 };

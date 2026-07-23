@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/file-upload',
+  path: '/workflow/file-upload',
   title: 'File Upload',
   menu: {
-    parent: 'workflow',
+    parent: '/workflow',
     order: 30,
     iconName: 'cloud-upload',
   },

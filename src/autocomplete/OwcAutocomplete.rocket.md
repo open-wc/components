@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/autocomplete',
+  path: '/forms/autocomplete',
   title: 'Autocomplete',
   menu: {
-    parent: 'forms',
+    parent: '/forms',
     order: 20,
     iconName: 'search',
   },

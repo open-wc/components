@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/icon-button',
+  path: '/utilities/icon-button',
   title: 'Icon Button',
   menu: {
-    parent: 'utilities',
+    parent: '/utilities',
     order: 30,
     iconName: 'hand-index',
   },

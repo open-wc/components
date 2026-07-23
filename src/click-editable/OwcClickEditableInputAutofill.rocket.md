@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/click-editable-input-autofill',
+  path: '/forms/click-editable-input-autofill',
   title: 'Click Editable Input Autofill',
   menu: {
-    parent: 'forms',
+    parent: '/forms',
     order: 80,
     iconName: 'input-cursor-text',
   },

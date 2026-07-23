@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/separator',
+  path: '/layout/separator',
   title: 'Separator',
   menu: {
-    parent: 'layout',
+    parent: '/layout',
     order: 40,
     iconName: 'hr',
   },

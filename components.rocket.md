@@ -39,9 +39,6 @@ copyable demos.
 Tables, charts, and record views for displaying application data.
 
 - [Table](/table): sortable, filterable tabular data with optional selection and settings.
-- [Table Info](/table-info): summary metadata around table state or results.
-- [Table Mass Edit](/table-mass-edit): bulk edits applied to selected table rows.
-- [Filter Builder](/filter-builder): standalone table-style query rules.
 - [Chart](/chart): line and bar charts from data series.
 - [Pie Chart](/pie-chart): proportional slices with an optional "other" slice.
 - [Data Detail](/data-detail): structured detail view for one record.
@@ -91,3 +88,11 @@ Small helpers, feedback elements, and controllers.
 - [Count Up](/count-up): animated numeric display.
 - [Compress](/compress): string compression helpers documented with demos.
 - [Wave Controller](/wave-controller): reactive controller documentation for wave-style state flows.
+
+## Internal components
+
+those components are not key features but rather components used inside of other components. some documentation exist but might not be finished.
+
+- [Table Info](/table-info): summary metadata around table state or results.
+- [Table Mass Edit](/table-mass-edit): bulk edits applied to selected table rows.
+- [Filter Builder](/filter-builder): standalone table-style query rules.

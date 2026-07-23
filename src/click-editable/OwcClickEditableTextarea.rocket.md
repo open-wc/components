@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/click-editable-textarea',
+  path: '/forms/click-editable-textarea',
   title: 'Click Editable Textarea',
   menu: {
-    parent: 'forms',
+    parent: '/forms',
     order: 60,
     iconName: 'textarea-t',
   },

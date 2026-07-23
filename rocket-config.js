@@ -1,6 +1,6 @@
 /** @type {import('@rocket/js/types.js').RocketConfig} */
 export default {
-  includeGlobs: ['*.rocket.{md,js}', 'src/**/*.rocket.{md,js}'],
+  includeGlobs: ['*.rocket.{md,js}', 'src/**/*.rocket.{md,js}', 'docs/**/*.rocket.{md,js}'],
   siteHeadMetadata: {
     language: 'en',
     siteName: 'Open Web Components',

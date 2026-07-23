@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/pinboard',
+  path: '/data/pinboard',
   title: 'Pinboard',
   menu: {
-    parent: 'data',
+    parent: '/data',
     order: 110,
     iconName: 'pin-angle',
   },

@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/layout-sidebar',
+  path: '/layout/layout-sidebar',
   title: 'Layout Sidebar',
   menu: {
-    parent: 'layout',
+    parent: '/layout',
     order: 10,
     iconName: 'layout-sidebar',
   },

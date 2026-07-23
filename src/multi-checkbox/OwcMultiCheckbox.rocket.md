@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/multi-checkbox',
+  path: '/forms/multi-checkbox',
   title: 'Multi Checkbox',
   menu: {
-    parent: 'forms',
+    parent: '/forms',
     order: 90,
     iconName: 'ui-checks',
   },

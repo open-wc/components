@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/compress',
+  path: '/utilities/compress',
   title: 'Compress',
   menu: {
-    parent: 'utilities',
+    parent: '/utilities',
     order: 50,
     linkText: 'Compress',
     iconName: 'file-zip',
