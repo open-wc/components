@@ -348,7 +348,7 @@ export const size = () => {
     ></owc-autocomplete>
     <br />
     <owc-autocomplete
-      size="medium"
+      size="m"
       .data=${[
         { label: 'VAV', value: '100' },
         { label: 'Standard Life', value: '101' },
@@ -357,7 +357,7 @@ export const size = () => {
     ></owc-autocomplete>
     <br />
     <owc-autocomplete
-      size="large"
+      size="l"
       .data=${[
         { label: 'VAV', value: '100' },
         { label: 'Standard Life', value: '101' },
