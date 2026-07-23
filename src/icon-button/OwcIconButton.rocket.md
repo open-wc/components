@@ -25,9 +25,11 @@ import '@open-wc/components/define/owc-tooltip.js';
 # Icon Button
 
 A borderless icon-only button. It renders as an anchor when `href` is set, so it works for
-actions and navigation alike. Give it a `label` so screen readers can name it.
+actions and navigation alike. Give it a `label` so screen readers can name it. via the `name` parameter, you can set which icon it should use.
 
-## As button
+## Simple Example
+
+this is a simple example, where it logs on each click.
 
 ```js demo
 export const simpleButton = () => {
@@ -39,6 +41,8 @@ export const simpleButton = () => {
 ```
 
 ## With tooltip
+
+you can also give it a tooltip to display a text while hovering over it.
 
 ```js demo
 export const withTooltip = () => {

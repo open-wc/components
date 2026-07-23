@@ -38,6 +38,8 @@ toast({ title: 'Saved', text: 'Your changes have been saved.', variant: 'success
 
 ## Simple toast
 
+here's a simple demo, showing how a toast looks. simply enter the desired text and duration and press `create toast`
+
 ```js demo
 export const simpleToast = () => {
   const durationRef = createRef();
@@ -54,7 +56,7 @@ export const simpleToast = () => {
         });
       }}
     >
-      Toast
+      create Toast
     </button>
   `;
 };
@@ -88,6 +90,8 @@ export const positionToast = () => {
 
 ## Variant
 
+there are currently 5 variants of the toast: `brand`, `neutral`, `success`, `warning` and `danger`. these stem from the webAwesome theme.
+
 ```js demo
 export const variantToast = () => {
   return html`
@@ -101,6 +105,8 @@ export const variantToast = () => {
 ```
 
 ## Appearance
+
+there are 5 different appearances of each variant as well, also stemming from WebAwesome: `accent`, `filled`, `outlined`, `plain` and `filled-outlined`;
 
 ```js demo
 export const appearanceToast = () => {
@@ -120,6 +126,8 @@ export const appearanceToast = () => {
 
 ## Custom Icon
 
+you can also submit your own icon as well via the the icon parameter:
+
 ```js demo
 export const customIconToast = () => {
   return html`
@@ -131,6 +139,8 @@ export const customIconToast = () => {
 ```
 
 ## Remove dismissible button
+
+there's also an option to make the toast to not be able to be dismissed
 
 ```js demo
 export const removeDismissibleToast = () => {

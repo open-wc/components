@@ -130,7 +130,7 @@ export const validatorField = () => {
     <owc-click-editable-input
       id="custom-validator"
       type="text"
-      value="This Doesn't start with 'B'"
+      value="This text has to start with 'B'"
       .validator=${value => {
         return { valid: value.startsWith('B'), error: 'Does not start with B' };
       }}
@@ -167,7 +167,7 @@ export const formatterWithFallbackField = () => {
       id="text-formatted"
       type="url"
       value=""
-      fallbackValue="Double click to edit!"
+      fallbackValue="Enter an URL"
       .formatter=${value => (value ? html`<a href="${value}">${value}</a> 🔗` : nothing)}
     ></owc-click-editable-input>
   `;

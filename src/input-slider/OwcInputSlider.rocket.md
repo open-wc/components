@@ -46,6 +46,8 @@ export const value = () => {
 
 ## Set a Label
 
+with the label attribute, you can give the slider a label.
+
 ```js demo
 export const label = () => {
   return html`
@@ -82,6 +84,8 @@ export const events = () => {
 ```
 
 ## Input Position
+
+the position of the slider and the input field can be swapped as well
 
 ```js demo
 export const inputPosition = () => {
@@ -132,11 +136,12 @@ export const absoluteMinMax = () => {
         console.log(ev.target.value);
       }}
       @input=${ev => {
-        console.log('change');
+        console.log('input');
         console.log(ev.target.value);
       }}
       absolute-min="-50"
       absolute-max="1000"
+      step="5"
     ></owc-input-slider>
   `;
 };
@@ -156,6 +161,8 @@ export const stacked = () => {
 ```
 
 ## Disabled
+
+you can also set the slider as disabled.
 
 ```js demo
 export const disabled = () => {

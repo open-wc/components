@@ -26,6 +26,7 @@ export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
   constructor() {
     super();
     this.value = 0;
+    this.textValue = 0;
     this.label = '';
     /**@type {'start' | 'end'} */
     this.inputPosition = 'start';
@@ -78,6 +79,26 @@ export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
     this.#applyRangeState(adjustRangeForValue(this.#rangeState));
   }
 
+  #adjustForStep() {
+    this.value = this.value - (this.value % this.step);
+  }
+
+  /**
+   * @param {Event & { target: { value: string; } }} ev
+   */
+  adjustTextValue(ev) {
+    ev.stopPropagation();
+    const nextValue = Number.parseFloat(ev.target.value);
+    if (!Number.isFinite(nextValue)) {
+      return;
+    }
+    this.value = nextValue;
+    this.#adjustForStep();
+    this.adjustValueForMinMax();
+    this.textValue = this.value;
+    this.dispatchEvent(new Event(ev.type, { bubbles: true, composed: true }));
+  }
+
   /**
    * @param {Event & { target: { value: string; } }} ev
    */
@@ -90,6 +111,7 @@ export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
       return;
     }
     this.value = nextValue;
+    this.#adjustForStep();
     this.adjustValueForMinMax();
     this.dispatchEvent(new Event(ev.type, { bubbles: true, composed: true }));
   }
@@ -100,6 +122,7 @@ export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
   adjustSlider(ev) {
     ev.stopPropagation();
     this.value = ev.target.value;
+    this.textValue = this.value;
     this.dispatchEvent(new Event(ev.type, { bubbles: true, composed: true }));
   }
 
@@ -122,8 +145,8 @@ export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
               password-toggle-button:input-password-toggle-button
             "
               @input=${this.adjustInput}
-              @change=${this.adjustInput}
-              .value=${this.value.toString()}
+              @change=${this.adjustTextValue}
+              .value=${this.textValue.toString()}
               min=${ifDefined(this.absoluteMin?.toString())}
               max=${ifDefined(this.absoluteMax?.toString())}
               step=${this.step}
@@ -148,8 +171,8 @@ export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
           thumb-min:slider-thumb-min,
           thumb-max:slider-thumb-max
         "
-        min=${this.min}
-        max=${this.max}
+        min=${this.absoluteMin ? this.absoluteMin : this.min}
+        max=${this.absoluteMax ? this.absoluteMax : this.max}
         step=${this.step}
         @input=${this.adjustSlider}
         @change=${this.adjustSlider}
@@ -171,8 +194,8 @@ export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
               password-toggle-button:input-password-toggle-button
             "
               @input=${this.adjustInput}
-              @change=${this.adjustInput}
-              .value=${this.value.toString()}
+              @change=${this.adjustTextValue}
+              .value=${this.textValue.toString()}
               min=${ifDefined(this.absoluteMin?.toString())}
               max=${ifDefined(this.absoluteMax?.toString())}
               step=${this.step}

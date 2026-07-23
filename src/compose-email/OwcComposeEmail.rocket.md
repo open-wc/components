@@ -235,7 +235,7 @@ export const previewModeCompose = () => {
     <wa-button
       variant="brand"
       style="margin-top: 15px"
-      size="large"
+      size="l"
       @click=${() => {
         const openPreview = document
           .querySelector('[demo-name=previewModeCompose]')
@@ -358,7 +358,7 @@ export const formatterCompose = () => {
       .user=${{ email: 'alex.taylor@example.com' }}
       .emailFormatter=${({ recipient, good, remove }) => html`
         <wa-tag
-          size="medium"
+          size="m"
           removable
           @wa-remove=${remove}
           class="recipient"

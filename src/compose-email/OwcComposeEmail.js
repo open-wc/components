@@ -93,7 +93,7 @@ export class OwcComposeEmail extends ScopedElementsMixin(LitElement) {
      */
     this.emailFormatter = ({ recipient, good, remove }) => html`
       <wa-tag
-        size="medium"
+        size="m"
         removable
         @wa-remove=${remove}
         class="recipient"
