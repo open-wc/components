@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/card-list',
+  path: '/data/card-list',
   title: 'Card List',
   menu: {
-    parent: 'data',
+    parent: '/data',
     order: 100,
     iconName: 'card-list',
   },

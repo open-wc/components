@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/pie-chart',
+  path: '/data/pie-chart',
   title: 'Pie Chart',
   menu: {
-    parent: 'data',
+    parent: '/data',
     order: 60,
     iconName: 'pie-chart',
   },

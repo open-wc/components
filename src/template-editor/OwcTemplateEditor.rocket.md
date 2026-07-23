@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/template-editor',
+  path: '/workflow/template-editor',
   title: 'Template Editor',
   menu: {
-    parent: 'workflow',
+    parent: '/workflow',
     order: 10,
     linkText: 'Template Editor',
     iconName: 'file-earmark-richtext',

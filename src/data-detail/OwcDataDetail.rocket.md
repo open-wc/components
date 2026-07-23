@@ -1,10 +1,9 @@
 ```js server
 export const config = {
-  path: '/data-detail',
+  path: '/data/data-detail',
   title: 'Data Detail',
   menu: {
-    parent: 'data',
-    order: 70,
+    parent: '/data',
     iconName: 'file-earmark-text',
   },
 };
@@ -38,67 +37,7 @@ const PLANET_LIST = [
   { label: 'Uranus ', value: 'Uranus' },
   { label: 'Neptune', value: 'Neptunus' },
 ];
-```
 
-# Data Detail
-
-`owc-data-detail` renders one record as a compact label/value grid. It is the
-single-record companion to `owc-table`: use the table to scan many rows, and use
-Data Detail to show or edit the selected row.
-
-The component is configured with a `data` object and a nested `columns` array. Each
-inner array is one visual column; each item inside that array is one label/value row.
-Items resolve their value from `field` (including dot paths such as
-`client.firstName` and JavaScript getters), then optionally format, edit, hide, or
-expand that value.
-
-The most common item shape is:
-
-```js
-{ label: 'First Name', field: 'firstName' }
-```
-
-Add `type: 'editable'` for click-to-edit values, `formatter` for display formatting,
-`visible` for conditional rows, and `type: 'expandable'` plus `contentExpanded` when a
-row should open a larger detail area.
-
-## Basic usage
-
-Start with `data` and one or more visual columns. This example renders two visual
-columns: names on the left, birth data on the right. The date row uses the built-in
-`date` formatter, but the source value in `data.dateOfBirth` stays unchanged.
-
-```js demo
-const basicColumns = [
-  [
-    { label: 'First Name', field: 'firstName' },
-    { label: 'Last Name', field: 'lastName' },
-  ],
-  [
-    { label: 'Date of Birth', field: 'dateOfBirth', formatter: 'date' },
-    { label: 'Age', field: 'age' },
-  ],
-];
-
-export const basicUsageDemo = () => html`
-  <owc-data-detail .data=${data} .columns=${basicColumns}></owc-data-detail>
-`;
-```
-
-## Kitchen sink
-
-This example combines the main features in one component:
-
-- click-editable fields (`First Name`, `Last Name`, `Date of Birth`)
-- autocomplete editing (`Favorite Planet`)
-- expandable rows with nested tables (`Family Members`, `Email`)
-- badges next to labels and suffix content next to values
-- computed getters on the record (`age`, `primaryEmail`, `primaryFamilyMember`)
-
-Use it as a reference when you need several features together. The smaller demos below
-show each concept in isolation.
-
-```js demo
 class Client {
   #data = {};
   familyMemberList = [];
@@ -188,7 +127,67 @@ const client = new Client({
     { id: 2, type: 'private', email: 'max+private@example.com' },
   ],
 });
+```
 
+# Data Detail
+
+`owc-data-detail` renders one record as a compact label/value grid. It is the
+single-record companion to `owc-table`: use the table to scan many rows, and use
+Data Detail to show or edit the selected row.
+
+The component is configured with a `data` object and a nested `columns` array. Each
+inner array is one visual column; each item inside that array is one label/value row.
+Items resolve their value from `field` (including dot paths such as
+`client.firstName` and JavaScript getters), then optionally format, edit, hide, or
+expand that value.
+
+The most common item shape is:
+
+```js
+{ label: 'First Name', field: 'firstName' }
+```
+
+Add `type: 'editable'` for click-to-edit values, `formatter` for display formatting,
+`visible` for conditional rows, and `type: 'expandable'` plus `contentExpanded` when a
+row should open a larger detail area.
+
+## Basic usage
+
+Start with `data` and one or more visual columns. This example renders two visual
+columns: names on the left, birth data on the right. The date row uses the built-in
+`date` formatter, but the source value in `data.dateOfBirth` stays unchanged.
+
+```js demo
+const basicColumns = [
+  [
+    { label: 'First Name', field: 'firstName' },
+    { label: 'Last Name', field: 'lastName' },
+  ],
+  [
+    { label: 'Date of Birth', field: 'dateOfBirth', formatter: 'date' },
+    { label: 'Age', field: 'age' },
+  ],
+];
+
+export const basicUsageDemo = () => html`
+  <owc-data-detail .data=${data} .columns=${basicColumns}></owc-data-detail>
+`;
+```
+
+## Kitchen sink
+
+This example combines the main features in one component:
+
+- click-editable fields (`First Name`, `Last Name`, `Date of Birth`)
+- autocomplete editing (`Favorite Planet`)
+- expandable rows with nested tables (`Family Members`, `Email`)
+- badges next to labels and suffix content next to values
+- computed getters on the record (`age`, `primaryEmail`, `primaryFamilyMember`)
+
+Use it as a reference when you need several features together. The smaller demos below
+show each concept in isolation.
+
+```js demo
 const kitchenSinkOptions = {
   handleUpdate: ({ data, field, config, value, autoSetData }) => {
     console.log({ field, value });
@@ -226,17 +225,17 @@ const kitchenSinkOptions = {
             }}
             .columns=${[
               {
-                title: 'First Name',
+                label: 'First Name',
                 field: 'client.firstName',
                 type: 'editable',
               },
               {
-                title: 'Last Name',
+                label: 'Last Name',
                 field: 'client.lastName',
                 type: 'editable',
               },
               {
-                title: 'Type',
+                label: 'Type',
                 field: 'type',
                 type: 'editable',
                 editableOptions: {
@@ -274,14 +273,12 @@ const kitchenSinkOptions = {
               return { type: 'public', email: '' };
             }}
             .handleUpdate=${({ autoSetData, data }) => {
-              // data.emailList =
-              console.log(data);
-              // autoSetData();
+              autoSetData();
             }}
             .columns=${[
-              { title: 'E-Mail', field: 'email', type: 'editable' },
+              { label: 'E-Mail', field: 'email', type: 'editable' },
               {
-                title: 'Type',
+                label: 'Type',
                 field: 'type',
                 type: 'editable',
                 editableOptions: {
@@ -306,16 +303,6 @@ const kitchenSinkOptions = {
           },
         },
       },
-      // {
-      //   label: 'Date of Birth',
-      //   field: 'dateOfBirth',
-      //   formatter: data =>
-      //     new Intl.DateTimeFormat('de', {
-      //       day: '2-digit',
-      //       month: '2-digit',
-      //       year: 'numeric',
-      //     }).format(data.dateOfBirth),
-      // },
       { label: 'Age', field: 'age', formatter: data => `${data.age} Years` },
     ],
   ],

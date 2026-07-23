@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/wave-controller',
+  path: '/utilities/wave-controller',
   title: 'Wave Controller',
   menu: {
-    parent: 'utilities',
+    parent: '/utilities',
     order: 60,
     iconName: 'water',
   },

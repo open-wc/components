@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/questionnaire',
+  path: '/workflow/questionnaire',
   title: 'Questionnaire',
   menu: {
-    parent: 'workflow',
+    parent: '/workflow',
     order: 40,
     iconName: 'patch-question',
   },

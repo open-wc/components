@@ -1,10 +1,10 @@
 ```js server
 export const config = {
-  path: '/table-mass-edit',
+  path: '/internal/table-mass-edit',
   title: 'Table Mass Edit',
   menu: {
-    parent: 'data',
-    order: 30,
+    parent: '/internal',
+    order: 10000,
     iconName: 'pencil-square',
   },
 };

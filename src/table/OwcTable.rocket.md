@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/table',
+  path: '/data/table',
   title: 'Table',
   menu: {
-    parent: 'data',
+    parent: '/data',
     order: 10,
     iconName: 'table',
   },

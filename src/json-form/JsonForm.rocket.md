@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/json-form',
+  path: '/forms/json-form',
   title: 'Json Form',
   menu: {
-    parent: 'forms',
+    parent: '/forms',
     order: 10,
     iconName: 'ui-checks',
   },

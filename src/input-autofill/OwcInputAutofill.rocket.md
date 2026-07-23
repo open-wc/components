@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/input-autofill',
+  path: '/forms/input-autofill',
   title: 'Input Autofill',
   menu: {
-    parent: 'forms',
+    parent: '/forms',
     order: 30,
     iconName: 'magic',
   },

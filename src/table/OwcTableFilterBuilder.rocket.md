@@ -1,17 +1,17 @@
 ```js server
 export const config = {
-  path: '/filter-builder',
+  path: '/internal/filter-builder',
   title: 'Table Filter Builder',
   menu: {
-    parent: 'data',
-    order: 40,
+    parent: '/internal',
+    order: 10000,
     iconName: 'funnel',
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
-export const components = atlasDocComponents;
 import { docsData } from '@open-wc/components/docsData.js';
 
+export const components = atlasDocComponents;
 export const layout = pageData => docLayout(pageData, docsData);
 ```
 

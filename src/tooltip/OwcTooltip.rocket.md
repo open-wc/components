@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/tooltip',
+  path: '/utilities/tooltip',
   title: 'Tooltip',
   menu: {
-    parent: 'utilities',
+    parent: '/utilities',
     order: 20,
     iconName: 'info-circle',
   },

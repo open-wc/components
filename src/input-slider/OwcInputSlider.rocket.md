@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/input-slider',
+  path: '/forms/input-slider',
   title: 'Input Slider',
   menu: {
-    parent: 'forms',
+    parent: '/forms',
     order: 40,
     iconName: 'sliders',
   },
@@ -103,8 +103,14 @@ Set minimum maximum and step. Min and max can be broken out of by using the inpu
 export const minMax = () => {
   return html`
     <owc-input-slider
-      @change=${() => console.log('change')}
-      @input=${() => console.log('input')}
+      @change=${ev => {
+        console.log('change');
+        console.log(ev.target.value);
+      }}
+      @input=${ev => {
+        console.log('change');
+        console.log(ev.target.value);
+      }}
       min="-50"
       max="1000"
       step="5"
@@ -126,7 +132,7 @@ export const absoluteMinMax = () => {
         console.log(ev.target.value);
       }}
       @input=${ev => {
-        console.log('input');
+        console.log('change');
         console.log(ev.target.value);
       }}
       absolute-min="-50"

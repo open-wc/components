@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/toast',
+  path: '/utilities/toast',
   title: 'Toast',
   menu: {
-    parent: 'utilities',
+    parent: '/utilities',
     order: 10,
     iconName: 'chat-left-text',
   },

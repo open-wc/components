@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/compose-email',
+  path: '/workflow/compose-email',
   title: 'Compose Email',
   menu: {
-    parent: 'workflow',
+    parent: '/workflow',
     order: 20,
     iconName: 'envelope',
   },

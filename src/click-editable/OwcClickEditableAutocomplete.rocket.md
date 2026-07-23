@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/click-editable-autocomplete',
+  path: '/forms/click-editable-autocomplete',
   title: 'Click Editable Autocomplete',
   menu: {
-    parent: 'forms',
+    parent: '/forms',
     order: 70,
     iconName: 'menu-button-wide',
   },

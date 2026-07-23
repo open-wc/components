@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/tabs',
+  path: '/layout/tabs',
   title: 'Tabs',
   menu: {
-    parent: 'layout',
+    parent: '/layout',
     order: 20,
     iconName: 'segmented-nav',
   },

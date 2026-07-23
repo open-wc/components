@@ -1,9 +1,9 @@
 ```js server
 export const config = {
-  path: '/chart',
+  path: '/data/chart',
   title: 'Chart',
   menu: {
-    parent: 'data',
+    parent: '/data',
     order: 50,
     iconName: 'graph-up',
   },
