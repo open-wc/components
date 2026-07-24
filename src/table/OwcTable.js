@@ -1721,7 +1721,12 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
    * @returns {import("./OwcTable.types.js").Column<T>}
    */
   findColumn(field) {
-    return this.columns.find(f => f.field === field) || { label: this.#localize.term('tableNotFound') , field: '' };
+    return (
+      this.columns.find(f => f.field === field) || {
+        label: this.#localize.term('tableNotFound'),
+        field: '',
+      }
+    );
   }
 
   /**

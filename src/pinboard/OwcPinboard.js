@@ -40,7 +40,7 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
     /**@type {(a: T, b: T) => number} */
     this.sorter = () => 0;
     /**@type {(data: T) => string} */
-    this.keyFunction = () => '';
+    this.keyFunction = this.#defaultKeyFunction;
     /**@type {(data: T, column: string) => boolean} */
     this.canDrop = () => true;
   }
@@ -51,7 +51,7 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
         ${repeat(
           this.columns,
           col => col.value,
-          (col, index) => this.#renderColumn(col, this.data[index]),
+          (col, index) => this.#renderColumn(this.#wrapCallbacks(col), this.data[index]),
         )}
       </div>
       <div class="dropzone-container-container">
@@ -66,44 +66,42 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
 
   /**@param {"success" | "delete"} dropzone */
   #renderDropzone(dropzone) {
+    const config = this.dropZones?.[dropzone];
+    if (!config) {
+      return nothing;
+    }
+
+    const wrapped = this.#wrapCallbacks({
+      value: dropzone,
+      onDrop: config.onDrop,
+      onLift: config.onLift,
+    });
+
     return html` <div class="${dropzone}-container dropzone-sub-container">
+      <div
+        class="dropzone ${dropzone}"
+        .name=${dropzone}
+        @dragover=${this.#onDragMove}
+        @drop=${this.#onDrop}
+        @dragleave=${this.#onDragLeave}
+        .onDropCallback=${wrapped.onDrop}
+        @click=${() => this.#handleDropzoneClick(dropzone)}
+      >
+        <wa-icon
+          auto-width
+          class="dropzone-icon"
+          name=${dropzone === 'success' ? 'check' : 'trash'}
+        ></wa-icon>
+      </div>
       ${
-        this.dropZones?.[dropzone]?.onDrop
-          ? html` <div
-              class="dropzone ${dropzone}"
-              .name=${dropzone}
-              @dragover=${this.#onDragMove}
-              @drop=${this.#onDrop}
-              @dragleave=${this.#onDragLeave}
-              .onDropCallback=${this.dropZones?.[dropzone].onDrop}
-              @click=${() => this.#handleDropzoneClick(dropzone)}
-            >
-              <wa-icon
-                auto-width
-                class="dropzone-icon"
-                name=${dropzone === 'success' ? 'check' : 'trash'}
-              ></wa-icon>
-            </div>`
-          : nothing
-      }
-      ${
-        this.dropZones?.[dropzone]?.data
+        config.data !== undefined
           ? html`<wa-details class="dropzone-details">
-              ${this.#renderColumn(
-                {
-                  value: dropzone,
-                  onDrop: this.dropZones?.[dropzone].onDrop,
-                  onLift: this.dropZones?.[dropzone].onLift,
-                },
-                this.dropZones?.[dropzone].data,
-                this.dropZones[dropzone].liftable || false,
-              )}
+              ${this.#renderColumn(wrapped, config.data, config.liftable || false)}
             </wa-details>`
           : nothing
       }
     </div>`;
   }
-
   /**
    *
    * @param {"success" | "delete"} dropzone
@@ -162,176 +160,80 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
     `;
   }
 
-  static styles = [
-    css`
-      .main-container {
-        display: flex;
-        gap: 100px;
-        min-height: inherit;
-      }
+  /**
+   * @param {T} data
+   * @param {string} column
+   * @return {void}
+   */
+  #defaultOnDrop = (data, column) => {
+    const colIndex = this.columns.findIndex(c => c.value === column);
+    if (colIndex !== -1) {
+      this.data[colIndex] = [...this.data[colIndex], data];
+      return;
+    }
+    const zone = this.dropZones[column];
+    if (zone && Array.isArray(zone.data)) {
+      zone.data = [...zone.data, data];
+    }
+  };
 
-      .column-container {
-        display: flex;
-        flex-direction: row;
-        flex-basis: auto;
-        width: max-content;
-      }
+  /**
+   * @param {T} data
+   * @param {string} column
+   * @return {void}
+   */
+  #defaultOnLift = (data, column) => {
+    const colIndex = this.columns.findIndex(c => c.value === column);
+    if (colIndex !== -1) {
+      this.data[colIndex] = this.data[colIndex].filter(elm => elm !== data);
+      return;
+    }
+    const zone = this.dropZones[column];
+    if (zone && Array.isArray(zone.data)) {
+      zone.data = zone.data.filter((/** @type {T} */ elm) => elm !== data);
+    }
+  };
 
-      .dropzone-container {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        position: sticky;
-        height: min(100%, 100vh);
-        top: 0px;
-        gap: max(20%, 10px);
-      }
+  /**
+   * @param {((data: T, column: string, defaultAction: (data: T, column: string) => void) => void) | undefined} userFn
+   * @param {T} data
+   * @param {string} column
+   * @param {(data: T, column: string) => void} defaultFn
+   * @return {void}
+   */
+  #runHook(userFn, data, column, defaultFn) {
+    return userFn ? userFn(data, column, defaultFn) : defaultFn(data, column);
+  }
 
-      .dropzone-sub-container {
-        display: grid;
-        justify-items: center;
-      }
+  /**
+   * @param {{value: string, onDrop?: (data: T, column: string, defaultAction: (data: T, column: string) => void) => void, onLift?: (data: T, column: string, defaultAction: (data: T, column: string) => void) => void}} col
+   * @return {{value: string, onDrop: (data: T, column: string) => void, onLift: (data: T, column: string) => void}}
+   */
+  #wrapCallbacks(col) {
+    return {
+      ...col,
+      onDrop: (data, column) => this.#runHook(col.onDrop, data, column, this.#defaultOnDrop),
+      onLift: (data, column) => this.#runHook(col.onLift, data, column, this.#defaultOnLift),
+    };
+  }
 
-      .column {
-        --border-style: 1px solid var(--wa-color-surface-border);
+  /** @type {WeakMap<object, string>} */
+  #itemKeys = new WeakMap();
+  #itemKeyCounter = 0;
 
-        display: flex;
-        flex-direction: column;
-        border-right: var(--border-style);
-        border-bottom: var(--border-style);
-        gap: 10px;
-        padding-bottom: 10px;
-        width: 250px;
-        transition: var(--wa-transition-medium);
-      }
-
-      .dropzone-details .column {
-        padding-top: 10px;
-        border-top: var(--border-style);
-      }
-
-      .column:first-child {
-        border-left: var(--border-style);
-        border-start-start-radius: var(--wa-border-radius-m);
-        border-end-start-radius: var(--wa-border-radius-m);
-      }
-
-      .column:last-child {
-        border-start-end-radius: var(--wa-border-radius-m);
-        border-end-end-radius: var(--wa-border-radius-m);
-      }
-
-      .column-card {
-        margin-right: 10px;
-        margin-left: 10px;
-        width: 230px;
-        margin-bottom: 10px;
-      }
-
-      .column-header-cell {
-        text-align: center;
-        border-bottom: var(--border-style);
-        border-top: var(--border-style);
-        color: #6b7280;
-        background-color: #f9fafb;
-        position: sticky;
-        top: 0px;
-        z-index: 100;
-        padding-top: 10px;
-        padding-bottom: 10px;
-      }
-
-      .dropzone {
-        font-size: 40px;
-        max-width: 1em;
-        max-height: 1em;
-        padding: 0.8em;
-        border-radius: var(--wa-border-radius-l);
-        border: thick dashed;
-        transition: var(--wa-transition-medium);
-        z-index: 300;
-      }
-
-      .delete {
-        border-color: red;
-      }
-
-      .dropzone-icon {
-        transition: var(--wa-transition-medium);
-        display: flex;
-      }
-
-      .delete .dropzone-icon {
-        color: red;
-      }
-
-      .success {
-        border-color: green;
-      }
-
-      .success .dropzone-icon {
-        color: green;
-      }
-
-      .drop-hover {
-        transition: var(--wa-transition-medium);
-        box-shadow: 0 2px 8px rgb(0 0 0 / 50%);
-        z-index: 150;
-      }
-
-      .drop-hover .column-header-cell {
-        z-index: 200;
-      }
-
-      .drop-hover.delete {
-        background-color: red;
-      }
-
-      .drop-hover .dropzone-icon {
-        color: white;
-      }
-
-      .drop-hover.success {
-        background-color: green;
-      }
-
-      .cannot-drop {
-        background-color: var(--wa-color-neutral-90);
-        color: var(--wa-color-neutral-900);
-      }
-
-      /* wa-detail overrides */
-      .dropzone-details {
-        max-height: 400px;
-        animation-duration: 1s;
-        overflow: auto;
-      }
-      .dropzone-details::part(base) {
-        border: none;
-        padding: 0;
-        box-shadow: none;
-      }
-      .dropzone-details::part(icon) {
-        display: none;
-      }
-      .dropzone-details::part(summary) {
-        padding: 0;
-        margin: 0;
-        display: none;
-      }
-      .dropzone-details::part(header) {
-        padding: 0;
-      }
-      .dropzone-details::part(content) {
-        padding: 0;
-        margin: 0;
-      }
-
-      owc-card::part(body) {
-        display: block;
-      }
-    `,
-  ];
+  /**
+   *
+   * @param {T} data
+   * @return {string}
+   */
+  #defaultKeyFunction = data => {
+    let key = this.#itemKeys.get(data);
+    if (key === undefined) {
+      key = `pinboard-item-${this.#itemKeyCounter++}`;
+      this.#itemKeys.set(data, key);
+    }
+    return key;
+  };
 
   /**
    *
@@ -515,4 +417,175 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
       this.requestUpdate();
     }
   }
+
+  static styles = [
+    css`
+      .main-container {
+        display: flex;
+        gap: 100px;
+        min-height: inherit;
+      }
+
+      .column-container {
+        display: flex;
+        flex-direction: row;
+        flex-basis: auto;
+        width: max-content;
+      }
+
+      .dropzone-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: sticky;
+        height: min(100%, 100vh);
+        top: 0px;
+        gap: max(20%, 10px);
+      }
+
+      .dropzone-sub-container {
+        display: grid;
+        justify-items: center;
+      }
+
+      .column {
+        --border-style: 1px solid var(--wa-color-surface-border);
+
+        display: flex;
+        flex-direction: column;
+        border-right: var(--border-style);
+        border-bottom: var(--border-style);
+        gap: 10px;
+        padding-bottom: 10px;
+        width: 250px;
+        transition: var(--wa-transition-medium);
+      }
+
+      .dropzone-details .column {
+        padding-top: 10px;
+        border-top: var(--border-style);
+      }
+
+      .column:first-child {
+        border-left: var(--border-style);
+        border-start-start-radius: var(--wa-border-radius-m);
+        border-end-start-radius: var(--wa-border-radius-m);
+      }
+
+      .column:last-child {
+        border-start-end-radius: var(--wa-border-radius-m);
+        border-end-end-radius: var(--wa-border-radius-m);
+      }
+
+      .column-card {
+        margin-right: 10px;
+        margin-left: 10px;
+        width: 230px;
+        margin-bottom: 10px;
+      }
+
+      .column-header-cell {
+        text-align: center;
+        border-bottom: var(--border-style);
+        border-top: var(--border-style);
+        color: #6b7280;
+        background-color: #f9fafb;
+        position: sticky;
+        top: 0px;
+        z-index: 100;
+        padding-top: 10px;
+        padding-bottom: 10px;
+      }
+
+      .dropzone {
+        font-size: 40px;
+        max-width: 1em;
+        max-height: 1em;
+        padding: 0.8em;
+        border-radius: var(--wa-border-radius-l);
+        border: thick dashed;
+        transition: var(--wa-transition-medium);
+        z-index: 300;
+      }
+
+      .delete {
+        border-color: red;
+      }
+
+      .dropzone-icon {
+        transition: var(--wa-transition-medium);
+        display: flex;
+      }
+
+      .delete .dropzone-icon {
+        color: red;
+      }
+
+      .success {
+        border-color: green;
+      }
+
+      .success .dropzone-icon {
+        color: green;
+      }
+
+      .drop-hover {
+        transition: var(--wa-transition-medium);
+        box-shadow: 0 2px 8px rgb(0 0 0 / 50%);
+        z-index: 150;
+      }
+
+      .drop-hover .column-header-cell {
+        z-index: 200;
+      }
+
+      .drop-hover.delete {
+        background-color: red;
+      }
+
+      .drop-hover .dropzone-icon {
+        color: white;
+      }
+
+      .drop-hover.success {
+        background-color: green;
+      }
+
+      .cannot-drop {
+        background-color: var(--wa-color-neutral-90);
+        color: var(--wa-color-neutral-900);
+      }
+
+      /* wa-detail overrides */
+      .dropzone-details {
+        max-height: 400px;
+        animation-duration: 1s;
+        overflow: auto;
+      }
+      .dropzone-details::part(base) {
+        border: none;
+        padding: 0;
+        box-shadow: none;
+      }
+      .dropzone-details::part(icon) {
+        display: none;
+      }
+      .dropzone-details::part(summary) {
+        padding: 0;
+        margin: 0;
+        display: none;
+      }
+      .dropzone-details::part(header) {
+        padding: 0;
+      }
+      .dropzone-details::part(content) {
+        padding: 0;
+        margin: 0;
+      }
+
+      owc-card::part(body) {
+        display: block;
+      }
+    `,
+  ];
 }
