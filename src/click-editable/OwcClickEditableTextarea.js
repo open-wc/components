@@ -65,7 +65,7 @@ export class OwcClickEditableTextarea extends OwcClickEditable {
               value=${this.value}
               resize="auto"
             ></wa-textarea>
-            <div class="hint">Esc zum abbrechen</div>
+            <div class="hint">${this._localize.term('clickEditableHint')}</div>
           </div>
         </div>
       </div>

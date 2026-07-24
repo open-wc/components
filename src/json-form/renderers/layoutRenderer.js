@@ -23,6 +23,7 @@ export const LAYOUTS = {
  * @param { {disabled: boolean; hidden: boolean} } ruleOptions
  * @param { boolean } readonly
  * @param { 'form' | 'schema' } mode
+ * @param { string| undefined} syncWarning
  */
 export function layoutRenderer(
   schema,
@@ -34,6 +35,7 @@ export function layoutRenderer(
   ruleOptions,
   readonly,
   mode,
+  syncWarning = undefined,
 ) {
   // @ts-ignore
   const staticTag = unsafeStatic(LAYOUTS[uiSchema.type]);
@@ -50,6 +52,7 @@ export function layoutRenderer(
     // @ts-ignore
     processedRenderers = getClickEditableRenderers({
       fallbackValue: uiSchema.options?.fallbackValue,
+      syncWarning: syncWarning,
     });
   }
   if (ruleOptions?.hidden) {

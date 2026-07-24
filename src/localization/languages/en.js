@@ -31,6 +31,7 @@ export const en = {
    */
   tableNoFilterFound: field => `No filter found for ${field}`,
   tableNot: 'NOT',
+    tableNotFound: 'not found',
   tableOpenDetails: 'Open details',
   tableOperatorBetween: 'between',
   tableOperatorBetweenNoYear: 'between (ignore year)',
@@ -85,4 +86,9 @@ export const en = {
   tableSort: 'Sort',
   tableSums: 'Sums',
   tableSearch: 'Search',
+  jsonFormArrayAddCard: 'Add Entry',
+  jsonFormRenderSyncWarning: 'Value is not automatically synchronized',
+  autoCompleteSelectAll: 'Select all',
+  autoCompleteRemoveAll: 'Remove all',
+  clickEditableHint: 'Esc to cancel',
 };

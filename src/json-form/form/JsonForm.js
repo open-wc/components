@@ -29,6 +29,7 @@ import { DetailsLayout } from '../layouts/DetailsLayout.js';
 import { ArrayLayout } from '../layouts/ArrayLayout.js';
 import { processLabel } from '../label/label.js';
 import { OwcTooltip } from '../../tooltip/OwcTooltip.js';
+import { OwcLocalizeController } from '@open-wc/components/localization.js';
 
 /**@type {import("../types/renderer.js").FullRendererRecord} */
 export const DEFAULT_RENDERERS = {
@@ -45,6 +46,7 @@ export const DEFAULT_RENDERERS = {
 };
 
 export class JsonForm extends ScopedElementsMixin(LitElement) {
+  #localize = new OwcLocalizeController(this);
   static scopedElements = {
     'vertical-layout': VerticalLayout,
     'horizontal-layout': HorizontalLayout,
@@ -355,6 +357,7 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
         ruleOptions,
         this.readonly,
         this.mode,
+        this.#localize.term('jsonFormRenderSyncWarning'),
       );
     }
   }

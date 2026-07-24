@@ -15,5 +15,5 @@ export interface OwcTabsOptions<T> {
   tabs: Tabs<T>;
   active?: keyof Tabs<T>;
   getRenderOptions?: () => T;
-  renderMode: "eager" | "deferred"
+  renderMode: 'eager' | 'deferred';
 }
