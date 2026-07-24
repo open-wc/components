@@ -1650,10 +1650,10 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       label: () =>
         html`<wa-checkbox
           @change=${this.#handleSelectableTitleChange}
-          ?checked=${this.#selectedSet.size === this.processedData.length}
-          ?indeterminate=${
-            this.#selectedSet.size > 0 && this.#selectedSet.size < this.processedData.length
-          }
+          .checked=${this.#selectedSet.size === this.processedData.length}
+          .indeterminate=${
+          this.#selectedSet.size > 0 && this.#selectedSet.size < this.processedData.length
+        }
           aria-label=${this.#localize.term('tableSelectAll')}
         ></wa-checkbox>`,
       includeInExport: false,
@@ -1661,11 +1661,10 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         const selectorSettings = this.getSelectorSettings(row);
         // @ts-ignore
         const typedIndex = /** @type {number} */ (options.custom.index);
-        /** @param {Event} ev */
         return html`<wa-checkbox
           class="owc-selectable-checkbox"
           value=${typedIndex}
-          ?checked=${this.#selectedSet.has(this.#rowKey(this.processedData[typedIndex]))}
+          .checked=${this.#selectedSet.has(this.#rowKey(this.processedData[typedIndex]))}
           aria-label=${ifDefined(selectorSettings['aria-label'])}
         ></wa-checkbox>`;
       },

@@ -4,7 +4,7 @@ export const config = {
   title: 'Card List',
   menu: {
     parent: '/data',
-    order: 100,
+    order: 70,
     iconName: 'card-list',
   },
 };

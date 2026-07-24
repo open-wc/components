@@ -4,7 +4,7 @@ export const config = {
   title: 'Pie Chart',
   menu: {
     parent: '/data',
-    order: 60,
+    order: 30,
     iconName: 'pie-chart',
   },
 };

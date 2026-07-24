@@ -4,7 +4,7 @@ export const config = {
   title: 'Pinboard',
   menu: {
     parent: '/data',
-    order: 110,
+    order: 80,
     iconName: 'pin-angle',
   },
 };

@@ -4,7 +4,7 @@ export const config = {
   title: 'Chart',
   menu: {
     parent: '/data',
-    order: 50,
+    order: 20,
     iconName: 'graph-up',
   },
 };
