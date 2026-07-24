@@ -1,3 +1,5 @@
+import { html } from 'lit';
+
 const headerData = {
   logo: ['/open-wc-components-logo.svg'],
   homeLink: '/',
@@ -36,6 +38,18 @@ export const docsData = {
   footerData,
   stylesheets: [],
   navigationIconServerBudget: 60,
+  headContent: () => html`
+    <script type="module">
+      import { registerIconLibrary } from '@awesome.me/webawesome/dist/webawesome.js';
+
+      registerIconLibrary('default', {
+        resolver: (name, family) => {
+          const suffix = family === 'filled' ? '-fill' : '';
+          return "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/icons/"+name + suffix +".svg";
+        },
+      });
+    </script>
+  `,
 };
 
 /** @type {import('@rocket/js/types.js').HeroData} */

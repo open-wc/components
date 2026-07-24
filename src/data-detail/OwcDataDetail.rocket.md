@@ -5,6 +5,7 @@ export const config = {
   menu: {
     parent: '/data',
     iconName: 'file-earmark-text',
+    order: 40
   },
 };
 import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';

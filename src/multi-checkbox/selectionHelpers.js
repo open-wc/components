@@ -11,6 +11,8 @@
 export function getGroupState(group, selected) {
   const checked = group.length > 0 && group.every(checkbox => selected.includes(checkbox.value));
   const indeterminate = !checked && group.some(checkbox => selected.includes(checkbox.value));
+  console.log('getting state');
+  console.log({ checked, indeterminate });
   return { checked, indeterminate };
 }
 
@@ -25,9 +27,11 @@ export function getGroupState(group, selected) {
  */
 export function toggleGroupSelection(group, selected) {
   const { checked } = getGroupState(group, selected);
+  const groupValues = group.map(x => x.value);
+  const outsideGroup = selected.filter(v => !groupValues.includes(v));
+
   if (checked) {
-    return selected.filter(itemValue => !group.some(checkbox => checkbox.value === itemValue));
+    return outsideGroup;
   }
-  const missing = group.map(checkbox => checkbox.value).filter(value => !selected.includes(value));
-  return [...selected, ...missing];
+  return [...outsideGroup, ...groupValues];
 }
