@@ -927,8 +927,10 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
                           }}
                         >
                           <wa-icon
+                            id="add-new-row-icon"
                             slot="start"
                             name="plus"
+                            canvas= "auto"
                             label=${this.#localize.term('tableNew')}
                           ></wa-icon
                           >${this.#localize.term('tableNew')}
@@ -2021,6 +2023,11 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
       #data-table .table-header .cell-content {
         padding-right: 2px;
+      }
+      #add-new-row-icon{
+        padding: 0 10px 0 0;
+        margin: 0;
+        font-size: 1rem;
       }
 
       #info-wrapper {
