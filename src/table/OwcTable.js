@@ -2029,8 +2029,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       #data-table .table-header .cell-content {
         padding-right: 2px;
       }
-      
-      #add-new-row-icon{
+
+      #add-new-row-icon {
         padding: 0 10px 0 0;
         margin: 0;
         font-size: 1rem;
