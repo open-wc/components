@@ -930,7 +930,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
                             id="add-new-row-icon"
                             slot="start"
                             name="plus"
-                            canvas= "auto"
+                            canvas="auto"
                             label=${this.#localize.term('tableNew')}
                           ></wa-icon
                           >${this.#localize.term('tableNew')}
@@ -1654,8 +1654,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
           @change=${this.#handleSelectableTitleChange}
           .checked=${this.#selectedSet.size === this.processedData.length}
           .indeterminate=${
-          this.#selectedSet.size > 0 && this.#selectedSet.size < this.processedData.length
-        }
+            this.#selectedSet.size > 0 && this.#selectedSet.size < this.processedData.length
+          }
           aria-label=${this.#localize.term('tableSelectAll')}
         ></wa-checkbox>`,
       includeInExport: false,
@@ -1721,7 +1721,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
    * @returns {import("./OwcTable.types.js").Column<T>}
    */
   findColumn(field) {
-    return this.columns.find(f => f.field === field) || { label: 'Nicht gefunden', field: '' };
+    return this.columns.find(f => f.field === field) || { label: this.#localize.term('tableNotFound') , field: '' };
   }
 
   /**
@@ -2024,6 +2024,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       #data-table .table-header .cell-content {
         padding-right: 2px;
       }
+      
       #add-new-row-icon{
         padding: 0 10px 0 0;
         margin: 0;

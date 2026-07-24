@@ -75,12 +75,12 @@ export class OwcMultiCheckbox extends ScopedElementsMixin(LitElement) {
           .checked=${checked}
           .indeterminate=${indeterminate}
           @input=${() => {
-          this.value = {
-            ...this.value,
-            value: toggleGroupSelection(group, this.value.value),
-          };
-          this.updateComplete.then(() => this.shadowRoot?.querySelector('form')?.requestSubmit());
-        }}
+            this.value = {
+              ...this.value,
+              value: toggleGroupSelection(group, this.value.value),
+            };
+            this.updateComplete.then(() => this.shadowRoot?.querySelector('form')?.requestSubmit());
+          }}
         ></wa-checkbox>
         <div class="row wrap">${group.map(checkbox => this.renderCheckbox(checkbox, false))}</div>
       </div>

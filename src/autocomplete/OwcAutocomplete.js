@@ -6,6 +6,7 @@ import { LocalizeController } from '@shoelace-style/shoelace/dist/utilities/loca
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { OwcIconButton } from '../icon-button/OwcIconButton.js';
 import { virtualize, virtualizerRef } from '@lit-labs/virtualizer/virtualize.js';
+import { OwcLocalizeController } from '@open-wc/components/localization.js';
 
 import '@awesome.me/webawesome/dist/components/input/input.js';
 import '@awesome.me/webawesome/dist/components/button/button.js';
@@ -24,6 +25,7 @@ import { matchFillInput } from './fillInput.js';
  * @template {Record<string, unknown>} T
  */
 export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
+  #localize = new OwcLocalizeController(this);
   static scopedElements = {
     'owc-icon-button': OwcIconButton,
   };
@@ -882,8 +884,8 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
                       @click=${this.#handleSelectAll}
                       >${
                         this.#selectedSet.size === this.processedData.length
-                          ? 'Alle abwählen'
-                          : 'Alle auswählen'
+                          ? this.#localize.term('autoCompleteRemoveAll')
+                          : this.#localize.term('autoCompleteSelectAll')
                       }</wa-button
                     >`
                   : ''

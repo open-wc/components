@@ -4,8 +4,10 @@ import { HasSlotController } from '../autocomplete/HasSlotController.js';
 import '@awesome.me/webawesome/dist/components/format-date/format-date.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { parseValueForType, toInputDateString } from './valueHelpers.js';
+import { OwcLocalizeController } from '@open-wc/components/localization.js';
 
 export class OwcClickEditable extends LitElement {
+  _localize = new OwcLocalizeController(this);
   static properties = {
     value: { type: String },
     formatter: { attribute: false },
@@ -95,7 +97,7 @@ export class OwcClickEditable extends LitElement {
       inputElement.setCustomValidity('');
       const validation = this.validator(this.getParsedValue(inputElement?.value ?? ''));
       if (!validation.valid) {
-        inputElement.setCustomValidity(validation.error || 'Ungültig');
+        inputElement.setCustomValidity(validation.error || 'invalid');
       }
     }
   }

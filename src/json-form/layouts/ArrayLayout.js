@@ -9,6 +9,7 @@ import { OwcIconButton } from '../../icon-button/OwcIconButton.js';
 import { OwcTooltip } from '../../tooltip/OwcTooltip.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 import '@awesome.me/webawesome/dist/components/button/button.js';
+import { OwcLocalizeController } from '@open-wc/components/localization.js';
 
 /**
  *
@@ -74,6 +75,7 @@ function executeDeepScopeReplace(uiSchema, scopeSearch, index) {
 }
 
 export class ArrayLayout extends ScopedElementsMixin(LitElement) {
+  #localize = new OwcLocalizeController(this);
   static scopedElements = {
     'owc-card': OwcCard,
     'owc-icon-button': OwcIconButton,
@@ -149,7 +151,7 @@ export class ArrayLayout extends ScopedElementsMixin(LitElement) {
                 }}
               >
                 <wa-icon style="margin-inline-end: 0" slot="start" name="plus-lg"></wa-icon>
-                Weitere hinzufügen</wa-button
+                ${this.#localize.term('jsonFormArrayAddCard')}</wa-button
               >`
         }
       </div>

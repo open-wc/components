@@ -48,9 +48,7 @@ export const simpleDetailCard = () => html`
       <div><strong>Having a nice text over here</strong></div>
       <div>click the arrow</div>
     </div>
-    <div>
-      I am an expandable text, that contains some info
-    </div>
+    <div>I am an expandable text, that contains some info</div>
   </owc-detail-card>
 `;
 ```
@@ -108,9 +106,7 @@ export const textOnlyDetailCard = () => html`
     <div slot="text">
       <div><strong>lorem Ipsum</strong></div>
     </div>
-    <div>
-      This card is way more simple
-    </div>
+    <div>This card is way more simple</div>
   </owc-detail-card>
 `;
 ```
@@ -133,9 +129,7 @@ export const customSuffixDetailCard = () => html`
       <div>how refreshing</div>
     </div>
     <wa-icon slot="suffix" name="circle-exclamation"></wa-icon>
-    <div>
-      lorem ipsum maximus
-    </div>
+    <div>lorem ipsum maximus</div>
   </owc-detail-card>
 `;
 ```
@@ -166,9 +160,7 @@ export const detailCardList = () => html`
       <div slot="detail">
         <div><strong>brother two</strong></div>
       </div>
-      <div>
-        I am Dewey
-      </div>
+      <div>I am Dewey</div>
     </owc-detail-card>
 
     <owc-detail-card accent-color="var(--wa-color-success-fill-loud)">
@@ -178,9 +170,7 @@ export const detailCardList = () => html`
       <div slot="detail">
         <div><strong>brother three</strong></div>
       </div>
-      <div>
-        And i am Louie
-      </div>
+      <div>And i am Louie</div>
     </owc-detail-card>
   </div>
 `;

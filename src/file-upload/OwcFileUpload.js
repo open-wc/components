@@ -38,7 +38,7 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
     this.files = [];
     this.renderCardContent = this.renderCardContentDefault;
     this.multiple = true;
-    this.label = 'Dateien hierher ziehen oder klicken, um hochzuladen';
+    this.label = 'Drag files here or click to upload';
   }
 
   render() {

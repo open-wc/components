@@ -45,7 +45,9 @@ export const docsData = {
       registerIconLibrary('default', {
         resolver: (name, family) => {
           const suffix = family === 'filled' ? '-fill' : '';
-          return "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/icons/"+name + suffix +".svg";
+          return (
+            'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/icons/' + name + suffix + '.svg'
+          );
         },
       });
     </script>

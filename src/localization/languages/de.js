@@ -31,6 +31,7 @@ export const de = {
    */
   tableNoFilterFound: field => `Kein Filter für ${field} gefunden`,
   tableNot: 'NICHT',
+  tableNotFound: 'nicht gefunden',
   tableOpenDetails: 'Details öffnen',
   tableOperatorBetween: 'zwischen',
   tableOperatorBetweenNoYear: 'zwischen (Jahr ignorieren)',
@@ -85,4 +86,9 @@ export const de = {
   tableSort: 'Sortieren',
   tableSums: 'Summen',
   tableSearch: 'Suche',
+  jsonFormArrayAddCard: 'Eintrag hinzufügen',
+  jsonFormRenderSyncWarning: 'Wert wird nicht automatisch synchronisiert',
+  autoCompleteSelectAll: 'Alle auswählen',
+  autoCompleteDeselectAll: 'Alle abwählen',
+  clickEditableHint: 'Esc zum abbrechen',
 };

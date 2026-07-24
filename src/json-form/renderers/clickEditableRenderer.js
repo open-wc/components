@@ -32,7 +32,7 @@ export const currencyFormatter = new Intl.NumberFormat('de', {
 
 /**
  *
- * @param {{inputType?: InputType, onSubmit?: () => any, postProcessing?: (arg0: any) => any; fallbackValue?: string}} [options]
+ * @param {{inputType?: InputType, onSubmit?: () => any, postProcessing?: (arg0: any) => any; fallbackValue?: string, syncWarning?:string} } [options]
  */
 export function getInputRenderer(options = {}) {
   return (
@@ -41,27 +41,27 @@ export function getInputRenderer(options = {}) {
     /** @type {any} */ value,
   ) => {
     if (state.uiSchema.options?.multi) {
-      return renderTextarea(state, ruleOptions, value, options);
+      return renderTextarea(state, ruleOptions, value, options, options.syncWarning);
     } else {
-      return renderInput(state, ruleOptions, value, options);
+      return renderInput(state, ruleOptions, value, options, options.syncWarning);
     }
   };
 }
 
 /**
  *
- * @param {{onSubmit?: () => any, postProcessing?: (arg0: any) => any; multiple?: boolean; fallbackValue?: string}} [options]
+ * @param {{onSubmit?: () => any, postProcessing?: (arg0: any) => any; multiple?: boolean; fallbackValue?: string, syncWarning?:string}} [options]
  */
 export function getAutocompleteRenderer(options = {}) {
   return (
     /** @type {import("../types/renderer.js").State} */ state,
     /** @type {{ disabled: boolean; hidden: boolean; }} */ ruleOptions,
     /** @type {any} */ value,
-  ) => renderAutocomplete(state, ruleOptions, value, options);
+  ) => renderAutocomplete(state, ruleOptions, value, options, options.syncWarning);
 }
 
 /**
- * @param {{fallbackValue?: string; onSubmit?: () => any, postProcessing?: (arg0: any) => any;}} [options]
+ * @param {{fallbackValue?: string; onSubmit?: () => any, postProcessing?: (arg0: any) => any; syncWarning?:string }} [options]
  * @returns {import("../types/renderer.js").RendererRecord}
  */
 export function getClickEditableRenderers(options = {}) {
@@ -92,9 +92,16 @@ export function getClickEditableRenderers(options = {}) {
  * @param {{ disabled: boolean; hidden: boolean }} ruleOptions
  * @param {any} value
  * @param {{onSubmit?: () => any; inputType?: InputType ;postProcessing?: (arg0: any) => any; fallbackValue?: string}} options
+ * @param {string} syncWarning
  * @returns {import("lit").TemplateResult}
  */
-function renderInput(state, ruleOptions, value, options = {}) {
+function renderInput(
+  state,
+  ruleOptions,
+  value,
+  options = {},
+  syncWarning = 'Value is not automatically synchronized',
+) {
   const error = getError(state.uiSchema, state.validatorState);
   const userInteracted = Boolean(resolveDataSchema(value, state.uiSchema.scope) !== null);
   const fallbackValue = getFallbackValue(state, options);
@@ -131,7 +138,7 @@ function renderInput(state, ruleOptions, value, options = {}) {
         ${
           state.uiSchema.options?.danger
             ? html` <owc-tooltip placement="right"
-                >"Wert wird nicht automatisch synchronisiert"
+                >${syncWarning}
                 <wa-icon
                   slot="anchor"
                   name="exclamation-triangle-fill"
@@ -184,9 +191,16 @@ function getUnitFormatter(state, fallbackValue) {
  * @param {{ disabled: boolean; hidden: boolean }} ruleOptions
  * @param {any} value
  * @param {{onSubmit?: () => any; inputType?: InputType ;postProcessing?: (arg0: any) => any; fallbackValue?: string}} options
+ * @param {string} syncWarning
  * @returns {import("lit").TemplateResult}
  */
-function renderTextarea(state, ruleOptions, value, options = {}) {
+function renderTextarea(
+  state,
+  ruleOptions,
+  value,
+  options = {},
+  syncWarning = 'Value is not automatically synchronized',
+) {
   const error = getError(state.uiSchema, state.validatorState);
   const userInteracted = Boolean(resolveDataSchema(value, state.uiSchema.scope) !== null);
   return html`
@@ -214,7 +228,7 @@ function renderTextarea(state, ruleOptions, value, options = {}) {
         ${
           state.uiSchema.options?.danger
             ? html` <owc-tooltip placement="right">
-                Wert wird nicht automatisch synchronisiert
+                ${syncWarning}
                 <wa-icon
                   slot="anchor"
                   name="exclamation-triangle-fill"
@@ -246,9 +260,16 @@ function renderTextarea(state, ruleOptions, value, options = {}) {
  * @param {{ disabled: boolean; hidden: boolean }} ruleOptions
  * @param {any} value
  * @param {{multiple?: boolean; onSubmit?: () => any; postProcessing?: (arg0: any) => any; fallbackValue?: string}} options
+ * @param {string} syncWarning
  * @returns {import("lit").TemplateResult}
  */
-function renderAutocomplete(state, ruleOptions, value, options = {}) {
+function renderAutocomplete(
+  state,
+  ruleOptions,
+  value,
+  options = {},
+  syncWarning = 'Value is not automatically synchronized',
+) {
   const error = getError(state.uiSchema, state.validatorState);
   const userInteracted = Boolean(resolveDataSchema(value, state.uiSchema.scope) !== null);
   const items =
@@ -282,7 +303,7 @@ function renderAutocomplete(state, ruleOptions, value, options = {}) {
         ${
           state.uiSchema.options?.danger
             ? html` <owc-tooltip placement="right">
-                Wert wird nicht automatisch synchronisiert
+                ${syncWarning}
                 <wa-icon
                   slot="anchor"
                   name="exclamation-triangle-fill"

@@ -95,7 +95,7 @@ export class OwcClickEditableInput extends OwcClickEditable {
               max=${this.type === 'date' || this.type === 'datetime-local' ? '3000-03-03' : ''}
               value=${valueDateFormatted ?? this.value}
             ></wa-input>
-            <div class="hint">Esc zum abbrechen</div>
+            <div class="hint">${this._localize.term('clickEditableHint')}</div>
           </div>
         </div>
       </div>

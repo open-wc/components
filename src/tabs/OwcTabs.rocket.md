@@ -197,22 +197,18 @@ tabs can be rendered in two different modes: eager or deferred. eager loading me
 
 here the dates get set without opening the tabs. if you compare both tabs, both times are nearly indent since the content function has been called when the tab itself has been rendered.
 
-``` js client
-
-function setFirstLoadedDate(dateToSet){
-  if (dateToSet === undefined){
+```js client
+function setFirstLoadedDate(dateToSet) {
+  if (dateToSet === undefined) {
     return new Date();
-  }
-  else {
+  } else {
     return dateToSet;
   }
 }
-
 ```
 
 ```js demo
-
-var one, two
+var one, two;
 
 export const tabsEagerLoading = () => {
   return html`
@@ -222,16 +218,16 @@ export const tabsEagerLoading = () => {
         general: {
           label: 'Date one',
           content: () => {
-            one = setFirstLoadedDate(one)
-            return html`<p>I got rendered the first time at ${one}</p>`
-            },
+            one = setFirstLoadedDate(one);
+            return html`<p>I got rendered the first time at ${one}</p>`;
+          },
         },
         other: {
           label: 'date two',
           content: () => {
-             two = setFirstLoadedDate(two)
-            return html`<p>but I got rendered the first time at ${two}</p>`
-            },
+            two = setFirstLoadedDate(two);
+            return html`<p>but I got rendered the first time at ${two}</p>`;
+          },
         },
       }}
     >
@@ -246,8 +242,7 @@ export const tabsEagerLoading = () => {
 now using deferred rendering, the time will only be calculated to when the tab is opened. this can save unnecessary loading when using big calculations.
 
 ```js demo
-
-var three, four
+var three, four;
 
 export const tabsDeferredLoading = () => {
   return html`
@@ -257,16 +252,16 @@ export const tabsDeferredLoading = () => {
         general: {
           label: 'Date one',
           content: () => {
-            three = setFirstLoadedDate(three)
-            return html`<p>I got rendered the first time at ${three}</p>`
-            },
+            three = setFirstLoadedDate(three);
+            return html`<p>I got rendered the first time at ${three}</p>`;
+          },
         },
         other: {
           label: 'date two',
-                content: () => {
-             four = setFirstLoadedDate(four)
-            return html`<p>but I got rendered the first time at ${four}</p>`
-            },
+          content: () => {
+            four = setFirstLoadedDate(four);
+            return html`<p>but I got rendered the first time at ${four}</p>`;
+          },
         },
       }}
     >
