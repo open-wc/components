@@ -31,7 +31,7 @@ export const en = {
    */
   tableNoFilterFound: field => `No filter found for ${field}`,
   tableNot: 'NOT',
-    tableNotFound: 'not found',
+  tableNotFound: 'not found',
   tableOpenDetails: 'Open details',
   tableOperatorBetween: 'between',
   tableOperatorBetweenNoYear: 'between (ignore year)',

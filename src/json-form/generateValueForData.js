@@ -1,6 +1,6 @@
 /**
  * @param {Record<string, any>} data
- * @param {import('./OwcTemplateEditorTypes.js').TemplateRecord} templateRecord
+ * @param {import('./types/OwcTemplateTypes.js').TemplateRecord} templateRecord
  * @param {{
  *   index: number,
  *   variantSelector?: (data: Record<string, any>, options: string[]) => options[number],
@@ -180,7 +180,7 @@ function parseCustomMarkup(input) {
 }
 
 /**
- * @param {import('./OwcTemplateEditorTypes.js').TemplateRecord} templateRecord
+ * @param {import('./types/OwcTemplateTypes.js').TemplateRecord} templateRecord
  */
 export function filesToObj(templateRecord) {
   if (!templateRecord.options?.fileList) {
