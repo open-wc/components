@@ -2,7 +2,7 @@
 export default {
   includeGlobs: ['*.rocket.{md,js}', 'src/**/*.rocket.{md,js}', 'docs/**/*.rocket.{md,js}'],
   siteHeadMetadata: {
-    language: 'en',
+    language: 'en-US',
     siteName: 'Open Web Components',
     defaultDescription: 'Easy web components',
   },

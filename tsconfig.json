@@ -21,6 +21,6 @@
     "outDir": "./dist-types",
     "rootDir": "."
   },
-  "include": ["exports", "src", "test", "demo", "types"],
+  "include": ["exports", "src", "test", "demo", "types", "src/compress"],
   "exclude": ["dist-types", "**/generated.*", "**/*.test-browser.js"]
 }

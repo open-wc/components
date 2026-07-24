@@ -143,6 +143,8 @@ import { en } from '@open-wc/components/languages/en.js';
 registerTranslation({
   ...en,
   tableEmptyMessage: 'MY OWN No data available',
+  tableShowAllEntries: count =>
+    count !== 0 ? `Showing all ${count} entries` : `MY CUSTOM no current entry available function`,
 });
 ```
 
@@ -156,6 +158,8 @@ import { en } from '@open-wc/components/languages/en.js';
 registerTranslation({
   ...en,
   tableEmptyMessage: 'MY OWN No data available',
+  tableShowAllEntries: count =>
+    count !== 0 ? `Showing all ${count} entries` : `MY CUSTOM no current entry available function`,
 });
 ```
 
