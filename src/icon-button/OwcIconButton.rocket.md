@@ -64,7 +64,7 @@ With `href` the icon button navigates. A `target` automatically adds
 export const asLink = () => {
   return html`
     <owc-icon-button
-      name="arrow-up-right-from-square"
+      name="arrow-up-right-square"
       label="Open example.com"
       href="https://example.com"
       target="_blank"
@@ -82,7 +82,7 @@ default).
 ```js demo
 export const variant = () => {
   return html`
-    <owc-icon-button name="circle-xmark" label="Close" variant="regular"> </owc-icon-button>
+    <owc-icon-button name="x-circle" label="Close" variant="regular"> </owc-icon-button>
   `;
 };
 ```
@@ -94,8 +94,7 @@ Disabled icon buttons block clicks and are removed from the tab order - links in
 ```js demo
 export const disabled = () => {
   return html`
-    <owc-icon-button disabled name="circle-xmark" label="Close" variant="regular">
-    </owc-icon-button>
+    <owc-icon-button disabled name="x-circle" label="Close" variant="regular"> </owc-icon-button>
     <owc-icon-button disabled name="gear" label="Settings" href="https://example.com">
     </owc-icon-button>
   `;

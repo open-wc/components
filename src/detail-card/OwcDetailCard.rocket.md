@@ -119,7 +119,7 @@ status icon in the trailing position. The slotted suffix still sits in the click
 ```js demo
 export const customSuffixDetailCard = () => html`
   <owc-detail-card accent-color="var(--wa-color-warning-fill-loud)">
-    <wa-icon slot="icon" name="triangle-exclamation"></wa-icon>
+    <wa-icon slot="icon" name="exclamation-triangle"></wa-icon>
     <div slot="text">
       <div><strong>Customizeable all the way</strong></div>
       <div>use any symbol you like</div>
@@ -128,7 +128,7 @@ export const customSuffixDetailCard = () => html`
       <div><strong>a new icon</strong></div>
       <div>how refreshing</div>
     </div>
-    <wa-icon slot="suffix" name="circle-exclamation"></wa-icon>
+    <wa-icon slot="suffix" name="exclamation-circle"></wa-icon>
     <div>lorem ipsum maximus</div>
   </owc-detail-card>
 `;

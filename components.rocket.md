@@ -39,11 +39,8 @@ copyable demos.
 Tables, charts, and record views for displaying application data.
 
 - [Table](/data/table): sortable, filterable tabular data with optional selection and settings.
-- [Chart](/data/chart): line and bar charts from data series.
-- [Pie Chart](/data/pie-chart): proportional slices with an optional "other" slice.
 - [Data Detail](/data/data-detail): structured detail view for one record.
 - [Detail Card](/data/detail-card): compact record card.
-- [Card](/data/card): generic card shell.
 - [Card List](/data/card-list): repeated cards backed by data.
 - [Pinboard](/data/pinboard): pinboard-style collection view.
 
@@ -75,20 +72,12 @@ Application shell and page structure.
 Small helpers, feedback elements, and controllers.
 
 - [Toast](/utilities/toast): transient status messages.
+- [Localization](/utilities/localization): Simple localization for owc components.
 - [Tooltip](/utilities/tooltip): contextual hover or focus help.
 - [Icon Button](/utilities/icon-button): compact icon-only actions.
-- [Count Up](/utilities/count-up): animated numeric display.
-- [Compress](/utilities/compress): string compression helpers documented with demos.
-- [Wave Controller](/utilities/wave-controller): reactive controller documentation for wave-style state flows.
-
-## Workflow
-
-Larger task-oriented surfaces.
-
-- [Template Editor](/workflow/template-editor): template editing and generated content workflows.
-- [Compose Email](/workflow/compose-email): email composition surfaces.
 - [File Upload](/workflow/file-upload): upload controls.
-- [Questionnaire](/workflow/questionnaire): questionnaire-style UI flows.
+- [Count Up](/utilities/count-up): animated numeric display.
+- [Wave Controller](/utilities/wave-controller): reactive controller documentation for wave-style state flows.
 
 ## Internal components
 
@@ -97,3 +86,4 @@ those components are not key features but rather components used inside of other
 - [Table Info](/internal/table-info): summary metadata around table state or results.
 - [Table Mass Edit](/internal/table-mass-edit): bulk edits applied to selected table rows.
 - [Filter Builder](/internal/filter-builder): standalone table-style query rules.
+- [Card](/data/card): generic card shell.

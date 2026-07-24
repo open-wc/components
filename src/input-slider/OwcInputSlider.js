@@ -96,6 +96,7 @@ export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
     this.#adjustForStep();
     this.adjustValueForMinMax();
     this.textValue = this.value;
+    this.requestUpdate()
     this.dispatchEvent(new Event(ev.type, { bubbles: true, composed: true }));
   }
 
@@ -145,11 +146,12 @@ export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
               password-toggle-button:input-password-toggle-button
             "
               @input=${this.adjustInput}
-              @change=${this.adjustTextValue}
+              @change=${this.adjustInput}
+              @blur=${this.adjustTextValue}
               .value=${this.textValue.toString()}
               min=${ifDefined(this.absoluteMin?.toString())}
               max=${ifDefined(this.absoluteMax?.toString())}
-              step=${this.step}
+              .step=${this.step}
               label=${this.label}
             ></wa-input>`
           : ''

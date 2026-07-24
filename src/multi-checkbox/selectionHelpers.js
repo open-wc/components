@@ -11,8 +11,6 @@
 export function getGroupState(group, selected) {
   const checked = group.length > 0 && group.every(checkbox => selected.includes(checkbox.value));
   const indeterminate = !checked && group.some(checkbox => selected.includes(checkbox.value));
-  console.log('getting state');
-  console.log({ checked, indeterminate });
   return { checked, indeterminate };
 }
 
