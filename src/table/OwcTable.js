@@ -1194,7 +1194,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     return this.highlightFilter(row);
   }
 
- /**
+  /**
    *
    * @param {T} row
    * @returns {import('lit').TemplateResult}
@@ -1220,47 +1220,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     }
 
     return html`<div class="row-no-click"></div>`;
-  }
-
-
-  /**
-   * @param {Event} ev
-   * @param {T} row
-   */
-  #handleRowClick(ev, row) {
-    const target = /** @type {HTMLElement} */ (ev.target);
-    // Don't navigate while selecting text.
-    if (window.getSelection()?.type === 'Range') {
-      return;
-    }
-
-    // Only clicks coming from a table cell should trigger.
-    const cell = target.closest('.cell');
-    if (!cell) {
-      return;
-    }
-
-    // Ignore explicitly interactive content.
-    if (target.closest('.cell-non-click')) {
-      return;
-    }
-
-    switch (this.renderMode) {
-      case 'detail':
-      case 'detailDeferred':
-        this.#handleDetailsClick(ev, row);
-        break;
-
-      case 'link':
-      case 'linkWithDetail': {
-        const settings = this.getRowLinkSettings?.(row);
-
-        if (settings?.href) {
-          window.location.assign(settings.href);
-        }
-        break;
-      }
-    }
   }
 
   /**
@@ -1339,13 +1298,13 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       : nothing;
 
     const rawRowContent = html` <div
-            class=${this.#shouldBeHighlighted(row) ? 'row highlighted' : 'row'}
-            data-index=${index}
-          >
-          ${this.renderRowMode(row)}
-            ${this.#visibleColumns.map(column => this.#renderCell(row, column, index))}
-          </div>`
-        
+      class=${this.#shouldBeHighlighted(row) ? 'row highlighted' : 'row'}
+      data-index=${index}
+    >
+      ${this.renderRowMode(row)}
+      ${this.#visibleColumns.map(column => this.#renderCell(row, column, index))}
+    </div>`;
+
     const rowId = this.getRowId(row);
     const rowDetail =
       mode === 'data-table' &&
@@ -1936,8 +1895,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         width: 100%;
         justify-content: center;
       }
-
-
 
       .cell-full {
         position: relative;
