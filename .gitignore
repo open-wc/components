@@ -26,4 +26,6 @@ assets/icons/*
 .codex
 *.tgz
 .vscode
-*.tgz
+
+# removed feature
+removed-feature
