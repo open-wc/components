@@ -208,6 +208,7 @@ export class OwcTableInfo extends ScopedElementsMixin(LitElement) {
     return html`
       <owc-tabs
         lang=${this.lang}
+        renderMode="deferred"
         .tabs=${tabIndex}
         .active=${this.actionTabActive}
         .getRenderOptions=${this.getRenderOptions}

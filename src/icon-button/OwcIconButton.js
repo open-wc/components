@@ -27,7 +27,8 @@ export class OwcIconButton extends LitElement {
     this.href = '';
     /**@type {'_blank' | '_parent' | '_self' | '_top' | ''} */
     this.target = '';
-    this.download = '';
+    /**@type {string | undefined} */
+    this.download = undefined;
     this.disabled = false;
     this.label = '';
     this.variant = '';

@@ -96,7 +96,7 @@ export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
     this.#adjustForStep();
     this.adjustValueForMinMax();
     this.textValue = this.value;
-    this.requestUpdate()
+    this.requestUpdate();
     this.dispatchEvent(new Event(ev.type, { bubbles: true, composed: true }));
   }
 

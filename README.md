@@ -1,7 +1,7 @@
 # @open-wc/components
 
-Reusable Web Components and helpers for data, forms, and workflow interfaces. The package ships
-unbundled ESM modules so applications can import only the components or utilities they use.
+Web Components for data-heavy interfaces — tables, forms, charts, and workflow UI — shipped as
+unbundled ESM so applications import only what they use.
 
 ## Installation
 
@@ -9,22 +9,9 @@ unbundled ESM modules so applications can import only the components or utilitie
 npm install @open-wc/components
 ```
 
-## Usage
+## Copy, paste, render
 
-Import component classes or helper modules from package entry points:
-
-```js
-import { OwcTable } from '@open-wc/components/OwcTable.js';
-import { convertToCsv } from '@open-wc/components/table/csv.js';
-```
-
-Register custom elements with the matching `define/*` entry point:
-
-```js
-import '@open-wc/components/define/owc-table.js';
-```
-
-Then use the registered element in your templates:
+Register a component through its `define` entry point and pass data as properties:
 
 ```js
 import { html } from 'lit';
@@ -43,24 +30,41 @@ const rows = [
 export const view = () => html`<owc-table .columns=${columns} .data=${rows}></owc-table>`;
 ```
 
+Every component follows the same pattern: pick the smallest demo that matches your use case from
+the docs and swap in your own data.
+
+You can also import classes or helpers directly without registering the element:
+
+```js
+import { OwcTable } from '@open-wc/components/OwcTable.js';
+import { convertToCsv } from '@open-wc/components/table/csv.js';
+```
+
+## What's inside
+
+Components are organized by the interface problem they solve:
+
+- **Data** — `Table`, `Data Detail`, `Detail Card`, `Card List`, `Pinboard`: tables, charts, and
+  record views for displaying application data.
+- **Forms** — `Json Form`, `Autocomplete`, `Input Autofill`, `Input Slider`, `Click Editable *`,
+  `Multi Checkbox`: schema-driven forms and the input controls that compose them.
+- **Layout** — `Layout Sidebar`, `Tabs`, `Loading Screen`, `Separator`: application shell and page
+  structure.
+- **Utilities** — `Toast`, `Localization`, `Tooltip`, `Icon Button`, `File Upload`, `Count Up`,
+  `Wave Controller`: small helpers, feedback elements, and controllers.
+
+A few components (`Table Info`, `Table Mass Edit`, `Filter Builder`, `Card`) are internal building
+blocks used inside the components above rather than standalone features.
+
 ## Documentation
 
-Component reference pages with live demos are colocated with the source as `*.rocket.md` files.
-Run the documentation site locally:
+Component reference pages with live, copyable demos are colocated with the source as `*.rocket.md`
+files. Run the documentation site locally to browse the full component index:
 
 ```sh
 npm install
 npm start
 ```
-
-Then open the components index to browse reference pages with copyable demos for every public UI
-export.
-
-## Project Status
-
-`@open-wc/components` is preparing its first public release as `0.1.0`. Public exports are expected
-to remain available for the initial release, while documentation and package contents are being
-audited before publication.
 
 ## Development
 

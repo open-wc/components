@@ -1840,11 +1840,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         box-sizing: border-box;
       }
 
-      // for owc Tabs
-      .tab-list{
-        width: var(--owc-table-width)
-      }
-
       .row-wrapper {
         position: relative;
         display: contents;
@@ -2041,6 +2036,10 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         font-size: 1rem;
       }
 
+      #info-outer-wrapper{
+        width: var(--owc-table-width);
+      }
+
       #info-wrapper {
         display: inline-flex;
         align-items: center;
@@ -2145,6 +2144,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         display: inline-flex;
       }
       .row-container {
+        width: var(--owc-table-width);
         display: block;
       }
 
