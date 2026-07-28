@@ -32,7 +32,7 @@ Every form needs two schemas to function:
 
 All examples on this page will console-log their value every time they change.
 
-Simple example:
+## Quick start
 
 ```js demo
 export const simple = () =>
@@ -197,7 +197,7 @@ export const array = () =>
   </json-form>`;
 ```
 
-### Multiple choice
+## Multiple choice
 
 There are two types that will produce multiple-choice inputs, enum and oneOf.
 
@@ -242,7 +242,7 @@ export const enumOneOf = () =>
   ></json-form>`;
 ```
 
-### Multiselect
+## Multiselect
 
 If you want to be able to select multiple options at once, make the property an array and set the items to enum or oneOf.
 
@@ -290,7 +290,7 @@ export const multiselect = () =>
   ></json-form>`;
 ```
 
-### Options
+## Options
 
 ```js demo
 export const options = () =>
@@ -403,7 +403,7 @@ Supported uiSchema options:
 - tagVariant: `{"brand" | "success" | "warning" | "danger" | "neutral"}` for booleans: the color for the checkbox tag
 - size: `{"small" | "medium" | "large"}` for booleans: renders the checkbox in a different size
 - slider: `{true}` for numbers: renders a slider. You can set the boundaries with the `minimum` and `maximum` properties in the normal schema.
-- rating: `{true}` for numbers: renders a star-rating. You can set the boundaries with he `minimum` and `maximum` properties in the normal schema.
+- rating: `{true}` for numbers: renders a star-rating. You can set the boundaries with the `minimum` and `maximum` properties in the normal schema.
 - multi: `{true}` for strings: renders a textarea instead of an input
 - format: `{"radio"}` for single-select enums: renders a radio group
 
@@ -670,7 +670,7 @@ export const details = () =>
 
 ## Labels
 
-The third type of uiSchema elements are labels. Labels can be used to divide the form into multiple parts, while still keeping it linear.
+The third type of uiSchema elements is labels. Labels can be used to divide the form into multiple parts, while still keeping it linear.
 Controls can also be given labels. If a control has no label, it will try to generate it from the property name.
 
 ```js demo
@@ -870,7 +870,7 @@ export const events = () =>
 
 ## Switching renderers
 
-You can switch to clickEditable renders midway through a uiSchema.
+You can switch to clickEditable renderers midway through a uiSchema.
 
 ```js demo
 export const switchRenderers = () =>
@@ -932,7 +932,7 @@ The default render types are:
 - `multiEnum`
 
 If you set one of these, it will overwrite the existing renderer. Otherwise, a new one will be added. You can then
-use your new renderer by setting the name of your render type to `true` in the `options` of the `uiSchema`
+use your new renderer by setting the name of your render type to `true` in the `options` of the `uiSchema`.
 
 ```js demo
 import { inputListener, resolveDataSchema, processLabel } from '@open-wc/components/JsonForm.js';
@@ -972,6 +972,9 @@ export const customize = () =>
 ```
 
 ## Displaying schemas
+
+Set `mode` to `'schema'` to render the shape of the data — the field types — instead of interactive
+inputs. Useful for read-only previews or documenting a schema.
 
 ```js demo
 export const schemaMode = () =>
@@ -1044,6 +1047,9 @@ export const schemaMode = () =>
 ```
 
 ## Array Tabs Kitchen Sink
+
+A larger combined example: an `ArrayLayout` nested inside a `TabLayout`, showing how layouts,
+controls, and array entries compose together in a single form.
 
 ```js demo
 export const arrayTabsKitchenSink = () =>
