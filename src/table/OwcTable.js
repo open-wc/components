@@ -1840,6 +1840,11 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         box-sizing: border-box;
       }
 
+      // for owc Tabs
+      .tab-list{
+        width: var(--owc-table-width)
+      }
+
       .row-wrapper {
         position: relative;
         display: contents;
@@ -2098,6 +2103,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
 
       #empty-message-wrapper {
+        width: var(--owc-table-width);
         display: flex;
         justify-content: center;
         align-items: center;
