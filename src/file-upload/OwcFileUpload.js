@@ -4,6 +4,7 @@ import { OwcCard } from '../card/OwcCard.js';
 import { OwcIconButton } from '../icon-button/OwcIconButton.js';
 
 import { addFiles, fileIsEqual } from './fileHelpers.js';
+import { OwcLocalizeController } from '../localization/localization.js';
 
 /**
  * @typedef {File & Record<string,any>} FilePlus
@@ -18,12 +19,12 @@ import { addFiles, fileIsEqual } from './fileHelpers.js';
  *   from the files property
  */
 export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
+  #localize = new OwcLocalizeController(this);
   static properties = {
     dragging: { type: Boolean, reflect: true },
     files: { type: Array },
     renderCardContent: { attribute: false },
     multiple: { type: Boolean },
-    label: { type: String },
   };
 
   static scopedElements = {
@@ -38,7 +39,6 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
     this.files = [];
     this.renderCardContent = this.renderCardContentDefault;
     this.multiple = true;
-    this.label = 'Drag files here or click to upload';
   }
 
   render() {
@@ -46,7 +46,7 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
       <div
         class="drop-area"
         tabindex="0"
-        aria-label=${this.label}
+        aria-label=${this.#localize.term("fileUploadLabel")}
         @dragover=${this._onDragOver}
         @dragleave=${this._onDragLeave}
         @drop=${this._onDrop}
@@ -72,7 +72,7 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
                     >`,
                 )}
               </div> `
-            : html`<span class="upload-label">${this.label}</span>`
+            : html`<span class="upload-label">${this.#localize.term("fileUploadLabel")}</span>`
         }
       </div>
     `;
