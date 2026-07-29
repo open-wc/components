@@ -1,34 +1,40 @@
-import { html } from 'lit';
+import { html } from "lit";
 
 const headerData = {
-  logo: ['/open-wc-components-logo.svg'],
-  homeLink: '/',
-  navLinks: [{ text: 'Components', href: '/components' }],
+  logo: ["/open-wc-components-logo.svg"],
+  homeLink: "/",
+  navLinks: [{ text: "Components", href: "/components" }],
   socials: [
     {
-      url: 'https://github.com/open-wc/components',
-      name: 'github',
-      label: 'GitHub',
+      url: "https://github.com/open-wc/components",
+      name: "github",
+      label: "GitHub",
     },
   ],
 };
 
 const footerData = [
   {
-    title: 'Documentation',
+    title: "Documentation",
     links: [
-      { text: 'All components', href: '/components' },
-      { text: 'Table', href: '/table' },
-      { text: 'Json Form', href: '/json-form' },
-      { text: 'Layout Sidebar', href: '/layout-sidebar' },
+      { text: "All components", href: "/components" },
+      { text: "Table", href: "/table" },
+      { text: "Json Form", href: "/json-form" },
+      { text: "Layout Sidebar", href: "/layout-sidebar" },
     ],
   },
   {
-    title: 'Project',
+    title: "Project",
     links: [
-      { text: 'GitHub', href: 'https://github.com/open-wc/components' },
-      { text: 'npm', href: 'https://www.npmjs.com/package/@open-wc/components' },
-      { text: 'Changelog', href: 'https://github.com/open-wc/components/blob/main/CHANGELOG.md' },
+      { text: "GitHub", href: "https://github.com/open-wc/components" },
+      {
+        text: "npm",
+        href: "https://www.npmjs.com/package/@open-wc/components",
+      },
+      {
+        text: "Changelog",
+        href: "https://github.com/open-wc/components/blob/main/CHANGELOG.md",
+      },
     ],
   },
 ];
@@ -40,13 +46,22 @@ export const docsData = {
   navigationIconServerBudget: 60,
   headContent: () => html`
     <script type="module">
-      import { registerIconLibrary } from '@awesome.me/webawesome/dist/webawesome.js';
+      import { registerIconLibrary } from "@awesome.me/webawesome/dist/webawesome.js";
 
-      registerIconLibrary('default', {
+      registerIconLibrary("default", {
         resolver: (name, family) => {
-          const suffix = family === 'filled' ? '-fill' : '';
+          if (name === "arrow-up-right-from-square") {
+            return "https://ka-f.fontawesome.com/releases/v7.3.0/svgs/solid/arrow-up-right-from-square.svg";
+          }
+          if (name === "bars") {
+            return "https://ka-f.fontawesome.com/releases/v7.3.0/svgs/solid/bars.svg";
+          }
+          const suffix = family === "filled" ? "-fill" : "";
           return (
-            'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/icons/' + name + suffix + '.svg'
+            "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/icons/" +
+            name +
+            suffix +
+            ".svg"
           );
         },
       });
@@ -59,87 +74,92 @@ export const heroData = {
   headerData,
   footerData,
   heroMainData: {
-    eyebrow: '@open-wc/components',
-    title: 'Web components for data-heavy interfaces. Tables, forms, and workflow UI as plain ESM.',
-    body: 'Framework-agnostic Lit components with typed APIs and copy-paste demos. Import only what you use — unbundled modules, no build step required.',
-    setupLink: '/components',
-    setupText: 'Browse components',
-    documentationLink: '/table',
-    documentationText: 'See the Table',
-    installLabel: 'Install',
-    installCommand: 'npm install @open-wc/components',
-    logoNoText: '/open-wc-components-logo.svg',
+    eyebrow: "@open-wc/components",
+    title:
+      "Web components for data-heavy interfaces. Tables, forms, and workflow UI as plain ESM.",
+    body: "Framework-agnostic Lit components with typed APIs and copy-paste demos. Import only what you use — unbundled modules, no build step required.",
+    setupLink: "/components",
+    setupText: "Browse components",
+    documentationLink: "/table",
+    documentationText: "See the Table",
+    installLabel: "Install",
+    installCommand: "npm install @open-wc/components",
+    logoNoText: "/open-wc-components-logo.svg",
     badges: [
-      { text: 'MIT licensed', icon: '' },
-      { text: '30+ components', icon: '' },
-      { text: 'Unbundled ESM', icon: '' },
+      { text: "MIT licensed", icon: "" },
+      { text: "30+ components", icon: "" },
+      { text: "Unbundled ESM", icon: "" },
       {
-        text: 'GitHub',
-        icon: 'github',
-        href: 'https://github.com/open-wc/components',
+        text: "GitHub",
+        icon: "github",
+        href: "https://github.com/open-wc/components",
       },
     ],
   },
   quickStartData: {
-    title: 'Quick start',
-    subtitle: 'From install to rendered table',
-    command: ['npm install @open-wc/components'],
+    title: "Quick start",
+    subtitle: "From install to rendered table",
+    command: ["npm install @open-wc/components"],
     description:
-      'Register an element through its define entry point, then use the tag in any template. Every component page has a copyable demo.',
+      "Register an element through its define entry point, then use the tag in any template. Every component page has a copyable demo.",
   },
   workflowData: {
-    title: 'How it works',
+    title: "How it works",
     steps: [
       {
-        icon: 'box-seam',
-        tone: 'red',
-        title: 'Install one package',
-        description: 'Unbundled ESM — applications import only the modules they use.',
+        icon: "box-seam",
+        tone: "red",
+        title: "Install one package",
+        description:
+          "Unbundled ESM — applications import only the modules they use.",
       },
       {
-        icon: 'plug',
-        tone: 'amber',
-        title: 'Register the element',
-        description: 'A side-effect import from define/ registers the custom element tag.',
+        icon: "plug",
+        tone: "amber",
+        title: "Register the element",
+        description:
+          "A side-effect import from define/ registers the custom element tag.",
       },
       {
-        icon: 'braces',
-        tone: 'blue',
-        title: 'Pass data as properties',
-        description: 'Typed .columns, .data, and schema properties drive the rendering.',
+        icon: "braces",
+        tone: "blue",
+        title: "Pass data as properties",
+        description:
+          "Typed .columns, .data, and schema properties drive the rendering.",
       },
       {
-        icon: 'palette',
-        tone: 'green',
-        title: 'Theme with CSS',
-        description: 'Style through CSS custom properties — no preprocessor required.',
+        icon: "palette",
+        tone: "green",
+        title: "Theme with CSS",
+        description:
+          "Style through CSS custom properties — no preprocessor required.",
       },
     ],
   },
   featuresData: [
     {
-      icon: '📊',
-      title: 'Data views built in',
+      icon: "📊",
+      title: "Data views built in",
       description:
-        'Tables with filtering, sorting, selection, and mass edit — plus charts, detail views, and card lists for everything around them.',
+        "Tables with filtering, sorting, selection, and mass edit — plus charts, detail views, and card lists for everything around them.",
     },
     {
-      icon: '📝',
-      title: 'Schema-driven forms',
+      icon: "📝",
+      title: "Schema-driven forms",
       description:
-        'Render complete forms from a JSON Schema with Json Form, or compose inputs like autocomplete, sliders, and click-to-edit fields.',
+        "Render complete forms from a JSON Schema with Json Form, or compose inputs like autocomplete, sliders, and click-to-edit fields.",
     },
     {
-      icon: '⚡',
-      title: 'No build step',
+      icon: "⚡",
+      title: "No build step",
       description:
-        'Ships as unbundled ES modules that run directly in modern browsers and any bundler — no framework lock-in.',
+        "Ships as unbundled ES modules that run directly in modern browsers and any bundler — no framework lock-in.",
     },
     {
-      icon: '🔡',
-      title: 'Typed APIs',
+      icon: "🔡",
+      title: "Typed APIs",
       description:
-        'TypeScript definitions for every public entry point, so editors autocomplete columns, options, and events.',
+        "TypeScript definitions for every public entry point, so editors autocomplete columns, options, and events.",
     },
   ],
 };
