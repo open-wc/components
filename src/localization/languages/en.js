@@ -91,4 +91,5 @@ export const en = {
   autoCompleteSelectAll: 'Select all',
   autoCompleteRemoveAll: 'Remove all',
   clickEditableHint: 'Esc to cancel',
+  fileUploadLabel: 'Drag files here or click to upload',
 };

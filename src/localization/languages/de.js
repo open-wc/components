@@ -91,4 +91,5 @@ export const de = {
   autoCompleteSelectAll: 'Alle auswählen',
   autoCompleteDeselectAll: 'Alle abwählen',
   clickEditableHint: 'Esc zum abbrechen',
+  fileUploadLabel: 'Dateien hierher ziehen oder klicken, um hochzuladen',
 };

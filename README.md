@@ -1,6 +1,6 @@
 # @open-wc/components
 
-Web Components for data-heavy interfaces — tables, forms, charts, and workflow UI — shipped as
+Web Components for data-heavy interfaces — tables, forms and workflow UI — shipped as
 unbundled ESM so applications import only what they use.
 
 ## Installation

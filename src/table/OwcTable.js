@@ -130,6 +130,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     renderAnnotation: { type: Function },
     renderHeaderContent: { type: Function },
     virtualizerMode: { type: String, attribute: 'virtualizer-mode' },
+    growFullWidth: { type: Boolean, attribute: 'grow-full-width', reflect: true },
   };
 
   #initialSetFilterFields = new Set();
@@ -303,6 +304,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
     /** @type {'always' | 'never' | 'auto'} */
     this.virtualizerMode = 'auto';
+
+    this.growFullWidth = false;
   }
 
   #selectedSet = new Set();
@@ -387,6 +390,11 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         this.#updateInfoHeight();
       });
       this.#infoResizeObserver.observe(wrapper);
+    }
+
+    // firstUpdated
+    if (this.growFullWidth) {
+      this.#resetAndFillColumnWidths();
     }
 
     super.firstUpdated(changedProperties);
@@ -1473,6 +1481,71 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     });
   }
 
+  async #resetAndFillColumnWidths() {
+    const isSystemColumn = column => !this.columns.some(c => c.field === column.field);
+    const isNonResizable = column => column.resizable === false;
+    const isUntouchable = column => isSystemColumn(column) || isNonResizable(column);
+    const hasExplicitWidth = column =>
+      this.#defaultColumnWidths[column.field] != null || this.#columnWidths[column.field] != null;
+
+    for (const column of this.#visibleColumns) {
+      if (isUntouchable(column)) {
+        continue;
+      }
+      if (hasExplicitWidth(column)) {
+        // keep the preset / URL-restored / manually dragged width as-is
+        continue;
+      }
+      delete this.#columnWidths[column.field];
+      const preset = this.#defaultColumnWidths[column.field];
+      if (preset != null) {
+        column.width = preset;
+      } else {
+        delete column.width;
+        delete column._calculatedWidth;
+      }
+    }
+
+    await this.recalculateColumnWidths();
+
+    const naturalWidths = this.#visibleColumns.map(
+      column => column.width ?? column._calculatedWidth ?? this.#MIN_COLUMN_WIDTH,
+    );
+    const totalNaturalWidth = naturalWidths.reduce((sum, w) => sum + w, 0);
+    const availableWidth = this.clientWidth || this.getBoundingClientRect().width;
+
+    const extra = availableWidth - totalNaturalWidth;
+    if (extra <= 0) {
+      return;
+    }
+
+    const stretchIndexes = this.#visibleColumns
+      .map((column, index) => ({ column, index }))
+      .filter(({ column }) => {
+        if (isUntouchable(column)) return false;
+        if (this.#defaultColumnWidths[column.field] != null) return false;
+        if (this.#columnWidths[column.field] != null) return false;
+        return true;
+      })
+      .map(({ index }) => index);
+
+    const stretchTotal = stretchIndexes.reduce((sum, i) => sum + naturalWidths[i], 0);
+    if (stretchTotal === 0) {
+      return;
+    }
+
+    for (const i of stretchIndexes) {
+      const ratio = naturalWidths[i] / stretchTotal;
+      const newWidth = Math.round(naturalWidths[i] + extra * ratio);
+      const column = this.#visibleColumns[i];
+      column.width = newWidth;
+      this.#columnWidths[column.field] = newWidth;
+    }
+
+    this.#updateColumnCssVariables();
+    this.requestUpdate();
+  }
+
   /**
    * @param {MouseEvent} ev
    */
@@ -1600,7 +1673,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     for (const row of Array.from(bodyRows)) {
       const cells = row.querySelectorAll(':scope > .cell');
       cells.forEach((cell, index) => {
-        const width = Math.ceil(cell.getBoundingClientRect().width);
+        const width = Math.ceil(cell.scrollWidth + 36); // padding recalculation
         if (width > (measuredWidths[index] ?? 0)) {
           measuredWidths[index] = width;
         }
@@ -2036,7 +2109,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         font-size: 1rem;
       }
 
-      #info-outer-wrapper{
+      #info-outer-wrapper {
         width: var(--owc-table-width);
       }
 

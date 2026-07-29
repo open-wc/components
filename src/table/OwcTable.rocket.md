@@ -166,6 +166,7 @@ export const simpleTable = () => {
       <owc-table
         virtualizer-mode="always"
         selectable
+        grow-full-width
         filter-mode="global-search-with-builder"
         save-state-to-url
         sticky-header
