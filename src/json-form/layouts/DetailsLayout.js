@@ -5,7 +5,7 @@ import { resolveDataSchema } from '../resolve.js';
 
 import '@awesome.me/webawesome/dist/components/details/details.js';
 import '@awesome.me/webawesome/dist/components/button/button.js';
-import { replaceValues } from '../generateValueForData.js';
+import { replaceValues } from '../replaceValues.js';
 
 export class DetailsLayout extends ScopedElementsMixin(LitElement) {
   static properties = {
