@@ -105,12 +105,17 @@ A realistic setup with nested sub menu items, a bottom menu and a logo. `logoSvg
 ```js demo
 export const layoutSidebarFull = () => {
   return html`
-    <div style="height: 420px; overflow: auto;">
+    <div style="height: 85vh; overflow: auto;">
       <owc-layout-sidebar
         .logoSvg=${html`
-          <svg viewBox="0 0 155 40" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 130 40" xmlns="http://www.w3.org/2000/svg">
             <rect width="40" height="40" rx="8" fill="#d1e6f5" />
             <text x="52" y="26" font-size="18" fill="currentColor">My App</text>
+          </svg>
+        `}
+        .logoSmallSvg=${html`
+          <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+            <rect width="40" height="40" rx="8" fill="#d1e6f5" />
           </svg>
         `}
         .menuItemList=${[
