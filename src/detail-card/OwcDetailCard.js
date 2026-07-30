@@ -88,6 +88,9 @@ export class OwcDetailCard extends LitElement {
               </slot>
             </div>
           </div>
+          <div class="badge">
+            <slot name="badge"></slot>
+          </div>
         </div>
         <div class="body">
           <slot></slot>
@@ -110,7 +113,7 @@ export class OwcDetailCard extends LitElement {
         padding: 0;
         box-shadow: none;
         border-radius: 0.5rem;
-        overflow: hidden;
+        overflow: visible;
         background: linear-gradient(
           90deg,
           var(--owc-detail-card-accent-color) 0,
@@ -140,6 +143,7 @@ export class OwcDetailCard extends LitElement {
 
       .summary {
         display: block;
+        position: relative;
         width: 100%;
       }
 
@@ -197,6 +201,21 @@ export class OwcDetailCard extends LitElement {
         block-size: 1.5rem;
         color: var(--wa-color-text-normal);
         transition: transform var(--wa-transition-fast);
+      }
+
+      .badge {
+        display: flex;
+        gap: 0.25rem;
+        position: absolute;
+        inset-block-start: 0;
+        inset-inline-end: 1.25rem;
+        z-index: 1;
+        transform: translateY(-50%);
+      }
+
+      slot[name='badge']::slotted(wa-badge) {
+        padding: 0.18em 0.72em;
+        font-size: 11px;
       }
 
       wa-details[open] .suffix {
