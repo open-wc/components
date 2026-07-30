@@ -64,6 +64,7 @@ export class OwcLayoutSidebar extends LitElement {
     this._toggleCollapsed = this._toggleCollapsed.bind(this);
     /** @type {number | undefined} */
     this._persistWidthTimeout = undefined;
+    this.iconName = '';
   }
 
   /**
@@ -405,7 +406,10 @@ export class OwcLayoutSidebar extends LitElement {
           aria-expanded=${expanded ? 'true' : 'false'}
           @click=${this._toggleCollapsed}
         >
-          <wa-icon name=${expanded ? 'angles-left' : 'angles-right'} aria-hidden="true"></wa-icon>
+          <wa-icon
+            name=${expanded ? 'chevron-double-left' : 'chevron-double-right'}
+            aria-hidden="true"
+          ></wa-icon>
         </button>
       </div>
     `;
@@ -606,7 +610,7 @@ export class OwcLayoutSidebar extends LitElement {
 
       #sidebar-panel {
         position: relative;
-        height: 100%;
+        height: 100vh;
         min-height: 0;
         z-index: 1;
         box-shadow: 4px 0 8px -6px rgb(0 0 0 / 35%);
