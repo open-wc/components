@@ -14,4 +14,13 @@ export interface OwcLayoutSidebarOptions {
   menuItemList: Array<MenuItem>;
   menuBottomItemList: Array<MenuItem>;
   menuTopTemplate: import('lit').TemplateResult;
+  logoSmallSvg?: import('lit').TemplateResult;
+  collapsed?: boolean;
+  storageKey?: string;
 }
+
+export interface OwcLayoutSidebarMethods {
+  resetPersistedState(): void;
+}
+
+export type OwcLayoutSidebarEventType = 'collapsed' | 'expanded';

@@ -46,7 +46,7 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
       <div
         class="drop-area"
         tabindex="0"
-        aria-label=${this.#localize.term("fileUploadLabel")}
+        aria-label=${this.#localize.term('fileUploadLabel')}
         @dragover=${this._onDragOver}
         @dragleave=${this._onDragLeave}
         @drop=${this._onDrop}
@@ -72,7 +72,7 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
                     >`,
                 )}
               </div> `
-            : html`<span class="upload-label">${this.#localize.term("fileUploadLabel")}</span>`
+            : html`<span class="upload-label">${this.#localize.term('fileUploadLabel')}</span>`
         }
       </div>
     `;
