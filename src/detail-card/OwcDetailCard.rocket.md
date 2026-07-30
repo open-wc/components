@@ -134,6 +134,29 @@ export const customSuffixDetailCard = () => html`
 `;
 ```
 
+## Badge
+
+Use the badge slot to display a neutral status label at the upper-right edge of a card.
+
+```js demo
+export const detailCardWithBadge = () => html`
+  <owc-detail-card accent-color="var(--wa-color-warning-fill-loud)">
+    <wa-icon slot="icon" name="exclamation-triangle"></wa-icon>
+    <wa-badge slot="badge" variant="neutral" pill>HEREEEEEEEEEEEEEEEEEEEEE</wa-badge>
+    <div slot="text">
+      <div><strong>I have a badge</strong></div>
+      <div>this is awesome</div>
+    </div>
+    <div slot="detail">
+      <div><strong>a new icon</strong></div>
+      <div>how refreshing</div>
+    </div>
+    <wa-icon slot="suffix" name="exclamation-circle"></wa-icon>
+    <div>lorem ipsum maximus</div>
+  </owc-detail-card>
+`;
+```
+
 ## Card list
 
 Multiple cards can be stacked to build a small record list. Give each card an accent color that
