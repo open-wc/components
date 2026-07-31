@@ -1522,9 +1522,15 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     const stretchIndexes = this.#visibleColumns
       .map((column, index) => ({ column, index }))
       .filter(({ column }) => {
-        if (isUntouchable(column)) return false;
-        if (this.#defaultColumnWidths[column.field] != null) return false;
-        if (this.#columnWidths[column.field] != null) return false;
+        if (isUntouchable(column)) {
+          return false;
+        }
+        if (this.#defaultColumnWidths[column.field] != null) {
+          return false;
+        }
+        if (this.#columnWidths[column.field] != null) {
+          return false;
+        }
         return true;
       })
       .map(({ index }) => index);

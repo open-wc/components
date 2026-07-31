@@ -28,6 +28,7 @@ export class OwcLayoutSidebar extends LitElement {
   static MAX_EXPANDED_WIDTH = 600;
   static DEFAULT_STORAGE_KEY = 'owc-layout-sidebar';
   static STORAGE_VERSION = 1;
+  static DEFAULT_TOGGLE_ICON = 'chevron-double-left';
 
   static get properties() {
     return {
@@ -36,6 +37,7 @@ export class OwcLayoutSidebar extends LitElement {
       menuTopTemplate: { type: Object },
       logoSvg: { type: Object },
       logoSmallSvg: { type: Object },
+      toggleIcon: { type: Object },
       collapsed: { type: Boolean, reflect: true },
       storageKey: { type: String, attribute: 'storage-key' },
     };
@@ -64,7 +66,10 @@ export class OwcLayoutSidebar extends LitElement {
     this._toggleCollapsed = this._toggleCollapsed.bind(this);
     /** @type {number | undefined} */
     this._persistWidthTimeout = undefined;
-    this.iconName = '';
+    /**
+     * @type {string | import('lit').TemplateResult | undefined}
+     */
+    this.toggleIcon = undefined;
   }
 
   /**
@@ -110,29 +115,22 @@ export class OwcLayoutSidebar extends LitElement {
   }
 
   /**
-   * @param {MenuItem} menuItem
-   * @returns {import('lit').TemplateResult | import('lit').nothing}
-   */
-  /**
-   * Renders a top-level menu item as an icon in the collapsed rail.
    *
    * @param {MenuItem} menuItem
    * @returns {import('lit').TemplateResult | import('lit').nothing}
    */
   renderRailMenuItem(menuItem) {
-    if (menuItem.visible === false) {
+    if (menuItem.visible !== undefined && menuItem.visible === false) {
       return nothing;
     }
-
     const label = menuItem.label ?? '';
     const hasSubmenu =
       Array.isArray(menuItem.subMenuItemList) && menuItem.subMenuItemList.length > 0;
-
-    const icon = menuItem.icon
-      ? html` <wa-icon name=${menuItem.icon} aria-hidden="true"></wa-icon> `
-      : html`
-          <span class="rail-fallback" aria-hidden="true"> ${label.charAt(0).toUpperCase()} </span>
-        `;
+    const iconOrFallback = menuItem.icon
+      ? html`<wa-icon name="${menuItem.icon}"></wa-icon>`
+      : html`<span class="rail-fallback" aria-hidden="true"
+          >${label.charAt(0).toUpperCase()}</span
+        >`;
 
     if (hasSubmenu) {
       const active = Boolean(menuItem.selected) || this._hasSelectedDescendant(menuItem);
@@ -141,38 +139,37 @@ export class OwcLayoutSidebar extends LitElement {
         <li>
           <button
             type="button"
-            class=${`rail-item ${active ? 'selected' : ''}`}
-            title=${label}
-            aria-label=${`Expand navigation and open ${label}`}
+            class="rail-item has-children ${active ? 'selected' : ''}"
+            title="${label}"
+            aria-label="Open ${label} menu"
             @click=${() => this._expandAndOpenGroup(menuItem)}
           >
-            ${icon}
+            <span class="rail-content">
+              ${iconOrFallback}
+              <span class="rail-group-dots" aria-hidden="true">
+                <span></span><span></span><span></span>
+              </span>
+            </span>
           </button>
         </li>
       `;
     }
 
     const href = getFullHref(menuItem.href, menuItem.hrefGETParams);
-
     return html`
       <li>
         <a
-          href=${href}
-          class=${`rail-item ${menuItem.selected ? 'selected' : ''}`}
-          title=${label}
-          aria-label=${label}
-          aria-current=${menuItem.selected ? 'page' : nothing}
+          href="${href}"
+          class="rail-item ${menuItem.selected ? 'selected' : ''}"
+          title="${label}"
+          aria-label="${label}"
         >
-          ${icon}
+          ${iconOrFallback}
         </a>
       </li>
     `;
   }
 
-  /**
-   * @param {MenuItem} menuItem
-   * @returns {boolean}
-   */
   /**
    * @param {MenuItem} menuItem
    * @returns {boolean}
@@ -188,9 +185,23 @@ export class OwcLayoutSidebar extends LitElement {
   }
 
   /**
+   * @param {Array<MenuItem>} menuItemList
+   */
+  _closeAllGroups(menuItemList) {
+    for (const menuItem of menuItemList) {
+      if (menuItem.subMenuItemList) {
+        menuItem.open = false;
+        this._closeAllGroups(menuItem.subMenuItemList);
+      }
+    }
+  }
+
+  /**
    * @param {MenuItem} menuItem
    */
   _expandAndOpenGroup(menuItem) {
+    this._closeAllGroups(this.menuItemList);
+    this._closeAllGroups(this.menuBottomItemList);
     menuItem.open = true;
     this.collapsed = false;
     this.requestUpdate();
@@ -388,6 +399,19 @@ export class OwcLayoutSidebar extends LitElement {
     );
   }
 
+  /**
+   * @returns {import('lit').TemplateResult}
+   */
+  _renderToggleIcon() {
+    const icon = this.toggleIcon ?? OwcLayoutSidebar.DEFAULT_TOGGLE_ICON;
+
+    if (typeof icon === 'string') {
+      return html`<wa-icon class="toggle-icon" name=${icon} aria-hidden="true"></wa-icon>`;
+    }
+
+    return html`<span class="toggle-icon" aria-hidden="true">${icon}</span>`;
+  }
+
   _renderHeader() {
     const expanded = !this.collapsed;
     const toggleLabel = expanded ? 'Collapse navigation' : 'Expand navigation';
@@ -406,10 +430,7 @@ export class OwcLayoutSidebar extends LitElement {
           aria-expanded=${expanded ? 'true' : 'false'}
           @click=${this._toggleCollapsed}
         >
-          <wa-icon
-            name=${expanded ? 'chevron-double-left' : 'chevron-double-right'}
-            aria-hidden="true"
-          ></wa-icon>
+          ${this._renderToggleIcon()}
         </button>
       </div>
     `;
@@ -474,7 +495,8 @@ export class OwcLayoutSidebar extends LitElement {
         --owc-layout-sidebar-selected-background: #d1e6f5;
         --owc-layout-sidebar-submenu-border: #d9d9d9;
         --owc-layout-sidebar-border-radius: 4px;
-        --owc-layout-sidebar-icon-size: 40px;
+        --owc-layout-sidebar-icon-size: 46px;
+        --owc-layout-sidebar-icon-scale: 1.35;
 
         font-family: var(--wa-font-family-body);
       }
@@ -483,8 +505,8 @@ export class OwcLayoutSidebar extends LitElement {
       }
 
       #logo-small {
-        width: 28px;
-        height: 28px;
+        width: 40px;
+        height: 40px;
       }
 
       #logo,
@@ -542,9 +564,13 @@ export class OwcLayoutSidebar extends LitElement {
       }
 
       #content {
+        height: 100vh;
+        min-height: 0;
         padding-left: 1.5em;
         box-sizing: border-box;
-        position: relative;
+        overflow-x: auto;
+        overflow-y: auto;
+        overscroll-behavior: contain;
       }
 
       ul {
@@ -601,6 +627,20 @@ export class OwcLayoutSidebar extends LitElement {
         wa-split-panel {
           transition: none;
         }
+        .toggle-icon {
+          transition: none;
+        }
+      }
+
+      .toggle-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 180ms ease;
+      }
+
+      :host([collapsed]) .toggle-icon {
+        transform: rotate(180deg);
       }
 
       :host([collapsed]) [slot='divider'] {
@@ -643,6 +683,7 @@ export class OwcLayoutSidebar extends LitElement {
       }
 
       .rail-item {
+        position: relative;
         margin: 4px auto;
       }
 
@@ -669,6 +710,7 @@ export class OwcLayoutSidebar extends LitElement {
       }
 
       :is(.rail-item, #collapse-toggle) wa-icon {
+        font-size: calc(100% * var(--owc-layout-sidebar-icon-scale));
         margin: 0;
       }
 
@@ -676,6 +718,51 @@ export class OwcLayoutSidebar extends LitElement {
         font-size: 0.85em;
         font-weight: 600;
         line-height: 1;
+      }
+
+      .rail-item.selected::before {
+        position: relative;
+        content: '';
+        left: -2px;
+        width: 5px;
+        height: 70%;
+        border-radius: 2px;
+        background-color: var(--owc-layout-sidebar-selected-background);
+      }
+
+      .rail-item wa-icon,
+      #collapse-toggle wa-icon {
+        margin-right: 0;
+      }
+
+      .rail-group-dots {
+        display: flex;
+        gap: 2px;
+        line-height: 0;
+      }
+
+      .rail-group-dots span {
+        width: calc(3px * var(--owc-layout-sidebar-icon-scale));
+        height: calc(3px * var(--owc-layout-sidebar-icon-scale));
+        border-radius: 50%;
+        background: currentColor;
+        opacity: 0.55;
+      }
+
+      .rail-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+      }
+
+      .rail-content wa-icon {
+        margin: 0;
+      }
+
+      .rail-item.has-children.selected .rail-group-dots span {
+        opacity: 0.8;
       }
     `,
   ];
