@@ -2318,6 +2318,7 @@ to overwrite the formats, see [Override Built-in Formatters](#override-built-in-
 | ----------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `customStyles`    | `CSSResult \| TemplateResult`   | styles for the shadow doms. (i.e.: if you need custom styles for the action tab)                                                                                             |
 | `virtualizerMode` | `"auto" \| "always" \| "never"` | sets the mode of how the rows are rendered. if set to auto(on large tables) or always, row that are outside out of field of view will be unrendered and deleted from the DOM |
+| `scrollTarget`    | `Element`                       | exact element that owns vertical scrolling for virtualized rows. Defaults to window scrolling; no ancestor is discovered automatically.                                      |
 
 ### Events
 

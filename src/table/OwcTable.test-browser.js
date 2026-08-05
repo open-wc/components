@@ -1,4 +1,4 @@
-import { fixture, html, expect, oneEvent } from '@open-wc/testing';
+import { aTimeout, fixture, html, expect, oneEvent } from '@open-wc/testing';
 import { OwcTable } from './OwcTable.js';
 
 customElements.define('owc-table', OwcTable);
@@ -29,6 +29,35 @@ async function tableFixture(template) {
  */
 function dataRows(el) {
   return [...el.shadowRoot.querySelectorAll('#data-table .table-body .row')];
+}
+
+function rows(count) {
+  return Array.from({ length: count }, (_, index) => ({
+    id: String(index),
+    firstName: `Person ${index}`,
+    age: index,
+  }));
+}
+
+class TableShadowHost extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.scrollTarget = document.createElement('div');
+    this.scrollTarget.style.cssText = 'height: 300px; overflow: auto';
+    this.table = document.createElement('owc-table');
+    this.scrollTarget.append(this.table);
+    this.shadowRoot.append(this.scrollTarget);
+  }
+}
+
+customElements.define('table-shadow-host', TableShadowHost);
+
+/** @param {OwcTable<Record<string, unknown>>} el */
+async function settleVirtualizer(el) {
+  await el.updateComplete;
+  await aTimeout(100);
+  await el.updateComplete;
 }
 
 describe('owc-table', () => {
@@ -115,5 +144,126 @@ describe('owc-table', () => {
   it('renders no filter builder by default', async () => {
     const el = await tableFixture(html`<owc-table .columns=${columns} .data=${data}></owc-table>`);
     expect(el.shadowRoot.querySelector('owc-table-filter-builder')).to.not.exist;
+  });
+
+  it('keeps the 300-row automatic virtualization threshold', async () => {
+    const belowThreshold = await tableFixture(
+      html`<owc-table .columns=${columns} .data=${rows(299)}></owc-table>`,
+    );
+    expect(dataRows(belowThreshold)).to.have.length(299);
+
+    const atThreshold = await tableFixture(
+      html`<owc-table .columns=${columns} .data=${rows(300)}></owc-table>`,
+    );
+    await settleVirtualizer(atThreshold);
+    expect(atThreshold.shadowRoot.querySelectorAll('.virtual-item').length).to.be.lessThan(300);
+    expect(atThreshold.shadowRoot.querySelector('#data-table').textContent).to.include('Person 0');
+
+    const aboveThreshold = await tableFixture(
+      html`<owc-table .columns=${columns} .data=${rows(301)}></owc-table>`,
+    );
+    await settleVirtualizer(aboveThreshold);
+    expect(aboveThreshold.shadowRoot.querySelectorAll('.virtual-item').length).to.be.lessThan(301);
+    expect(aboveThreshold.shadowRoot.querySelector('#data-table').textContent).to.include(
+      'Person 0',
+    );
+  });
+
+  it('allows an explicit element to own virtualized table scrolling', async () => {
+    const host = await fixture(html`<table-shadow-host></table-shadow-host>`);
+    const el = host.table;
+    el.columns = columns;
+    el.data = rows(301);
+    el.scrollTarget = host.scrollTarget;
+    await settleVirtualizer(el);
+
+    expect(el.scrollTarget).to.equal(host.scrollTarget);
+    expect(el.shadowRoot.querySelectorAll('.virtual-item').length).to.be.lessThan(301);
+    host.remove();
+  });
+
+  it('keeps sorting, filtering, and replacement data consistent while virtualized', async () => {
+    const largeData = rows(301).reverse();
+    const el = await tableFixture(
+      html`<owc-table
+        virtualizer-mode="always"
+        .columns=${columns}
+        .data=${largeData}
+        .jsonSorters=${[{ field: 'age', order: 'asc' }]}
+      ></owc-table>`,
+    );
+    await settleVirtualizer(el);
+
+    expect(el.allData.map(row => row.age)).to.deep.equal(rows(301).map(row => row.age));
+
+    el.jsonFilters = [{ field: 'age', operator: 'lessThan', value: 10 }];
+    await settleVirtualizer(el);
+    expect(el.allData.map(row => row.age)).to.deep.equal([...Array(10).keys()]);
+    expect(dataRows(el)).to.have.length(10);
+
+    el.jsonFilters = [];
+    await settleVirtualizer(el);
+    expect(el.allData).to.have.length(301);
+
+    el.data = rows(301).map(row => ({ ...row, firstName: `Replacement ${row.id}` }));
+    await settleVirtualizer(el);
+    expect(el.allData[0].firstName).to.equal('Replacement 0');
+    expect(el.shadowRoot.querySelector('#data-table').textContent).to.include('Replacement 0');
+  });
+
+  it('keeps row click interactions consistent with and without virtualization', async () => {
+    for (const virtualizerMode of ['always', 'never']) {
+      const el = await tableFixture(
+        html`<owc-table
+          .virtualizerMode=${virtualizerMode}
+          .columns=${columns}
+          .data=${rows(301)}
+        ></owc-table>`,
+      );
+      await settleVirtualizer(el);
+
+      setTimeout(() => dataRows(el)[0].querySelector('.cell').click());
+      const event = await oneEvent(el, 'rowClick');
+      expect(event.row.id).to.equal('0');
+    }
+  });
+
+  it('reports the overscanned rendered range in sorted render order', async () => {
+    const el = await tableFixture(
+      html`<owc-table
+        virtualizer-mode="always"
+        .columns=${columns}
+        .data=${rows(301).reverse()}
+        .jsonSorters=${[{ field: 'age', order: 'asc' }]}
+      ></owc-table>`,
+    );
+    await settleVirtualizer(el);
+
+    const renderedIndexes = [...el.shadowRoot.querySelectorAll('.virtual-item')].map(item =>
+      Number(item.getAttribute('data-index')),
+    );
+    expect(el.visibleData).to.deep.equal(renderedIndexes.map(index => el.allData[index]));
+    expect(el.visibleData.map(row => row.age)).to.deep.equal(
+      [...el.visibleData].map(row => row.age).sort((left, right) => left - right),
+    );
+  });
+
+  it('restores virtualized rendering after disconnecting and reconnecting', async () => {
+    const el = await tableFixture(
+      html`<owc-table
+        virtualizer-mode="always"
+        .columns=${columns}
+        .data=${rows(301)}
+      ></owc-table>`,
+    );
+    await settleVirtualizer(el);
+
+    const parent = el.parentElement;
+    el.remove();
+    parent.append(el);
+    await settleVirtualizer(el);
+
+    expect(el.shadowRoot.querySelectorAll('.virtual-item').length).to.be.lessThan(301);
+    expect(el.shadowRoot.querySelector('#data-table').textContent).to.include('Person 0');
   });
 });

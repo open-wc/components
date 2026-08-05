@@ -1,6 +1,24 @@
 # Preserve flat-table virtualization and explicit scroll ownership
 
-Status: ready-for-agent
+Status: completed
+
+Completion: Migrated the flat table path to the private TanStack-backed vertical-list
+integration. The existing 300-row `auto` threshold and `always`/`never` modes remain,
+row identity comes from the table's existing `getRowId` contract, and `visibleData` now
+follows the controller's overscanned rendered range. Added the additive `scrollTarget`
+element property (window scrolling remains the default), public types, documentation,
+and public-component threshold/scroll-owner coverage. Grouped tables intentionally retain
+their current path for issue 04, while dynamic detail-row remeasurement remains issue 03.
+
+Review follow-up: consolidated the shared 300-row virtualizer decision, added a consumer-visible
+changelog entry, and expanded public-component coverage for the default window target, an explicit
+shadow-root target, virtual/non-virtual interactions, sort/filter/restore/replacement transitions,
+rendered overscan ordering, and reconnecting a virtualized table.
+
+Validation: focused ESLint and Prettier checks pass. Typechecking reaches three unrelated
+pre-existing errors in the table row-number formatter and `OwcTableMassEdit`'s `renderType`
+references. Focused browser tests could not run because Playwright Chromium is absent; the
+browser installation request was not approved.
 
 ## What to build
 

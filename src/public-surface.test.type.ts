@@ -22,6 +22,7 @@ export const column: Column<Row> = {
 
 export const tableOptions: OwcTableOptions<Row> = {
   columns: [column],
+  scrollTarget: document.createElement('main'),
 };
 
 export const filter: JsonFilter = {

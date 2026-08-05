@@ -184,6 +184,11 @@ export interface OwcTableOptions<T> {
   currencyFormatter?: Intl.NumberFormat;
   percentFormatter?: Intl.NumberFormat;
   virtualizerMode?: 'always' | 'never' | 'auto';
+  /**
+   * The exact element that owns vertical scrolling for virtualized table rows.
+   * When omitted, the table uses window scrolling.
+   */
+  scrollTarget?: Element;
 }
 
 /**

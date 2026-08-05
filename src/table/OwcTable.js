@@ -1,7 +1,8 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
+import { ref } from 'lit/directives/ref.js';
 import { until } from 'lit/directives/until.js';
-import { virtualize, virtualizerRef } from '@lit-labs/virtualizer/virtualize.js';
+import { virtualize } from '@lit-labs/virtualizer/virtualize.js';
 
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { OwcTableHeaderCell } from './OwcTableHeaderCell.js';
@@ -32,6 +33,7 @@ import {
 import { styleMap } from 'lit/directives/style-map.js';
 import { dateParserForJsonDecode } from './dateParserForJsonDecode.js';
 import { OwcLocalizeController } from '@open-wc/components/localization.js';
+import { VerticalListController } from '../lit-helpers/VerticalListController.js';
 
 // for smaller views do something like this
 // https://github.com/zachleat/table-saw/
@@ -130,6 +132,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     renderAnnotation: { type: Function },
     renderHeaderContent: { type: Function },
     virtualizerMode: { type: String, attribute: 'virtualizer-mode' },
+    scrollTarget: { attribute: false },
   };
 
   #initialSetFilterFields = new Set();
@@ -138,7 +141,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   #handleWindowResize = () => {
     clearTimeout(this.#resizeTimeout);
     this.#resizeTimeout = window.setTimeout(() => {
-      void this.recalculateColumnWidths().then(() => this.resetVirtualizer());
+      void this.recalculateColumnWidths();
     }, 50);
   };
 
@@ -303,6 +306,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
     /** @type {'always' | 'never' | 'auto'} */
     this.virtualizerMode = 'auto';
+
+    /** @type {Element | undefined} */
+    this.scrollTarget = undefined;
   }
 
   #selectedSet = new Set();
@@ -317,6 +323,10 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   #defaultColumnWidths = {};
 
   #MIN_COLUMN_WIDTH = 50;
+  /** @type {VerticalListController | undefined} */
+  #flatList;
+  /** @type {Element | undefined} */
+  #flatListScrollTarget;
 
   get visibleColumns() {
     return [...this.#visibleColumns];
@@ -354,11 +364,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
    * @param {import('lit').PropertyValues} changedProperties
    */
   firstUpdated(changedProperties) {
-    this.virtualizerHost?.addEventListener('rangeChanged', ev => {
-      // @ts-ignore
-      this.visibleData = this.allData.slice(ev.first, ev.last + 1);
-    });
-
     const sortedColumns = new Set();
     for (const column of this.jsonSorters) {
       sortedColumns.add(column.field);
@@ -390,6 +395,21 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     }
 
     super.firstUpdated(changedProperties);
+  }
+
+  /**
+   * @param {import('lit').PropertyValues} changedProperties
+   */
+  updated(changedProperties) {
+    super.updated(changedProperties);
+
+    if (
+      changedProperties.has('allData') ||
+      changedProperties.has('virtualizerMode') ||
+      changedProperties.has('scrollTarget')
+    ) {
+      this.#updateFlatList();
+    }
   }
 
   /**
@@ -1013,10 +1033,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
    * @returns
    */
   #renderList({ items, renderItem }) {
-    const shouldUseVirtualizer =
-      this.virtualizerMode === 'always' || (this.virtualizerMode === 'auto' && items.length >= 300);
-
-    if (shouldUseVirtualizer) {
+    if (this.#shouldUseVirtualizer(items)) {
       return html`${virtualize({ items, renderItem })}`;
     }
 
@@ -1024,6 +1041,67 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       const result = renderItem(item, index);
       return result;
     })}`;
+  }
+
+  /** @param {T[]} items */
+  #shouldUseVirtualizer(items) {
+    return (
+      this.virtualizerMode === 'always' || (this.virtualizerMode === 'auto' && items.length >= 300)
+    );
+  }
+
+  #createFlatList() {
+    this.#flatListScrollTarget = this.scrollTarget;
+    this.#flatList = new VerticalListController(this, {
+      scrollTarget: this.scrollTarget ? 'element' : 'window',
+      getScrollElement: () => this.scrollTarget ?? null,
+      getItems: () => (this.#shouldUseVirtualizer(this.allData) ? this.allData : []),
+      getItemKey: index => this.#rowKey(this.allData[index]),
+      estimateSize: 45,
+      overscan: 5,
+      onRangeChange: (startIndex, endIndex) => {
+        if (this.#shouldUseVirtualizer(this.allData)) {
+          this.visibleData = this.allData.slice(startIndex, endIndex + 1);
+        }
+      },
+    });
+  }
+
+  #updateFlatList() {
+    if (this.#flatListScrollTarget !== this.scrollTarget) {
+      this.#flatList = undefined;
+    }
+    if (!this.#flatList) {
+      this.#createFlatList();
+    }
+    this.#flatList?.update();
+  }
+
+  #renderFlatList() {
+    if (!this.#shouldUseVirtualizer(this.allData)) {
+      return this.allData.map((item, index) => this.#renderItem(item, index));
+    }
+
+    if (!this.#flatList) {
+      this.#createFlatList();
+    }
+    const flatList = this.#flatList;
+    if (!flatList) {
+      return nothing;
+    }
+    return html`<div class="virtual-list" style=${`height: ${flatList.totalSize}px`}>
+      ${flatList.items.map(
+        item =>
+          html`<div
+            class="virtual-item"
+            data-index=${item.index}
+            style=${`transform: translateY(${item.start}px)`}
+            ${ref(element => this.#flatList?.measureElement(element ?? null))}
+          >
+            ${this.#renderItem(this.allData[item.index], item.index)}
+          </div>`,
+      )}
+    </div>`;
   }
 
   #renderDataTable() {
@@ -1040,12 +1118,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
             this.allData && this.allData.length > 0
               ? this.groupList?.length > 0 && this.groupSelector
                 ? html`${this.#renderGroups()}`
-                : html`<div id="virtualize-container">
-                    ${this.#renderList({
-                      items: this.allData,
-                      renderItem: this.#renderItem,
-                    })}
-                  </div>`
+                : html`<div id="virtualize-container">${this.#renderFlatList()}</div>`
               : html`<div id="empty-message-wrapper">
                   <p>${this.#localize.term('tableEmptyMessage')}</p>
                 </div>`
@@ -1796,24 +1869,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     return addedFields;
   }
 
-  get virtualizer() {
-    const el = this.shadowRoot?.querySelector('#data-table .table-body #virtualize-container');
-    // @ts-ignore
-    return el ? el[virtualizerRef] : undefined;
-  }
-
-  get virtualizerHost() {
-    const el = this.shadowRoot?.querySelector('#data-table .table-body #virtualize-container');
-    return el || undefined;
-  }
-
-  resetVirtualizer() {
-    if (this.virtualizer) {
-      this.virtualizer.disconnected();
-      this.virtualizer.connected();
-    }
-  }
-
   static styles = [
     contentFormatterStyles,
     css`
@@ -1871,6 +1926,18 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
       #virtualize-container {
         display: block;
+      }
+
+      .virtual-list {
+        position: relative;
+        width: 100%;
+      }
+
+      .virtual-item {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
       }
 
       .row:has(.row-click):hover > .cell {

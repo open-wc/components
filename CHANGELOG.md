@@ -12,6 +12,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- `OwcTable`: large, ungrouped tables now retain bounded virtualized rendering. Window scrolling
+  remains the default; consumers can set the additive `scrollTarget` property to nominate an
+  application-shell scrolling element explicitly.
 - `OwcInputAutofill.types.ts` export: the option shape (`OwcInputAutofillOption`,
   `OwcInputAutofillData`) is now importable from
   `@open-wc/components/OwcInputAutofill.types.js`.
