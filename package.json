@@ -64,6 +64,7 @@
     "@open-wc/lit-helpers": "0.7.0",
     "@open-wc/scoped-elements": "~2.1.4",
     "@shoelace-style/shoelace": "^2.20.0",
+    "@tanstack/lit-virtual": "3.13.36",
     "@types/dompurify": "^3.0.5",
     "apexcharts": "4.5.0",
     "countup.js": "^2.9.0",

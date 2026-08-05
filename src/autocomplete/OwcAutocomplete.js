@@ -5,7 +5,8 @@ import { HasSlotController } from './HasSlotController.js';
 import { LocalizeController } from '@shoelace-style/shoelace/dist/utilities/localize.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { OwcIconButton } from '../icon-button/OwcIconButton.js';
-import { virtualize, virtualizerRef } from '@lit-labs/virtualizer/virtualize.js';
+import { ref } from 'lit/directives/ref.js';
+import { VerticalListController } from '../lit-helpers/VerticalListController.js';
 
 import '@awesome.me/webawesome/dist/components/input/input.js';
 import '@awesome.me/webawesome/dist/components/button/button.js';
@@ -106,6 +107,14 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
     this.hideSelectAll = false;
     this.fixedTrigger = false;
 
+    this.optionList = new VerticalListController(this, {
+      getScrollElement: () => this.rows,
+      getItems: () => this.limitedProcessedData,
+      getItemKey: index => this.optionKey(this.limitedProcessedData[index], index),
+      estimateSize: 36,
+      overscan: 5,
+    });
+
     /** @param {T} row */
     this.getOptionValue = row => {
       return row && (row.value || row.value === 0 || row.value === '')
@@ -167,6 +176,21 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
 
   get listbox() {
     return /**@type {HTMLSlotElement} */ (this.shadowRoot?.querySelector('.listbox'));
+  }
+
+  get rows() {
+    return /** @type {HTMLElement | null} */ (this.shadowRoot?.querySelector('#rows'));
+  }
+
+  /**
+   * @param {T} option
+   * @param {number} index
+   */
+  optionKey(option, index) {
+    // Applications configure getOptionValue when their option identity differs.
+    // The index fallback keeps malformed legacy data renderable without exposing
+    // a new public identity contract.
+    return this.getOptionValue(option) ?? index;
   }
 
   /**
@@ -290,34 +314,36 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
         if (ev.key === 'Home' || ev.key === 'End') {
           ev.preventDefault();
         }
-        if (this.processedData.length === 0) {
+        const options = this.limitedProcessedData;
+        if (options.length === 0) {
           return;
         }
-        const index = this.processedData.findIndex(
+        const index = options.findIndex(
           option => this.getOptionValue(option) === this.currentValue,
         );
         let newIndex = index;
         if (ev.key === 'ArrowDown') {
-          newIndex = index < this.processedData.length - 1 ? index + 1 : 0;
+          newIndex = index < options.length - 1 ? index + 1 : 0;
         }
         if (ev.key === 'ArrowUp') {
-          newIndex = index > 0 ? index - 1 : this.processedData.length - 1;
+          newIndex = index > 0 ? index - 1 : options.length - 1;
         }
         if (ev.key === 'Home') {
           newIndex = 0;
         }
         if (ev.key === 'End') {
-          newIndex = this.processedData.length - 1;
+          newIndex = options.length - 1;
         }
-        this.currentValue = this.getOptionValue(this.processedData[newIndex]);
+        this.currentValue = this.getOptionValue(options[newIndex]);
       } else if (ev.key === 'Enter') {
         ev.stopPropagation();
-        if (this.processedData.length === 1) {
-          this.currentValue = this.getOptionValue(this.processedData[0]);
+        const options = this.limitedProcessedData;
+        if (options.length === 1) {
+          this.currentValue = this.getOptionValue(options[0]);
         }
         if (
           this.currentValue &&
-          this.processedData.find(opt => this.getOptionValue(opt) === this.currentValue)
+          options.find(opt => this.getOptionValue(opt) === this.currentValue)
         ) {
           this.handleOptionAction(this.currentValue);
         }
@@ -580,9 +606,14 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
       this.handleOpenChange();
     }
     if (changedProperties.has('currentValue')) {
-      const el = this.shadowRoot?.querySelector('.option--current');
-      el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      const index = this.limitedProcessedData.findIndex(
+        option => this.getOptionValue(option) === this.currentValue,
+      );
+      if (index >= 0) {
+        this.optionList.scrollToIndex(index);
+      }
     }
+    this.optionList.update();
   }
 
   #handleSelectAll() {
@@ -862,17 +893,21 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
                       ></owc-icon-button>`
                 }
               </wa-input>
-              <div
-                no-clipping
-                @click=${this.handleOptionClick}
-                style="min-height: 300px;"
-                id="rows"
-              >
-                ${virtualize({
-                  scroller: true,
-                  items: this.limitedProcessedData,
-                  renderItem: this.renderItem,
-                })}
+              <div @click=${this.handleOptionClick} id="rows">
+                <div class="virtual-list" style=${`height: ${this.optionList.totalSize}px`}>
+                  ${this.optionList.items.map(
+                    item => html`
+                      <div
+                        class="virtual-item"
+                        data-index=${item.index}
+                        style=${`transform: translateY(${item.start}px)`}
+                        ${ref(element => this.optionList.measureElement(element ?? null))}
+                      >
+                        ${this.renderItem(this.limitedProcessedData[item.index], item.index)}
+                      </div>
+                    `,
+                  )}
+                </div>
               </div>
               ${
                 this.hideSelectAll === false
@@ -905,17 +940,6 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
         >
       </div>
     `;
-  }
-
-  get virtualizer() {
-    const el = this.shadowRoot?.querySelector('#rows');
-    // @ts-ignore
-    return el ? el[virtualizerRef] : undefined;
-  }
-
-  get virtualizerHost() {
-    const el = this.shadowRoot?.querySelector('#rows');
-    return el || undefined;
   }
 
   /**
@@ -993,9 +1017,7 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
 
       .option-label {
         flex: 1 1 auto;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        overflow-wrap: anywhere;
       }
       .row-selected {
         width: 2em;
@@ -1009,6 +1031,25 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
         padding-bottom: 0;
         margin-top: 5px;
         overflow: hidden;
+      }
+
+      #rows {
+        max-height: 300px;
+        min-height: 1px;
+        overflow: auto;
+        overscroll-behavior: contain;
+      }
+
+      .virtual-list {
+        position: relative;
+        width: 100%;
+      }
+
+      .virtual-item {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
       }
 
       #placeholder {

@@ -1,6 +1,17 @@
 # Replace autocomplete virtualization through the private integration
 
-Status: ready-for-agent
+Status: completed
+
+Completion: Added the private TanStack-backed vertical-list controller and migrated
+autocomplete to its explicit option-list scroller with stable keys, measured rows,
+and indexed keyboard scrolling. Added the exact runtime dependency, documentation,
+and a large-list keyboard regression test. Focused lint passes; browser validation
+is blocked locally because the configured Playwright Chromium binary is not installed.
+
+Review follow-up: Keyboard navigation and Enter selection now use the same limited
+candidate collection that the virtual list renders. Browser coverage also exercises
+the limited range's first and last options, variable-height labels, and the nested
+shadow-root popup lifecycle (open, close, resize, filter, restore, reconnect, reopen).
 
 ## What to build
 

@@ -3,6 +3,28 @@ import { OwcAutocomplete } from './OwcAutocomplete.js';
 
 customElements.define('owc-autocomplete', OwcAutocomplete);
 
+class AutocompleteShadowHost extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.autocomplete = document.createElement('owc-autocomplete');
+    this.shadowRoot.append(this.autocomplete);
+  }
+}
+
+class NestedAutocompleteHost extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.innerHost = document.createElement('autocomplete-shadow-host');
+    this.autocomplete = this.innerHost.autocomplete;
+    this.shadowRoot.append(this.innerHost);
+  }
+}
+
+customElements.define('autocomplete-shadow-host', AutocompleteShadowHost);
+customElements.define('nested-autocomplete-host', NestedAutocompleteHost);
+
 const data = [
   { label: 'VAV', value: '100' },
   { label: 'Standard Life', value: '101' },
@@ -294,5 +316,99 @@ describe('owc-autocomplete', () => {
     el.maxDropdownOptionsVisible = 2;
     await open(el);
     expect(renderedOptionLabels(el)).to.deep.equal(['VAV', 'Standard Life']);
+  });
+
+  it('keeps keyboard navigation visible across a virtualized range', async () => {
+    const largeData = Array.from({ length: 300 }, (_, index) => ({
+      label: `Option ${index}`,
+      value: `${index}`,
+    }));
+    const el = await fixture(html`<owc-autocomplete .data=${largeData}></owc-autocomplete>`);
+    await open(el);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'End' }));
+    await el.updateComplete;
+
+    expect(el.currentValue).to.equal('199');
+    expect(el.rows.scrollTop).to.be.greaterThan(0);
+    expect(renderedOptionLabels(el)).to.include('Option 199');
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home' }));
+    await el.updateComplete;
+
+    expect(el.currentValue).to.equal('0');
+    expect(renderedOptionLabels(el)).to.include('Option 0');
+  });
+
+  it('keeps keyboard navigation and selection inside the limited option range', async () => {
+    const el = await fixture(html`<owc-autocomplete .data=${data}></owc-autocomplete>`);
+    el.maxDropdownOptionsVisible = 2;
+    await open(el);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'End' }));
+    expect(el.currentValue).to.equal('101');
+
+    setTimeout(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' })));
+    await oneEvent(el, 'change');
+    expect(el.value).to.equal('101');
+  });
+
+  it('remains usable through popup lifecycle changes inside a nested shadow root', async () => {
+    const host = await fixture(html`<nested-autocomplete-host></nested-autocomplete-host>`);
+    const el = host.autocomplete;
+    const largeData = Array.from({ length: 250 }, (_, index) => ({
+      label: `Option ${index}`,
+      value: `${index}`,
+    }));
+    el.data = largeData;
+    await el.updateComplete;
+
+    await open(el);
+    expect(renderedOptionLabels(el)).to.not.be.empty;
+
+    await el.hide();
+    await el.show();
+    await aTimeout(200);
+    window.dispatchEvent(new Event('resize'));
+    await search(el, 'Option 24');
+    expect(renderedOptionLabels(el)).to.deep.equal(['Option 24']);
+    await search(el, '');
+    expect(renderedOptionLabels(el)).to.not.be.empty;
+
+    const parent = host.parentNode;
+    host.remove();
+    parent.append(host);
+    await el.updateComplete;
+    await el.hide();
+    await el.show();
+    await aTimeout(200);
+
+    expect(el.open).to.equal(true);
+    expect(renderedOptionLabels(el)).to.not.be.empty;
+  });
+
+  it('measures variable-height options and reaches both limited range bounds', async () => {
+    const largeData = Array.from({ length: 240 }, (_, index) => ({
+      label: `Option ${index}: ${'variable content '.repeat((index % 5) + 1)}`,
+      value: `${index}`,
+    }));
+    const el = await fixture(html`<owc-autocomplete .data=${largeData}></owc-autocomplete>`);
+    await open(el);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'End' }));
+    await aTimeout(50);
+    expect(el.currentValue).to.equal('199');
+    expect(renderedOptionLabels(el)).to.include(largeData[199].label);
+    const optionBounds = [...el.shadowRoot.querySelectorAll('.option')]
+      .map(option => option.getBoundingClientRect())
+      .sort((first, second) => first.top - second.top);
+    for (let index = 1; index < optionBounds.length; index += 1) {
+      expect(optionBounds[index - 1].bottom).to.be.at.most(optionBounds[index].top + 1);
+    }
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home' }));
+    await aTimeout(50);
+    expect(el.currentValue).to.equal('0');
+    expect(renderedOptionLabels(el)).to.include(largeData[0].label);
   });
 });

@@ -37,8 +37,9 @@ or an array of values when `multiple` is set.
 - Fill mode: paste space/comma/semicolon/tab/newline separated text or a JSON
   array and every matching option gets selected - matching Excel/CSV copy
   output (see [fillInput.js](./fillInput.js))
-- Virtualized option list via `@lit-labs/virtualizer`, capped by
-  `maxDropdownOptionsVisible` (default 200)
+- Virtualized option list, capped by `maxDropdownOptionsVisible` (default 200).
+  The option-list element owns scrolling explicitly; rows are dynamically measured
+  so custom or wrapping option content can have different heights.
 - Keyboard navigation: arrow keys, `Home`/`End`, `Enter` to select,
   `Escape`/`Tab` to close
 - Select all / deselect all button for multi select (`hide-select-all` to hide)
