@@ -6,5 +6,7 @@
  * guards remain inert without requiring a bundler-provided replacement.
  */
 if (!globalThis.process) {
-  globalThis.process = { env: { NODE_ENV: 'production' } };
+  globalThis.process = /** @type {typeof process} */ (
+    /** @type {unknown} */ ({ env: { NODE_ENV: 'production' } })
+  );
 }

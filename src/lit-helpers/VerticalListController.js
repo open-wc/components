@@ -1,5 +1,13 @@
 import './virtualizer-environment.js';
-import { VirtualizerController, WindowVirtualizerController } from '@tanstack/lit-virtual';
+import {
+  Virtualizer,
+  elementScroll,
+  observeElementOffset,
+  observeElementRect,
+  observeWindowOffset,
+  observeWindowRect,
+  windowScroll,
+} from '@tanstack/virtual-core';
 
 /**
  * Private Lit integration for a vertically scrolling collection.
@@ -27,6 +35,8 @@ export class VerticalListController {
   constructor(host, options) {
     this.host = host;
     this.options = options;
+    this.lastRange = undefined;
+    const isWindow = options.scrollTarget === 'window';
     const controllerOptions = {
       count: options.getItems().length,
       getItemKey: options.getItemKey,
@@ -34,26 +44,49 @@ export class VerticalListController {
       overscan: options.overscan ?? 5,
       rangeExtractor: options.rangeExtractor,
       scrollMargin: options.scrollMargin ?? 0,
+      getScrollElement: isWindow
+        ? () => (typeof document !== 'undefined' ? window : null)
+        : options.getScrollElement ?? (() => null),
+      observeElementRect: isWindow ? observeWindowRect : observeElementRect,
+      observeElementOffset: isWindow ? observeWindowOffset : observeElementOffset,
+      scrollToFn: isWindow ? windowScroll : elementScroll,
+      initialOffset: isWindow ? () => (typeof document !== 'undefined' ? window.scrollY : 0) : 0,
       /** @param {any} instance */
       onChange: instance => {
         const range = instance.calculateRange();
-        if (range) {
+        if (
+          range &&
+          (this.lastRange?.startIndex !== range.startIndex ||
+            this.lastRange?.endIndex !== range.endIndex)
+        ) {
+          this.lastRange = { startIndex: range.startIndex, endIndex: range.endIndex };
           options.onRangeChange?.(range.startIndex, range.endIndex);
+          this.host.requestUpdate();
         }
       },
     };
-    this.controller = /** @type {any} */ (
-      options.scrollTarget === 'window'
-        ? new WindowVirtualizerController(host, controllerOptions)
-        : new VirtualizerController(host, {
-            ...controllerOptions,
-            getScrollElement: options.getScrollElement ?? (() => null),
-          })
-    );
+    this.virtualizer = new Virtualizer(controllerOptions);
+    this.host.addController(this);
+  }
+
+  hostConnected() {
+    this.cleanup = this.virtualizer._didMount();
+  }
+
+  hostUpdated() {
+    this.virtualizer._willUpdate();
+  }
+
+  hostDisconnected() {
+    this.cleanup?.();
+  }
+
+  getVirtualizer() {
+    return this.virtualizer;
   }
 
   update() {
-    const virtualizer = this.controller.getVirtualizer();
+    const virtualizer = this.getVirtualizer();
     virtualizer.setOptions({
       ...virtualizer.options,
       count: this.options.getItems().length,
@@ -70,14 +103,14 @@ export class VerticalListController {
       return;
     }
     this.options.overscan = overscan;
-    const virtualizer = this.controller.getVirtualizer();
+    const virtualizer = this.getVirtualizer();
     virtualizer.setOptions({ ...virtualizer.options, overscan });
     virtualizer.measure();
   }
 
   /** Recalculate item sizes after a host-driven layout change. */
   remeasure() {
-    this.controller.getVirtualizer().measure();
+    this.getVirtualizer().measure();
   }
 
   /** @param {number} scrollMargin */
@@ -95,28 +128,27 @@ export class VerticalListController {
 
   /** Stop observing a list that is no longer rendered by its host. */
   dispose() {
-    this.controller.hostDisconnected();
-    this.host.removeController(this.controller);
+    this.host.removeController(this);
   }
 
   /** @returns {Array<{index: number, start: number}>} */
   get items() {
     return /** @type {Array<{index: number, start: number}>} */ (
-      this.controller.getVirtualizer().getVirtualItems()
+      this.getVirtualizer().getVirtualItems()
     );
   }
 
   get totalSize() {
-    return this.controller.getVirtualizer().getTotalSize();
+    return this.getVirtualizer().getTotalSize();
   }
 
   /** @param {Element | null} element */
   measureElement(element) {
-    this.controller.getVirtualizer().measureElement(element);
+    this.getVirtualizer().measureElement(element);
   }
 
   /** @param {number} index */
   scrollToIndex(index) {
-    this.controller.getVirtualizer().scrollToIndex(index, { align: 'auto' });
+    this.getVirtualizer().scrollToIndex(index, { align: 'auto' });
   }
 }
