@@ -50,6 +50,12 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
   }
 
   #smallListThreshold = 50;
+  #normalOverscan = 5;
+  #dragOverscan = 50;
+  /** @type {string | undefined} */
+  #draggedListKey;
+  /** @type {string | number | undefined} */
+  #draggedItemKey;
   /** @type {Map<string, {items: T[], list: VerticalListController, element?: Element}>} */
   #columnLists = new Map();
   /** @type {Element | undefined} */
@@ -151,6 +157,7 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
       <div
         class="column ${liftable ? 'liftable' : ''}"
         .name=${column.value}
+        .listKey=${listKey}
         .onLiftCallback=${column.onLift}
         .onDropCallback=${column.onDrop}
         @dragover=${this.#onDragMove}
@@ -212,7 +219,8 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
         getItems: listItems,
         getItemKey: index => this.keyFunction(listItems()[index]),
         estimateSize: 120,
-        overscan: 5,
+        overscan: this.#draggedListKey ? this.#dragOverscan : this.#normalOverscan,
+        rangeExtractor: range => this.#getDragRange(key, range),
       });
       entry = { items, list };
       this.#columnLists.set(key, entry);
@@ -221,6 +229,36 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
     }
     entry.list.update();
     return entry.list;
+  }
+
+  /**
+   * Retain the lifted card even when its column is scrolled far enough for the
+   * normal range to exclude it. The expanded overscan keeps nearby targets
+   * available without making the normal, non-dragging DOM unbounded.
+   * @param {{startIndex: number, endIndex: number, overscan: number, count: number}} range
+   */
+  #getDragRange(key, range) {
+    const start = Math.max(range.startIndex - range.overscan, 0);
+    const end = Math.min(range.endIndex + range.overscan, range.count - 1);
+    const indexes = Array.from({ length: end - start + 1 }, (_, index) => start + index);
+    if (key !== this.#draggedListKey || this.#draggedItemKey === undefined) {
+      return indexes;
+    }
+    const sourceIndex = this.#columnLists
+      .get(key)
+      ?.items.findIndex(item => this.keyFunction(item) === this.#draggedItemKey);
+    if (sourceIndex !== undefined && sourceIndex >= 0 && !indexes.includes(sourceIndex)) {
+      indexes.push(sourceIndex);
+      indexes.sort((a, b) => a - b);
+    }
+    return indexes;
+  }
+
+  #setDragOverscan(active) {
+    for (const { list } of this.#columnLists.values()) {
+      list.setOverscan(active ? this.#dragOverscan : this.#normalOverscan);
+    }
+    this.requestUpdate();
   }
 
   /** @param {string} key @param {Element | null} element */
@@ -556,6 +594,11 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
   #onDragStart(ev) {
     this.dragged = /**@type {HTMLElement}*/ (ev.target);
     this.draggedFrom = ev.currentTarget;
+    const source = /** @type {HTMLElement & {listKey: string}} */ (this.draggedFrom);
+    this.#draggedListKey = source.listKey;
+    // @ts-ignore
+    this.#draggedItemKey = this.keyFunction(this.dragged.data);
+    this.#setDragOverscan(true);
     // @ts-ignore
     this.#showNonDropColsDisabled(this.dragged.data);
     // @ts-ignore
@@ -568,7 +611,14 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
    */
   #onDragEnd(ev) {
     ev.preventDefault();
+    this.#finishDrag();
+  }
+
+  #finishDrag() {
     this.#hideNonDropColsDisabled();
+    this.#draggedListKey = undefined;
+    this.#draggedItemKey = undefined;
+    this.#setDragOverscan(false);
   }
 
   /**
@@ -628,8 +678,11 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
   async #onDrop(ev) {
     ev.preventDefault();
     this.#removeHoverShadow();
-    this.#hideNonDropColsDisabled();
     const typedTarget = /**@type {HTMLElement}*/ (ev.currentTarget);
+    if (typedTarget.classList.contains('column') && !this.canDrop(this.dragged?.data, typedTarget.name)) {
+      this.#finishDrag();
+      return;
+    }
     if (typedTarget !== this.draggedFrom || typedTarget.classList.contains('dropzone')) {
       // @ts-ignore
       await this.draggedFrom?.onLiftCallback?.(this.dragged.data, this.draggedFrom.name);
@@ -642,5 +695,6 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
       );
       this.requestUpdate();
     }
+    this.#finishDrag();
   }
 }

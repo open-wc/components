@@ -18,6 +18,7 @@ export class VerticalListController {
    *   getItemKey: (index: number) => string | number,
    *   estimateSize?: number,
    *   overscan?: number,
+   *   rangeExtractor?: (range: {startIndex: number, endIndex: number, overscan: number, count: number}) => number[],
    *   scrollMargin?: number,
    *   onRangeChange?: (startIndex: number, endIndex: number) => void,
    * }} options
@@ -30,6 +31,7 @@ export class VerticalListController {
       getItemKey: options.getItemKey,
       estimateSize: () => options.estimateSize ?? 36,
       overscan: options.overscan ?? 5,
+      rangeExtractor: options.rangeExtractor,
       scrollMargin: options.scrollMargin ?? 0,
       /** @param {any} instance */
       onChange: instance => {
@@ -55,8 +57,20 @@ export class VerticalListController {
       ...virtualizer.options,
       count: this.options.getItems().length,
       getItemKey: this.options.getItemKey,
+      rangeExtractor: this.options.rangeExtractor,
       scrollMargin: this.options.scrollMargin ?? 0,
     });
+    virtualizer.measure();
+  }
+
+  /** @param {number} overscan */
+  setOverscan(overscan) {
+    if (this.options.overscan === overscan) {
+      return;
+    }
+    this.options.overscan = overscan;
+    const virtualizer = this.controller.getVirtualizer();
+    virtualizer.setOptions({ ...virtualizer.options, overscan });
     virtualizer.measure();
   }
 

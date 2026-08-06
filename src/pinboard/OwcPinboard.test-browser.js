@@ -133,6 +133,44 @@ describe('owc-pinboard', () => {
     expect(doneCol.classList.contains('cannot-drop')).to.equal(false);
   });
 
+  it('keeps a dragged virtual source mounted while scrolling and supports configured drop zones', async () => {
+    const dropped = [];
+    const scrollTarget = document.createElement('div');
+    scrollTarget.style.cssText = 'height: 300px; overflow: auto';
+    const el = await pinboardFixture({
+      data: [manyCards('todo', 100), manyCards('done', 100)],
+      dropZones: {
+        success: { onDrop: (data, column) => dropped.push([data.id, column]) },
+        delete: { onDrop: (data, column) => dropped.push([data.id, column]) },
+      },
+    });
+    scrollTarget.append(el);
+    document.body.append(scrollTarget);
+    el.scrollTarget = scrollTarget;
+    await el.updateComplete;
+    await waitUntil(
+      () => columnEls(el)[0]?.querySelector('.virtual-item[data-index="0"] owc-card'),
+      'first virtual card never rendered',
+    );
+
+    const todo = columnEls(el)[0];
+    const card = todo.querySelector('.virtual-item[data-index="0"] owc-card');
+    card.dispatchEvent(new DragEvent('dragstart', { dataTransfer: new DataTransfer(), bubbles: true }));
+    scrollTarget.scrollTop = 5000;
+    scrollTarget.dispatchEvent(new Event('scroll'));
+    await waitUntil(
+      () => Number(todo.querySelector('.virtual-item')?.dataset.index) > 0,
+      'scrolling did not move the virtual range',
+    );
+    expect(todo.querySelector('.virtual-item[data-index="0"] owc-card')).to.exist;
+
+    const success = el.shadowRoot.querySelector('.dropzone.success');
+    success.dispatchEvent(new DragEvent('drop', { dataTransfer: new DataTransfer(), bubbles: true }));
+    await aTimeout(0);
+    expect(dropped).to.deep.equal([['todo-0', 'success']]);
+    scrollTarget.remove();
+  });
+
   it('uses bounded virtual DOM only for large columns', async () => {
     const el = await pinboardFixture({ data: [manyCards('todo'), [{ id: 'small', title: 'Small' }]] });
     await waitUntil(
