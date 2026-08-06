@@ -26,6 +26,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- `OwcTable`: virtualized rows are remeasured after rendered column-width changes, keeping
+  wrapped cells, annotations, and details aligned without resetting virtualization.
 - `OwcCountUp`: property changes after the first render now take effect - the merged
   countup.js options used to be written back into the `options` property, so the stale
   first merge shadowed every later `start`/`duration`/`separator` change.

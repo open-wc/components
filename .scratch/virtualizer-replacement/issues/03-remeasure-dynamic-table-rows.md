@@ -1,6 +1,16 @@
 # Remeasure dynamic table rows without lifecycle resets
 
-Status: ready-for-agent
+Status: completed
+
+Completion: Flat virtual rows continue to use their complete virtual-item wrapper as the
+measurement boundary, including annotations and details. The table schedules supported controller
+remeasurement only after the column-width render has reached the next frame; TanStack's element
+observation covers later content-driven height changes. No virtualizer lifecycle internals are
+called. Browser coverage exercises annotations, actual detail expansion/collapse, asynchronous
+detail resizing, row interaction, and repeated column resizing.
+
+Validation: focused ESLint and Prettier checks pass. The focused browser suite is blocked in this
+environment because Chromium cannot launch without the system library `libasound.so.2`.
 
 ## What to build
 

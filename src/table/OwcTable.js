@@ -2,7 +2,6 @@ import { LitElement, css, html, nothing } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { ref } from 'lit/directives/ref.js';
 import { until } from 'lit/directives/until.js';
-import { virtualize } from '@lit-labs/virtualizer/virtualize.js';
 
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { OwcTableHeaderCell } from './OwcTableHeaderCell.js';
@@ -327,6 +326,11 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   #flatList;
   /** @type {Element | undefined} */
   #flatListScrollTarget;
+  #flatListRemeasurePending = false;
+  /** @type {Map<string, {items: T[], list: VerticalListController, element?: Element}>} */
+  #groupLists = new Map();
+  /** @type {Element | undefined} */
+  #groupListsScrollTarget;
 
   get visibleColumns() {
     return [...this.#visibleColumns];
@@ -409,6 +413,15 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       changedProperties.has('scrollTarget')
     ) {
       this.#updateFlatList();
+    }
+
+    if (
+      changedProperties.has('columns') ||
+      changedProperties.has('openDetails') ||
+      changedProperties.has('renderAnnotation') ||
+      changedProperties.has('renderDetail')
+    ) {
+      this.#scheduleFlatListRemeasure();
     }
   }
 
@@ -1028,21 +1041,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     this.#applySorters();
   }
 
-  /**
-   * @param {{items: T[], renderItem: (item: T, index: number) => import('lit').TemplateResult}} options
-   * @returns
-   */
-  #renderList({ items, renderItem }) {
-    if (this.#shouldUseVirtualizer(items)) {
-      return html`${virtualize({ items, renderItem })}`;
-    }
-
-    return html`${items.map((item, index) => {
-      const result = renderItem(item, index);
-      return result;
-    })}`;
-  }
-
   /** @param {T[]} items */
   #shouldUseVirtualizer(items) {
     return (
@@ -1077,6 +1075,26 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     this.#flatList?.update();
   }
 
+  /**
+   * Rows are measured as their complete virtual-item wrapper, which includes
+   * annotations and details. Content changes inside that wrapper are observed
+   * by the virtualizer; this pass covers table-driven layout changes.
+   */
+  #scheduleFlatListRemeasure() {
+    if (this.#flatListRemeasurePending || !this.#shouldUseVirtualizer(this.allData)) {
+      return;
+    }
+    this.#flatListRemeasurePending = true;
+    this.updateComplete.then(() => {
+      // Column CSS variables are applied by Lit's render. Waiting for the next
+      // frame means TanStack reads the dimensions that were actually painted.
+      requestAnimationFrame(() => {
+        this.#flatListRemeasurePending = false;
+        this.#flatList?.remeasure();
+      });
+    });
+  }
+
   #renderFlatList() {
     if (!this.#shouldUseVirtualizer(this.allData)) {
       return this.allData.map((item, index) => this.#renderItem(item, index));
@@ -1099,6 +1117,89 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
             ${ref(element => this.#flatList?.measureElement(element ?? null))}
           >
             ${this.#renderItem(this.allData[item.index], item.index)}
+          </div>`,
+      )}
+    </div>`;
+  }
+
+  /** @param {Set<string>} activeKeys */
+  #disposeGroupListsExcept(activeKeys) {
+    for (const [key, { list }] of this.#groupLists) {
+      if (!activeKeys.has(key)) {
+        list.dispose();
+        this.#groupLists.delete(key);
+      }
+    }
+  }
+
+  /** @param {string} key @param {T[]} items */
+  #getGroupList(key, items) {
+    if (this.#groupListsScrollTarget !== this.scrollTarget) {
+      this.#disposeGroupListsExcept(new Set());
+      this.#groupListsScrollTarget = this.scrollTarget;
+    }
+
+    let entry = this.#groupLists.get(key);
+    if (!entry) {
+      const initialItems = items;
+      const groupItems = () => this.#groupLists.get(key)?.items ?? initialItems;
+      const list = new VerticalListController(this, {
+        scrollTarget: this.scrollTarget ? 'element' : 'window',
+        getScrollElement: () => this.scrollTarget ?? null,
+        getItems: groupItems,
+        getItemKey: index => this.#rowKey(groupItems()[index]),
+        estimateSize: 45,
+        overscan: 5,
+      });
+      entry = { items, list };
+      this.#groupLists.set(key, entry);
+    } else {
+      entry.items = items;
+    }
+    entry.list.update();
+    return entry.list;
+  }
+
+  /** @param {string} key @param {Element | null} element */
+  #setGroupListElement(key, element) {
+    const entry = this.#groupLists.get(key);
+    if (!entry || !element) {
+      return;
+    }
+    entry.element = element;
+    const scrollOffset = this.scrollTarget
+      ? /** @type {HTMLElement} */ (this.scrollTarget).scrollTop
+      : window.scrollY;
+    const scrollTop = this.scrollTarget ? this.scrollTarget.getBoundingClientRect().top : 0;
+    entry.list.setScrollMargin(scrollOffset + element.getBoundingClientRect().top - scrollTop);
+  }
+
+  /**
+   * @param {string} key
+   * @param {T[]} items
+   * @param {(item: T, index: number) => import('lit').TemplateResult} renderItem
+   */
+  #renderGroupList(key, items, renderItem) {
+    if (!this.#shouldUseVirtualizer(items)) {
+      return items.map(renderItem);
+    }
+
+    const list = this.#getGroupList(key, items);
+    return html`<div
+      class="group-virtual-list virtual-list"
+      style=${`height: ${list.totalSize}px`}
+      ${ref(element => this.#setGroupListElement(key, element ?? null))}
+    >
+      ${list.items.map(
+        item =>
+          html`<div
+            class="virtual-item"
+            data-index=${item.index}
+            data-group-key=${key}
+            style=${`transform: translateY(${item.start - list.scrollMargin}px)`}
+            ${ref(element => list.measureElement(element ?? null))}
+          >
+            ${renderItem(items[item.index], item.index)}
           </div>`,
       )}
     </div>`;
@@ -1139,16 +1240,21 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     const groupKeyRecord = new Set(this.groupList.map(elm => elm.key));
     /**@type {Record<string, T[]>} */
     const groupRecord = { others: [] };
-    for (const item of this.allData) {
+    /** @type {Record<string, number[]>} */
+    const groupIndexes = { others: [] };
+    for (const [index, item] of this.allData.entries()) {
       const groupName = this.groupSelector(item);
       if (!groupKeyRecord.has(groupName)) {
         groupRecord['others'].push(item);
+        groupIndexes['others'].push(index);
         continue;
       }
       if (!groupRecord[groupName]) {
         groupRecord[groupName] = [item];
+        groupIndexes[groupName] = [index];
       } else {
         groupRecord[groupName].push(item);
+        groupIndexes[groupName].push(index);
       }
     }
 
@@ -1163,11 +1269,20 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       });
     }
 
+    this.#disposeGroupListsExcept(
+      new Set(
+        groupListSorted
+          .filter(group => group.active && this.#shouldUseVirtualizer(groupRecord[group.key] || []))
+          .map(group => group.key),
+      ),
+    );
+
     // TODO: This does not work due to the hacky nature of row styling
     return html`
       ${groupListSorted.map(
         (group, groupIndex) => html`
           <div
+            data-group-key=${group.key}
             style=${styleMap({ backgroundColor: group.backgroundColor })}
             class="group-label-container ${group.active ? 'active' : ''} data-container  ${
               !group.active && groupIndex === groupListSorted.length - 1 ? 'last-row' : ''
@@ -1193,14 +1308,12 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
           ${
             group.active
               ? html`<div class="group-rows-container data-container">
-                  ${this.#renderList({
-                    items: groupRecord[group.key] || [],
-                    renderItem: (item, index) =>
-                      this.#renderItem(item, index, {
-                        setLast: groupIndex === groupListSorted.length - 1,
-                        lastIndex: (groupRecord[group.key] || []).length - 1,
-                      }),
-                  })}
+                  ${this.#renderGroupList(group.key, groupRecord[group.key] || [], (item, index) =>
+                    this.#renderItem(item, groupIndexes[group.key][index], {
+                      setLast: groupIndex === groupListSorted.length - 1,
+                      lastIndex: groupIndexes[group.key][(groupRecord[group.key] || []).length - 1],
+                    }),
+                  )}
                 </div>`
               : html`<div class="group-rows-container"></div>`
           }
@@ -1608,20 +1721,14 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         if (column.width) {
           const { clientX } = event;
           const newWidth = Math.max(this.#MIN_COLUMN_WIDTH, width + (clientX - clientXStart));
-          column.width = newWidth;
-          this.#columnWidths[column.field] = newWidth;
-          this.#updateColumnCssVariables();
-          this.requestUpdate();
+          this.#setColumnWidth(column, newWidth);
         } else if (target.parentElement) {
           const realWidth = Math.max(
             this.#MIN_COLUMN_WIDTH,
             target.parentElement.getBoundingClientRect().width,
           );
-          column.width = realWidth;
-          this.#columnWidths[column.field] = realWidth;
+          this.#setColumnWidth(column, realWidth);
           width = realWidth;
-          this.#updateColumnCssVariables();
-          this.requestUpdate();
         }
       };
 
@@ -1644,6 +1751,15 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       this.addEventListener('mousemove', onResizeMouseMoveAndTrack);
       this.addEventListener('mouseup', onResizeMouseUp);
     }
+  }
+
+  /** @param {import('./OwcTable.types.js').Column<T>} column @param {number} width */
+  #setColumnWidth(column, width) {
+    column.width = width;
+    this.#columnWidths[column.field] = width;
+    this.#updateColumnCssVariables();
+    this.requestUpdate();
+    this.#scheduleFlatListRemeasure();
   }
 
   async recalculateColumnWidths() {
@@ -1697,7 +1813,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
     if (changed) {
       this.requestUpdate();
+      await this.updateComplete;
     }
+    this.#scheduleFlatListRemeasure();
   }
 
   /**

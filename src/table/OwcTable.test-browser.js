@@ -266,4 +266,169 @@ describe('owc-table', () => {
     expect(el.shadowRoot.querySelectorAll('.virtual-item').length).to.be.lessThan(301);
     expect(el.shadowRoot.querySelector('#data-table').textContent).to.include('Person 0');
   });
+
+  it('keeps annotation and detail interactions stable as virtual row content changes', async () => {
+    const detailHeight = 40;
+    const el = await tableFixture(
+      html`<owc-table
+        virtualizer-mode="always"
+        render-mode="detailDeferred"
+        .columns=${columns}
+        .data=${rows(301)}
+        .renderAnnotation=${row =>
+          row.id === '0' ? html`<div style="height: 60px">Annotation</div>` : html``}
+        .renderDetail=${row =>
+          row.id === '0'
+            ? html`<div class="async-detail" style=${`height: ${detailHeight}px`}>Detail</div>`
+            : html``}
+      ></owc-table>`,
+    );
+    await settleVirtualizer(el);
+
+    const firstRow = dataRows(el)[0];
+    expect(firstRow.parentElement.querySelector('.row-annotation')).to.exist;
+    firstRow.querySelector('.row-click').click();
+    await settleVirtualizer(el);
+
+    const detail = dataRows(el)[0].parentElement.querySelector('.async-detail');
+    expect(detail.textContent).to.equal('Detail');
+
+    detail.style.height = '180px';
+    await aTimeout(150);
+    expect(dataRows(el)[1].textContent).to.include('Person 1');
+
+    dataRows(el)[0].querySelector('.row-click').click();
+    await settleVirtualizer(el);
+    expect(el.openDetails).to.deep.equal([]);
+  });
+
+  it('keeps virtual ranges private to active grouped lists', async () => {
+    const groupedRows = Array.from({ length: 602 }, (_, index) => ({
+      id: String(index),
+      firstName: `Person ${index}`,
+      age: index,
+      group: index < 301 ? 'first' : 'second',
+    }));
+    const groupList = [
+      { key: 'first', label: 'First', active: true },
+      { key: 'second', label: 'Second', active: true },
+    ];
+    const host = await fixture(html`<table-shadow-host></table-shadow-host>`);
+    const el = host.table;
+    el.virtualizerMode = 'always';
+    el.scrollTarget = host.scrollTarget;
+    el.selectable = true;
+    el.columns = columns;
+    el.data = groupedRows;
+    el.groupList = groupList;
+    el.groupSelector = row => row.group;
+    await settleVirtualizer(el);
+
+    const firstList = el.shadowRoot.querySelector(
+      '[data-group-key="first"] + .group-rows-container .group-virtual-list',
+    );
+    const secondList = el.shadowRoot.querySelector(
+      '[data-group-key="second"] + .group-rows-container .group-virtual-list',
+    );
+    expect(firstList).to.exist;
+    expect(secondList).to.exist;
+    expect(firstList).to.not.equal(secondList);
+    expect(firstList.querySelectorAll('.virtual-item').length).to.be.lessThan(301);
+    expect(secondList.querySelectorAll('.virtual-item').length).to.be.lessThan(301);
+
+    host.scrollTarget.scrollTop +=
+      secondList.getBoundingClientRect().top - host.scrollTarget.getBoundingClientRect().top;
+    host.scrollTarget.dispatchEvent(new Event('scroll'));
+    await settleVirtualizer(el);
+    const secondRenderedIndexes = [...secondList.querySelectorAll('.virtual-item')].map(item =>
+      Number(item.dataset.index),
+    );
+    expect(secondRenderedIndexes).to.include(0);
+
+    el.shadowRoot.querySelector('[data-group-key="first"] .row-click').click();
+    await settleVirtualizer(el);
+    expect(
+      el.shadowRoot.querySelector(
+        '[data-group-key="first"] + .group-rows-container .group-virtual-list',
+      ),
+    ).to.not.exist;
+    expect(
+      el.shadowRoot.querySelector(
+        '[data-group-key="second"] + .group-rows-container .group-virtual-list',
+      ),
+    ).to.exist;
+
+    el.shadowRoot.querySelector('[data-group-key="first"] .row-click').click();
+    await settleVirtualizer(el);
+    expect(
+      el.shadowRoot.querySelector(
+        '[data-group-key="first"] + .group-rows-container .group-virtual-list',
+      ),
+    ).to.exist;
+
+    el.jsonSorters = [{ field: 'age', order: 'desc' }];
+    await settleVirtualizer(el);
+    expect(el.allData[0].age).to.equal(601);
+
+    host.scrollTarget.scrollTop = 0;
+    host.scrollTarget.dispatchEvent(new Event('scroll'));
+    await settleVirtualizer(el);
+
+    const firstGroupCheckbox = el.shadowRoot.querySelector(
+      '[data-group-key="first"] + .group-rows-container .owc-selectable-checkbox',
+    );
+    firstGroupCheckbox.click();
+    await settleVirtualizer(el);
+    const rowClick = oneEvent(el, 'rowClick');
+    el.shadowRoot
+      .querySelector(
+        '[data-group-key="first"] + .group-rows-container .row .cell:not(.cell-selector)',
+      )
+      .click();
+    expect((await rowClick).row.id).to.equal('300');
+    expect(el.selectedData.map(row => row.id)).to.deep.equal(['300']);
+
+    el.jsonFilters = [{ field: 'firstName', operator: 'includes', value: 'Person 2' }];
+    await settleVirtualizer(el);
+    expect(el.allData).to.have.length(111);
+    el.data = groupedRows.map(row => ({ ...row, firstName: `Replacement ${row.id}` }));
+    el.jsonFilters = [];
+    await settleVirtualizer(el);
+    expect(el.shadowRoot.querySelector('#data-table').textContent).to.include('Replacement 601');
+
+    const parent = el.parentElement;
+    el.remove();
+    parent.append(el);
+    await settleVirtualizer(el);
+    expect(el.shadowRoot.querySelectorAll('.group-virtual-list')).to.have.length(2);
+    host.remove();
+  });
+
+  it('remeasures wrapped virtual rows after repeated column resizing without resetting the table', async () => {
+    const longRows = rows(301).map(row => ({
+      ...row,
+      firstName: `A deliberately long name that wraps after the column becomes narrow ${row.id}`,
+    }));
+    const el = await tableFixture(
+      html`<owc-table virtualizer-mode="always" .columns=${columns} .data=${longRows}></owc-table>`,
+    );
+    await settleVirtualizer(el);
+
+    const resizeHandle = el.shadowRoot.querySelector('.cell-resize[data-visible-column-index="0"]');
+    resizeHandle.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: 300 }));
+    el.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 80 }));
+    el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, clientX: 80 }));
+    await settleVirtualizer(el);
+
+    expect(columns[0].width).to.equal(50);
+    resizeHandle.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: 80 }));
+    el.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 160 }));
+    el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, clientX: 160 }));
+    await settleVirtualizer(el);
+
+    expect(columns[0].width).to.equal(130);
+    expect(el.shadowRoot.querySelector('#data-table').textContent).to.include(
+      'deliberately long name',
+    );
+  });
 });
