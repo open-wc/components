@@ -29,6 +29,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- `OwcAutocomplete`, `OwcTable`, and `OwcPinboard`: virtualization now uses the package's
+  maintained private integration instead of the retired Lit Labs dependency. The replacement
+  removes its installation patch and ResizeObserver-error suppression while preserving the
+  documented component APIs and unbundled ESM package format.
 - `OwcTable`: virtualized rows are remeasured after rendered column-width changes, keeping
   wrapped cells, annotations, and details aligned without resetting virtualization.
 - `OwcCountUp`: property changes after the first render now take effect - the merged

@@ -30,6 +30,18 @@ html`<owc-pinboard
 See [OwcPinboard.rocket.md](./OwcPinboard.rocket.md) for live demos and the
 API reference; published on the docs site under `/pinboard/`.
 
+## Virtualized card lists
+
+Small card lists render normally. Larger columns and populated drop-zone lists
+use bounded virtualized rendering; the threshold is private implementation
+policy, not a consumer setting. Window scrolling is the default. Set the
+additive `scrollTarget` property to the exact application-shell element that
+owns vertical scrolling; the pinboard does not infer a scrolling ancestor.
+
+Card heights are measured after rendering so variable card content can reflow
+without overlapping following cards. Virtualization is an implementation detail
+and does not change the `keyFunction`, sorting, or drag-and-drop contracts.
+
 ## Files
 
 - [OwcPinboard.js](./OwcPinboard.js) - the component

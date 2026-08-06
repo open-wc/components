@@ -42,6 +42,19 @@ public exports (`table/*`, `filter/*`).
 - [/table-filter-builder/](./OwcTableFilterBuilder.rocket.md) - JSON filter builder
 - [/table-mass-edit/](./OwcTableMassEdit.rocket.md) - bulk editing
 
+## Virtualized rows
+
+`virtualizerMode` retains its established `always`, `auto`, and `never` modes.
+In `auto` mode, tables begin virtualizing at 300 rows; smaller lists render
+normally. Virtualized tables use window scrolling by default. Set the additive
+`scrollTarget` property to the exact application-shell element that owns
+vertical scrolling. The table does not infer a scrolling ancestor.
+
+Rows are measured after rendering and remeasured when column widths change, so
+wrapped cells, annotations, details, and grouped lists retain correct heights.
+This is an implementation detail: consumers should use the documented table
+properties rather than relying on virtualized row markup.
+
 ## Tests
 
 Browser tests (`npx web-test-runner src/table/`) cover every component:

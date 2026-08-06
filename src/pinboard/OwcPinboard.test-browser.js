@@ -3,15 +3,6 @@ import { OwcPinboard } from './OwcPinboard.js';
 
 customElements.define('owc-pinboard', OwcPinboard);
 
-// The virtualizer's ResizeObserver occasionally reports this benign browser
-// limitation; without suppression the runner counts it as an uncaught error.
-window.addEventListener('error', ev => {
-  if (ev.message?.includes('ResizeObserver loop completed')) {
-    ev.stopImmediatePropagation();
-    ev.preventDefault();
-  }
-});
-
 const columns = [
   { label: 'Todo', value: 'todo' },
   { label: 'Done', value: 'done' },
@@ -47,7 +38,10 @@ function columnEls(el) {
 }
 
 const manyCards = (prefix, count = 60) =>
-  Array.from({ length: count }, (_, index) => ({ id: `${prefix}-${index}`, title: `${prefix} ${index}` }));
+  Array.from({ length: count }, (_, index) => ({
+    id: `${prefix}-${index}`,
+    title: `${prefix} ${index}`,
+  }));
 
 describe('owc-pinboard', () => {
   it('renders a column per config with its cards', async () => {
@@ -155,7 +149,9 @@ describe('owc-pinboard', () => {
 
     const todo = columnEls(el)[0];
     const card = todo.querySelector('.virtual-item[data-index="0"] owc-card');
-    card.dispatchEvent(new DragEvent('dragstart', { dataTransfer: new DataTransfer(), bubbles: true }));
+    card.dispatchEvent(
+      new DragEvent('dragstart', { dataTransfer: new DataTransfer(), bubbles: true }),
+    );
     scrollTarget.scrollTop = 5000;
     scrollTarget.dispatchEvent(new Event('scroll'));
     await waitUntil(
@@ -165,14 +161,18 @@ describe('owc-pinboard', () => {
     expect(todo.querySelector('.virtual-item[data-index="0"] owc-card')).to.exist;
 
     const success = el.shadowRoot.querySelector('.dropzone.success');
-    success.dispatchEvent(new DragEvent('drop', { dataTransfer: new DataTransfer(), bubbles: true }));
+    success.dispatchEvent(
+      new DragEvent('drop', { dataTransfer: new DataTransfer(), bubbles: true }),
+    );
     await aTimeout(0);
     expect(dropped).to.deep.equal([['todo-0', 'success']]);
     scrollTarget.remove();
   });
 
   it('uses bounded virtual DOM only for large columns', async () => {
-    const el = await pinboardFixture({ data: [manyCards('todo'), [{ id: 'small', title: 'Small' }]] });
+    const el = await pinboardFixture({
+      data: [manyCards('todo'), [{ id: 'small', title: 'Small' }]],
+    });
     await waitUntil(
       () => columnEls(el)[0]?.querySelector('.virtual-list'),
       'large column never virtualized',
@@ -218,7 +218,9 @@ describe('owc-pinboard', () => {
     await el.updateComplete;
     await aTimeout(0);
     const items = [...columnEls(el)[0].querySelectorAll('.virtual-item')];
-    expect(items.map(item => item.style.transform)).to.have.lengthOf(new Set(items.map(item => item.style.transform)).size);
+    expect(items.map(item => item.style.transform)).to.have.lengthOf(
+      new Set(items.map(item => item.style.transform)).size,
+    );
     expect(columnEls(el)[0].querySelector('owc-card').data.id).to.equal('card-0');
   });
 
@@ -244,7 +246,10 @@ describe('owc-pinboard', () => {
     document.body.append(scrollTarget);
     el.scrollTarget = scrollTarget;
     await el.updateComplete;
-    await waitUntil(() => columnEls(el)[0]?.querySelector('.virtual-list'), 'items never virtualized');
+    await waitUntil(
+      () => columnEls(el)[0]?.querySelector('.virtual-list'),
+      'items never virtualized',
+    );
     expect(el.scrollTarget).to.equal(scrollTarget);
     scrollTarget.remove();
   });
@@ -261,7 +266,10 @@ describe('owc-pinboard', () => {
     scrollTarget.append(el);
     document.body.append(scrollTarget);
     await el.updateComplete;
-    await waitUntil(() => columnEls(el)[0]?.querySelector('.virtual-item'), 'items never virtualized');
+    await waitUntil(
+      () => columnEls(el)[0]?.querySelector('.virtual-item'),
+      'items never virtualized',
+    );
     el.remove();
     scrollTarget.append(el);
     await el.updateComplete;

@@ -1,6 +1,6 @@
 # Retire Lit Labs virtualization and complete release readiness
 
-Status: ready-for-agent
+Status: implemented-awaiting-review
 
 ## What to build
 
