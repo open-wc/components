@@ -836,36 +836,32 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   #updateColumnCssVariables() {
     let tableWidth = 0;
+    const gridTracks = [];
 
     for (const column of this.#visibleColumns) {
       const width = column.width ?? column._calculatedWidth;
 
       if (width != null) {
         tableWidth += width;
+        gridTracks.push(`${width}px`);
+      } else {
+        gridTracks.push(`minmax(${this.#MIN_COLUMN_WIDTH}px, 1fr)`);
       }
     }
 
     this.#saveStateToUrl();
 
-    this.style.setProperty('--owc-table-width', `${tableWidth}px`);
+    this.style.setProperty(
+      '--owc-table-width',
+      tableWidth > 0 ? `max(100%, ${tableWidth}px)` : '100%',
+    );
+    this.style.setProperty('--owc-table-columns', gridTracks.join(' '));
 
     this.requestUpdate();
   }
 
   renderSizeTableColumnStyles() {
-    return html`
-      ${this.#visibleColumns.map((column, index) => {
-        const width = column.width ?? column._calculatedWidth;
-
-        return width != null
-          ? html`
-              .table-header > .header-cell:nth-child(${index + 2}), .row >
-              .cell:nth-child(${index + 2}) { width: ${width}px; min-width: ${width}px; max-width:
-              ${width}px; flex: 0 0 ${width}px; box-sizing: border-box; }
-            `
-          : nothing;
-      })}
-    `;
+    return nothing;
   }
 
   #addGlobalSearchJsonFilter() {
@@ -2038,8 +2034,13 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
 
       .row {
-        display: flex;
+        display: grid;
+        grid-template-columns: var(--owc-table-columns, minmax(50px, 1fr));
         position: relative;
+      }
+
+      #data-table {
+        width: var(--owc-table-width);
       }
 
       #virtualize-container {
@@ -2247,7 +2248,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
 
       .table-header {
-        display: flex;
+        display: block;
       }
 
       .align-start {

@@ -70,6 +70,18 @@ describe('owc-table', () => {
     expect(el.shadowRoot.querySelector('#data-table').textContent).to.include('Robert');
   });
 
+  it('uses the same grid tracks for headers and data rows', async () => {
+    const el = await tableFixture(html`<owc-table .columns=${columns} .data=${data}></owc-table>`);
+    const header = el.shadowRoot.querySelector('.table-header .row');
+    const row = dataRows(el)[0];
+
+    expect(getComputedStyle(header).display).to.equal('grid');
+    expect(getComputedStyle(row).display).to.equal('grid');
+    expect(getComputedStyle(header).gridTemplateColumns).to.equal(
+      getComputedStyle(row).gridTemplateColumns,
+    );
+  });
+
   it('shows the empty message when there is no data', async () => {
     const el = await tableFixture(html`<owc-table .columns=${columns} .data=${[]}></owc-table>`);
     const emptyMessage = el.shadowRoot.querySelector('#data-table #empty-message-wrapper');
