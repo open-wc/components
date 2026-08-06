@@ -446,13 +446,13 @@ export const dropValidationPinboard = () => {
 
 ### Attributes & properties
 
-| Property      | Type                                    | Default      | Description                                                                              |
-| ------------- | --------------------------------------- | ------------ | ---------------------------------------------------------------------------------------- |
-| `columns`     | `{ label?, value, onDrop?, onLift? }[]` | `[]`         | The board columns; `onDrop`/`onLift` fire when a card is dropped into / dragged out.     |
-| `data`        | `T[][]`                                 | `[]`         | Card data per column, index-aligned with `columns`.                                      |
-| `fieldMapper` | `Fields<T>`                             | `{ body }`   | Maps a card to content: `body`, `header?`, `footer?`, `image?` (`{src, alt}`), `style?`. |
-| `dropZones`   | `{ delete?, success? }`                 | `{}`         | Extra drop targets (`onDrop`, optional collapsible `data` list, `onLift`, `liftable`).   |
-| `canDrop`     | `(data, column) => boolean`             | `() => true` | Columns that reject the dragged card are grayed out and refuse the drop.                 |
-| `sorter`      | `(a, b) => number`                      | keep order   | Sort within each column (applied to a copy).                                             |
-| `keyFunction` | `(data) => string`                      | `() => ''`   | Stable card key for the virtualizer.                                                     |
-| `scrollTarget` | `Element` | `undefined` | Exact element that owns vertical scrolling for virtualized card lists. Defaults to window scrolling; no ancestor is discovered automatically. |
+| Property       | Type                                    | Default      | Description                                                                                                                                   |
+| -------------- | --------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `columns`      | `{ label?, value, onDrop?, onLift? }[]` | `[]`         | The board columns; `onDrop`/`onLift` fire when a card is dropped into / dragged out.                                                          |
+| `data`         | `T[][]`                                 | `[]`         | Card data per column, index-aligned with `columns`.                                                                                           |
+| `fieldMapper`  | `Fields<T>`                             | `{ body }`   | Maps a card to content: `body`, `header?`, `footer?`, `image?` (`{src, alt}`), `style?`.                                                      |
+| `dropZones`    | `{ delete?, success? }`                 | `{}`         | Extra drop targets (`onDrop`, optional collapsible `data` list, `onLift`, `liftable`).                                                        |
+| `canDrop`      | `(data, column) => boolean`             | `() => true` | Columns that reject the dragged card are grayed out and refuse the drop.                                                                      |
+| `sorter`       | `(a, b) => number`                      | keep order   | Sort within each column (applied to a copy).                                                                                                  |
+| `keyFunction`  | `(data) => string`                      | `() => ''`   | Stable card key for the virtualizer.                                                                                                          |
+| `scrollTarget` | `Element`                               | `undefined`  | Exact element that owns vertical scrolling for virtualized card lists. Defaults to window scrolling; no ancestor is discovered automatically. |

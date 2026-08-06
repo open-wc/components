@@ -284,8 +284,8 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
       small-padding
       style="${this.#renderStyles(item)}"
     >
-      ${this.#renderCardImage(item)} ${this.#renderCardHeader(item)}
-      ${this.#renderCardBody(item)} ${this.#renderCardFooter(item)}
+      ${this.#renderCardImage(item)} ${this.#renderCardHeader(item)} ${this.#renderCardBody(item)}
+      ${this.#renderCardFooter(item)}
     </owc-card>`;
   }
 
@@ -304,14 +304,15 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
       ${ref(element => this.#setListElement(key, element ?? null))}
     >
       ${list.items.map(
-        virtualItem => html`<div
-          class="virtual-item"
-          data-index=${virtualItem.index}
-          style=${`transform: translateY(${virtualItem.start - list.scrollMargin}px)`}
-          ${ref(element => list.measureElement(element ?? null))}
-        >
-          ${this.#renderCard(items[virtualItem.index], liftable)}
-        </div>`,
+        virtualItem =>
+          html`<div
+            class="virtual-item"
+            data-index=${virtualItem.index}
+            style=${`transform: translateY(${virtualItem.start - list.scrollMargin}px)`}
+            ${ref(element => list.measureElement(element ?? null))}
+          >
+            ${this.#renderCard(items[virtualItem.index], liftable)}
+          </div>`,
       )}
     </div>`;
   }
@@ -679,7 +680,10 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
     ev.preventDefault();
     this.#removeHoverShadow();
     const typedTarget = /**@type {HTMLElement}*/ (ev.currentTarget);
-    if (typedTarget.classList.contains('column') && !this.canDrop(this.dragged?.data, typedTarget.name)) {
+    if (
+      typedTarget.classList.contains('column') &&
+      !this.canDrop(this.dragged?.data, typedTarget.name)
+    ) {
       this.#finishDrag();
       return;
     }
