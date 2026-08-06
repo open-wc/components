@@ -455,3 +455,4 @@ export const dropValidationPinboard = () => {
 | `canDrop`     | `(data, column) => boolean`             | `() => true` | Columns that reject the dragged card are grayed out and refuse the drop.                 |
 | `sorter`      | `(a, b) => number`                      | keep order   | Sort within each column (applied to a copy).                                             |
 | `keyFunction` | `(data) => string`                      | `() => ''`   | Stable card key for the virtualizer.                                                     |
+| `scrollTarget` | `Element` | `undefined` | Exact element that owns vertical scrolling for virtualized card lists. Defaults to window scrolling; no ancestor is discovered automatically. |

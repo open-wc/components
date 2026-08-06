@@ -12,6 +12,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- `OwcPinboard`: large columns and populated drop-zone lists now use bounded virtualized
+  rendering. Window scrolling remains the default; consumers can set the additive `scrollTarget`
+  property to nominate an application-shell scrolling element explicitly.
 - `OwcTable`: large, ungrouped tables now retain bounded virtualized rendering. Window scrolling
   remains the default; consumers can set the additive `scrollTarget` property to nominate an
   application-shell scrolling element explicitly.

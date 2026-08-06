@@ -12,6 +12,7 @@ import '@open-wc/components/OwcCardList.types.js';
 import '@open-wc/components/OwcComposeEmail.types.js';
 import '@open-wc/components/OwcLayoutSidebar.types.js';
 import '@open-wc/components/OwcTable.types.js';
+import { OwcPinboardOptions } from '@open-wc/components/OwcPinboard.types.js';
 
 type Row = { name: string };
 
@@ -22,6 +23,10 @@ export const column: Column<Row> = {
 
 export const tableOptions: OwcTableOptions<Row> = {
   columns: [column],
+  scrollTarget: document.createElement('main'),
+};
+
+export const pinboardOptions: OwcPinboardOptions = {
   scrollTarget: document.createElement('main'),
 };
 

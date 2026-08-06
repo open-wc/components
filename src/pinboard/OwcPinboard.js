@@ -2,9 +2,10 @@ import { LitElement, css, html, nothing } from 'lit';
 import { OwcCard } from '../card/OwcCard.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { repeat } from 'lit/directives/repeat.js';
+import { ref } from 'lit/directives/ref.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 import '@awesome.me/webawesome/dist/components/details/details.js';
-import { virtualize } from '@lit-labs/virtualizer/virtualize.js';
+import { VerticalListController } from '../lit-helpers/VerticalListController.js';
 
 /**
  * @template {Record<string, any>} T
@@ -24,6 +25,7 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
     keyFunction: { type: Function },
     fieldMapper: { type: Object },
     canDrop: { type: Function },
+    scrollTarget: { attribute: false },
   };
 
   constructor() {
@@ -43,15 +45,32 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
     this.keyFunction = () => '';
     /**@type {(data: T, column: string) => boolean} */
     this.canDrop = () => true;
+    /** @type {Element | undefined} */
+    this.scrollTarget = undefined;
+  }
+
+  #smallListThreshold = 50;
+  /** @type {Map<string, {items: T[], list: VerticalListController, element?: Element}>} */
+  #columnLists = new Map();
+  /** @type {Element | undefined} */
+  #columnListsScrollTarget;
+
+  connectedCallback() {
+    super.connectedCallback();
+    // Keep the controllers registered while detached so Lit can run their
+    // supported hostDisconnected/hostConnected lifecycle. Requesting a render
+    // reattaches card measurement elements after the board is reconnected.
+    this.requestUpdate();
   }
 
   render() {
+    this.#disposeColumnListsExcept(this.#activeVirtualListKeys());
     return html` <div class="main-container">
       <div class="column-container">
         ${repeat(
           this.columns,
           col => col.value,
-          (col, index) => this.#renderColumn(col, this.data[index]),
+          (col, index) => this.#renderColumn(`column:${col.value}`, col, this.data[index]),
         )}
       </div>
       <div class="dropzone-container-container">
@@ -90,6 +109,7 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
         this.dropZones?.[dropzone]?.data
           ? html`<wa-details class="dropzone-details">
               ${this.#renderColumn(
+                `dropzone:${dropzone}`,
                 {
                   value: dropzone,
                   onDrop: this.dropZones?.[dropzone].onDrop,
@@ -120,11 +140,13 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
 
   /**
    *
+   * @param {string} listKey
    * @param {Columns[number]} column
    * @param {T[]} data
    * @param {boolean} [liftable]
    */
-  #renderColumn(column, data, liftable = true) {
+  #renderColumn(listKey, column, data = [], liftable = true) {
+    const items = [...data].sort(this.sorter);
     return html`
       <div
         class="column ${liftable ? 'liftable' : ''}"
@@ -138,28 +160,122 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
         @dragend=${liftable ? this.#onDragEnd : undefined}
       >
         ${column.label ? html`<div class="column-header-cell">${column.label}</div>` : nothing}
-        <div>
-          ${virtualize({
-            items: [...data].sort(this.sorter),
-            keyFunction: this.keyFunction,
-            renderItem: elm => html`
-              <div>
-                <owc-card
-                  class="column-card"
-                  .data=${elm}
-                  draggable=${liftable}
-                  small-padding
-                  style="${this.#renderStyles(elm)}"
-                >
-                  ${this.#renderCardImage(elm)} ${this.#renderCardHeader(elm)}
-                  ${this.#renderCardBody(elm)} ${this.#renderCardFooter(elm)}
-                </owc-card>
-              </div>
-            `,
-          })}
-        </div>
+        <div class="column-list">${this.#renderList(listKey, items, liftable)}</div>
       </div>
     `;
+  }
+
+  /** @param {T[]} items */
+  #shouldVirtualize(items) {
+    return items.length >= this.#smallListThreshold;
+  }
+
+  #activeVirtualListKeys() {
+    /** @type {Set<string>} */
+    const keys = new Set();
+    this.columns.forEach((column, index) => {
+      if (this.#shouldVirtualize(this.data[index] ?? [])) {
+        keys.add(`column:${column.value}`);
+      }
+    });
+    Object.entries(this.dropZones).forEach(([key, dropzone]) => {
+      if (dropzone.data && this.#shouldVirtualize(dropzone.data)) {
+        keys.add(`dropzone:${key}`);
+      }
+    });
+    return keys;
+  }
+
+  /** @param {Set<string>} activeKeys */
+  #disposeColumnListsExcept(activeKeys) {
+    for (const [key, { list }] of this.#columnLists) {
+      if (!activeKeys.has(key)) {
+        list.dispose();
+        this.#columnLists.delete(key);
+      }
+    }
+  }
+
+  /** @param {string} key @param {T[]} items */
+  #getList(key, items) {
+    if (this.#columnListsScrollTarget !== this.scrollTarget) {
+      this.#disposeColumnListsExcept(new Set());
+      this.#columnListsScrollTarget = this.scrollTarget;
+    }
+    let entry = this.#columnLists.get(key);
+    if (!entry) {
+      const initialItems = items;
+      const listItems = () => this.#columnLists.get(key)?.items ?? initialItems;
+      const list = new VerticalListController(this, {
+        scrollTarget: this.scrollTarget ? 'element' : 'window',
+        getScrollElement: () => this.scrollTarget ?? null,
+        getItems: listItems,
+        getItemKey: index => this.keyFunction(listItems()[index]),
+        estimateSize: 120,
+        overscan: 5,
+      });
+      entry = { items, list };
+      this.#columnLists.set(key, entry);
+    } else {
+      entry.items = items;
+    }
+    entry.list.update();
+    return entry.list;
+  }
+
+  /** @param {string} key @param {Element | null} element */
+  #setListElement(key, element) {
+    const entry = this.#columnLists.get(key);
+    if (!entry || !element) {
+      return;
+    }
+    entry.element = element;
+    const scrollOffset = this.scrollTarget
+      ? /** @type {HTMLElement} */ (this.scrollTarget).scrollTop
+      : window.scrollY;
+    const scrollTop = this.scrollTarget ? this.scrollTarget.getBoundingClientRect().top : 0;
+    entry.list.setScrollMargin(scrollOffset + element.getBoundingClientRect().top - scrollTop);
+  }
+
+  /** @param {T} item @param {boolean} liftable */
+  #renderCard(item, liftable) {
+    return html`<owc-card
+      class="column-card"
+      .data=${item}
+      draggable=${liftable}
+      small-padding
+      style="${this.#renderStyles(item)}"
+    >
+      ${this.#renderCardImage(item)} ${this.#renderCardHeader(item)}
+      ${this.#renderCardBody(item)} ${this.#renderCardFooter(item)}
+    </owc-card>`;
+  }
+
+  /** @param {string} key @param {T[]} items @param {boolean} liftable */
+  #renderList(key, items, liftable) {
+    if (!this.#shouldVirtualize(items)) {
+      const entry = this.#columnLists.get(key);
+      entry?.list.dispose();
+      this.#columnLists.delete(key);
+      return items.map(item => this.#renderCard(item, liftable));
+    }
+    const list = this.#getList(key, items);
+    return html`<div
+      class="virtual-list"
+      style=${`height: ${list.totalSize}px`}
+      ${ref(element => this.#setListElement(key, element ?? null))}
+    >
+      ${list.items.map(
+        virtualItem => html`<div
+          class="virtual-item"
+          data-index=${virtualItem.index}
+          style=${`transform: translateY(${virtualItem.start - list.scrollMargin}px)`}
+          ${ref(element => list.measureElement(element ?? null))}
+        >
+          ${this.#renderCard(items[virtualItem.index], liftable)}
+        </div>`,
+      )}
+    </div>`;
   }
 
   static styles = [
@@ -226,6 +342,18 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
         margin-left: 10px;
         width: 230px;
         margin-bottom: 10px;
+      }
+
+      .virtual-list {
+        position: relative;
+        width: 100%;
+      }
+
+      .virtual-item {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
       }
 
       .column-header-cell {
