@@ -237,6 +237,7 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
    * available without making the normal, non-dragging DOM unbounded.
    * @param {{startIndex: number, endIndex: number, overscan: number, count: number}} range
    */
+  /** @param {string} key @param {{startIndex: number, endIndex: number, overscan: number, count: number}} range */
   #getDragRange(key, range) {
     const start = Math.max(range.startIndex - range.overscan, 0);
     const end = Math.min(range.endIndex + range.overscan, range.count - 1);
@@ -254,6 +255,7 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
     return indexes;
   }
 
+  /** @param {boolean} active */
   #setDragOverscan(active) {
     for (const { list } of this.#columnLists.values()) {
       list.setOverscan(active ? this.#dragOverscan : this.#normalOverscan);
@@ -680,9 +682,11 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
     ev.preventDefault();
     this.#removeHoverShadow();
     const typedTarget = /**@type {HTMLElement}*/ (ev.currentTarget);
+    const dragged = /** @type {(HTMLElement & {data: T}) | undefined} */ (this.dragged);
+    const dropTarget = /** @type {HTMLElement & {name: string}} */ (typedTarget);
     if (
-      typedTarget.classList.contains('column') &&
-      !this.canDrop(this.dragged?.data, typedTarget.name)
+      dropTarget.classList.contains('column') &&
+      !this.canDrop(/** @type {T} */ (dragged?.data), dropTarget.name)
     ) {
       this.#finishDrag();
       return;
