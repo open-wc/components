@@ -860,10 +860,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     this.requestUpdate();
   }
 
-  renderSizeTableColumnStyles() {
-    return nothing;
-  }
-
   #addGlobalSearchJsonFilter() {
     // reassign instead of unshift so Lit sees the change
     this.jsonFilters = [
@@ -888,7 +884,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   render() {
     return html`
       <style>
-        ${this.renderSizeTableColumnStyles()}
         ${this.customStyles}
       </style>
       <div id="header">

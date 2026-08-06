@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Table rows and headers now share a CSS Grid column layout, replacing the prior
+  selector-based flex sizing rules while preserving the existing table interface.
+
 All notable changes to this project will be documented in this file.
 
 ## 0.1.0 - Initial release target

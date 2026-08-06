@@ -46,7 +46,7 @@ export class VerticalListController {
       scrollMargin: options.scrollMargin ?? 0,
       getScrollElement: isWindow
         ? () => (typeof document !== 'undefined' ? window : null)
-        : options.getScrollElement ?? (() => null),
+        : (options.getScrollElement ?? (() => null)),
       observeElementRect: isWindow ? observeWindowRect : observeElementRect,
       observeElementOffset: isWindow ? observeWindowOffset : observeElementOffset,
       scrollToFn: isWindow ? windowScroll : elementScroll,
@@ -79,6 +79,7 @@ export class VerticalListController {
 
   hostDisconnected() {
     this.cleanup?.();
+    this.cleanup = undefined;
   }
 
   getVirtualizer() {
@@ -128,6 +129,7 @@ export class VerticalListController {
 
   /** Stop observing a list that is no longer rendered by its host. */
   dispose() {
+    this.hostDisconnected();
     this.host.removeController(this);
   }
 

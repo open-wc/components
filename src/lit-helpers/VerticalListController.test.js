@@ -24,3 +24,18 @@ test('requests an update only when the rendered range changes', async () => {
 
   assert.equal(host.updateRequests, 1);
 });
+
+test('cleans up a mounted virtualizer when disposed', () => {
+  const host = { addController() {}, removeController() {}, requestUpdate() {} };
+  const list = new VerticalListController(host, {
+    getItems: () => [],
+    getItemKey: index => index,
+  });
+  let cleanupCount = 0;
+  list.cleanup = () => cleanupCount++;
+
+  list.dispose();
+  list.dispose();
+
+  assert.equal(cleanupCount, 1);
+});
