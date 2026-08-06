@@ -1,3 +1,4 @@
+import './virtualizer-environment.js';
 import { VirtualizerController, WindowVirtualizerController } from '@tanstack/lit-virtual';
 
 /**
