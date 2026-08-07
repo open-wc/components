@@ -1,1 +1,1 @@
-export { ControlRenderer } from '../src/json-form/types/renderer.js';
+export { AutofillOption, ControlRenderer } from '../src/json-form/types/renderer.js';

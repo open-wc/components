@@ -7,6 +7,8 @@ import { processLabel } from '../label/label.js';
 import { resolveDataSchema } from '../resolve.js';
 import { getError } from '../helpers/getError.js';
 import { inputListener } from './inputListener.js';
+import { FormDataChangeEvent } from '../FormDataChangeEvent.js';
+import { normalizeAutofillOptions } from './autofill.js';
 
 import '@awesome.me/webawesome/dist/components/button/button.js';
 import '@awesome.me/webawesome/dist/components/checkbox/checkbox.js';
@@ -35,6 +37,51 @@ export const textRenderer = (state, ruleOptions, value) => {
       ? val => val?.replace(/\n/g, '<br>')
       : undefined,
   });
+};
+
+/**
+ * Renders a free-text field with selectable presets. A preset either supplies a
+ * scalar value for this control or an atomic map of form-scope values.
+ *
+ * @type {Renderer}
+ */
+export const autofillRenderer = (state, ruleOptions, value) => {
+  const error = getError(state.uiSchema, state.validatorState);
+  const userInteracted = Boolean(resolveDataSchema(value, state.uiSchema.scope) !== null);
+  const presets = normalizeAutofillOptions(state.uiSchema);
+  const currentValue = resolveDataSchema(value, state.uiSchema.scope);
+
+  return html`<owc-input-autofill
+    class=${classMap({
+      hidden: ruleOptions.hidden,
+      invalid: (userInteracted || state.forceErrors) && Boolean(error),
+    })}
+    .label=${`${processLabel(state)}${state.required ? '*' : ''}`}
+    .value=${currentValue ?? ''}
+    .data=${presets}
+    ?multi=${state.uiSchema.options?.multi}
+    ?disabled=${ruleOptions.disabled || state.uiSchema.options?.readonly || false}
+    ?readonly=${state.uiSchema.options?.readonly || false}
+    @input=${inputListener(state.uiSchema)}
+    @change=${(/** @type {CustomEvent<{fill?: Record<string, unknown>}>} */ event) => {
+      const fill = event.detail?.fill;
+      if (fill) {
+        event.currentTarget?.dispatchEvent(
+          new FormDataChangeEvent('formDataChange', '', undefined, fill),
+        );
+      }
+    }}
+  >
+    ${when(
+      (userInteracted || state.forceErrors) && error,
+      () => html`<span class="error" slot="hint">${error?.error}</span>`,
+    )}
+    ${
+      state.schema.description
+        ? html`<span slot="hint" class="help-text">${state.schema.description}</span>`
+        : ''
+    }
+  </owc-input-autofill>`;
 };
 
 /**@type {Renderer} */

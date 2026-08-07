@@ -1,5 +1,6 @@
 import { fixture, html, expect, oneEvent } from '@open-wc/testing';
 import { JsonForm } from './JsonForm.js';
+import { FormDataChangeEvent } from '../FormDataChangeEvent.js';
 
 if (!customElements.get('json-form')) {
   customElements.define('json-form', JsonForm);
@@ -69,6 +70,43 @@ describe('json-form controls', () => {
       ></json-form>
     `);
     expect(el.shadowRoot.querySelector('wa-textarea')).to.exist;
+  });
+
+  it('renders the autofill control when presets are configured', async () => {
+    const el = await fixture(html`
+      <json-form
+        .schema=${personSchema}
+        .uiSchema=${{
+          type: 'Control',
+          scope: '#/properties/name',
+          options: { autofill: [{ label: 'Ada', value: 'Ada Lovelace' }] },
+        }}
+      ></json-form>
+    `);
+
+    const autofill = el.shadowRoot.querySelector('owc-input-autofill');
+    expect(autofill).to.exist;
+    expect(autofill.data[0].value).to.equal('Ada Lovelace');
+  });
+
+  it('applies a multi-field autofill update atomically', async () => {
+    const value = {};
+    const el = await fixture(html`
+      <json-form
+        .schema=${personSchema}
+        .uiSchema=${{ type: 'Control', scope: '#/properties/name' }}
+        .value=${value}
+      ></json-form>
+    `);
+
+    el.dispatchEvent(
+      new FormDataChangeEvent('formDataChange', '', undefined, {
+        '#/properties/name': 'Ada',
+        '#/properties/age': 36,
+      }),
+    );
+
+    expect(value).to.deep.equal({ name: 'Ada', age: 36 });
   });
 
   it('renders a number input for number controls', async () => {

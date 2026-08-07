@@ -3,6 +3,7 @@
 export type OwcInputAutofillOption = {
   value: string; // written into the input when the option is picked
   label: string; // shown in the dropdown list
+  fill?: Record<string, unknown>; // optional atomic JSON Form update
 };
 
 export type OwcInputAutofillData = OwcInputAutofillOption[];

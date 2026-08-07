@@ -13,7 +13,7 @@ const data = [
  * @param {OwcInputAutofill} el
  */
 function waInput(el) {
-  return el.shadowRoot.querySelector('wa-input');
+  return el.shadowRoot.querySelector('wa-input, wa-textarea');
 }
 
 /**
@@ -68,6 +68,36 @@ describe('owc-input-autofill', () => {
     expect(waInput(el).value).to.equal('101');
     expect(changeEvent.bubbles).to.equal(true);
     expect(changeEvent.composed).to.equal(true);
+  });
+
+  it('includes a multi-field fill map in the selection event', async () => {
+    const fill = {
+      '#/properties/iban': 'AT12',
+      '#/properties/bic': 'EXAMPLEAT',
+    };
+    const el = await fixture(
+      html`<owc-input-autofill
+        .data=${[{ label: 'Main account', value: 'AT12', fill }]}
+      ></owc-input-autofill>`,
+    );
+    const dropdown = autocomplete(el);
+    await dropdown.updateComplete;
+
+    setTimeout(() => dropdown.handleOptionAction('AT12'));
+    const changeEvent = await oneEvent(el, 'change');
+
+    expect(changeEvent.detail.fill).to.deep.equal(fill);
+  });
+
+  it('renders textarea mode and forwards disabled and readonly state', async () => {
+    const el = await fixture(
+      html`<owc-input-autofill multi disabled readonly .data=${data}></owc-input-autofill>`,
+    );
+
+    expect(el.shadowRoot.querySelector('wa-textarea')).to.exist;
+    expect(waInput(el).disabled).to.equal(true);
+    expect(waInput(el).readOnly).to.equal(true);
+    expect(autocomplete(el).disabled).to.equal(true);
   });
 
   it('keeps options with an empty label selectable (regression)', async () => {

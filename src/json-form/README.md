@@ -36,7 +36,7 @@ The `rootForm` and `validatorState` properties are managed internally — don't 
 
 ## Features
 
-- Controls: `string`, `boolean`, `number`, `integer` plus the string formats `date`, `time` and `datetime`
+- Controls: `string`, `boolean`, `number`, `integer` plus the string formats `date`, `time` and `datetime`; text controls support single- and multi-field `autofill` presets
 - Single- and multi-select via `enum`/`oneOf` (autocomplete or radio group)
 - Layouts: `VerticalLayout`, `HorizontalLayout`, `GroupLayout`, `TabLayout`, `DetailsLayout`, `ArrayLayout`, `CheckboxComboLayout` and more
 - `Label` and `Separator` elements

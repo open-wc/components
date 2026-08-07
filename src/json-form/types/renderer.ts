@@ -10,6 +10,7 @@ export type ControlRenderer = (
 ) => TemplateResult;
 
 export type RendererKind =
+  | 'autofill'
   | 'checkboxTag'
   | 'date'
   | 'time'
@@ -21,7 +22,11 @@ export type RendererKind =
   | 'enum'
   | 'multiEnum';
 
-export type RendererRecord = Record<RendererKind, ControlRenderer | undefined>;
+export type AutofillOption =
+  | { label: string; value: string; fill?: never }
+  | { label: string; fill: Record<string, unknown>; value?: never };
+
+export type RendererRecord = Partial<Record<RendererKind, ControlRenderer>>;
 export type FullRendererRecord = Record<RendererKind, ControlRenderer>;
 
 export interface State {

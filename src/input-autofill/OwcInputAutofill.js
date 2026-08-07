@@ -5,6 +5,7 @@ import { OwcAutocomplete } from '@open-wc/components/OwcAutocomplete.js';
 import { findOptionByValue, isSelectableOption } from './optionHelpers.js';
 
 import '@awesome.me/webawesome/dist/components/input/input.js';
+import '@awesome.me/webawesome/dist/components/textarea/textarea.js';
 
 /** @typedef {import('./OwcInputAutofill.types.js').OwcInputAutofillOption} Option */
 
@@ -13,7 +14,7 @@ import '@awesome.me/webawesome/dist/components/input/input.js';
  * picking an option replaces the input with the option's value.
  *
  * @fires input - while the user types free text (relayed from the inner input)
- * @fires change - when an option is picked from the dropdown or typed text is committed
+ * @fires change - when an option is picked; detail.fill carries an optional multi-field update
  */
 export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
   static scopedElements = {
@@ -26,6 +27,9 @@ export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
     label: { type: String },
     placeholder: { type: String },
     open: { type: Boolean, reflect: true },
+    multi: { type: Boolean },
+    disabled: { type: Boolean },
+    readonly: { type: Boolean },
   };
 
   constructor() {
@@ -36,10 +40,15 @@ export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
     this.label = '';
     this.placeholder = '';
     this.open = false;
+    this.multi = false;
+    this.disabled = false;
+    this.readonly = false;
   }
 
   get _waInput() {
-    return /** @type {HTMLInputElement | null} */ (this.renderRoot?.querySelector('wa-input'));
+    return /** @type {HTMLInputElement | null} */ (
+      this.renderRoot?.querySelector('wa-input, wa-textarea')
+    );
   }
   get _owcAutocomplete() {
     return /** @type {OwcAutocomplete<Option> | null} */ (
@@ -87,7 +96,13 @@ export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
       this._waInput.value = opt.value;
       this._waInput.focus?.({ preventScroll: true });
     }
-    this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+    this.dispatchEvent(
+      new CustomEvent('change', {
+        detail: { fill: opt.fill },
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 
   /**
@@ -104,14 +119,27 @@ export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
     return html`
       <div class="wrap">
         <div class="col input-col">
-          <wa-input
-            class="form"
-            .label=${this.label}
-            .placeholder=${this.placeholder ?? ''}
-            .value=${this.value ?? ''}
-            @input=${this._onInput}
-          >
-          </wa-input>
+          ${
+            this.multi
+              ? html`<wa-textarea
+                  class="form"
+                  .label=${this.label}
+                  .placeholder=${this.placeholder ?? ''}
+                  .value=${this.value ?? ''}
+                  ?disabled=${this.disabled}
+                  ?readonly=${this.readonly}
+                  @input=${this._onInput}
+                ></wa-textarea>`
+              : html`<wa-input
+                  class="form"
+                  .label=${this.label}
+                  .placeholder=${this.placeholder ?? ''}
+                  .value=${this.value ?? ''}
+                  ?disabled=${this.disabled}
+                  ?readonly=${this.readonly}
+                  @input=${this._onInput}
+                ></wa-input>`
+          }
         </div>
 
         <div class="col list-col">
@@ -121,6 +149,7 @@ export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
             class="form"
             .label=${this.label ? ' ' : ''}
             .data=${this.data}
+            ?disabled=${this.disabled || this.readonly}
             @input=${(/** @type {Event} */ ev) => ev.stopPropagation()}
             @autocomplete-selection=${this._onAutocompleteChange}
             ?open=${this.open}
@@ -128,6 +157,7 @@ export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
           </owc-autocomplete>
         </div>
       </div>
+      <div class="hint"><slot name="hint"></slot></div>
     `;
   }
 
@@ -146,6 +176,13 @@ export class OwcInputAutofill extends ScopedElementsMixin(LitElement) {
     }
     .form {
       font-size: inherit;
+    }
+    .hint {
+      color: var(--wa-color-neutral-60);
+      font-size: var(--wa-font-size-small);
+    }
+    ::slotted(.error) {
+      color: var(--wa-color-danger-60);
     }
   `;
 }
