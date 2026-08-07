@@ -15,6 +15,7 @@ import {
   numberRenderer,
   textRenderer,
   timeRenderer,
+  autofillRenderer,
 } from '../renderers/inputRenderers.js';
 import { layoutRenderer } from '../renderers/layoutRenderer.js';
 import { dataPathSegments, isRequired, resolveDataSchema, resolveSchema } from '../resolve.js';
@@ -30,9 +31,11 @@ import { ArrayLayout } from '../layouts/ArrayLayout.js';
 import { processLabel } from '../label/label.js';
 import { OwcTooltip } from '../../tooltip/OwcTooltip.js';
 import { OwcLocalizeController } from '@open-wc/components/localization.js';
+import { OwcInputAutofill } from '../../input-autofill/OwcInputAutofill.js';
 
 /**@type {import("../types/renderer.js").FullRendererRecord} */
 export const DEFAULT_RENDERERS = {
+  autofill: autofillRenderer,
   checkboxTag: checkboxTagRenderer,
   date: dateRenderer,
   time: timeRenderer,
@@ -59,6 +62,7 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
     'array-layout': ArrayLayout,
     'owc-separator': OwcSeparator,
     'owc-tooltip': OwcTooltip,
+    'owc-input-autofill': OwcInputAutofill,
   };
   static properties = {
     schema: { type: Object },
@@ -117,27 +121,19 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
       if (!this.rootForm) {
         return;
       }
-      if (!ev.path) {
+      if (ev.values) {
+        // A preset can update several controls together; validate only after all values are applied.
+        for (const [path, changedValue] of Object.entries(ev.values)) {
+          this.setValueAtPath(path, changedValue);
+        }
+      } else if (!ev.path) {
         this.validatorState = this.getValidator().validate(
           removeFalseIshAndEmptyProperties(this.value),
         );
         return;
+      } else {
+        this.setValueAtPath(ev.path, ev.value);
       }
-
-      const segments = dataPathSegments(ev.path);
-
-      let currentBlock = this.value;
-      for (let i = 0; i < segments.length - 1; i++) {
-        const segment = segments[i];
-        const typedSegment = /**@type {keyof currentBlock} */ (segment);
-        if (!currentBlock[typedSegment]) {
-          // @ts-ignore
-          currentBlock[typedSegment] = {};
-        }
-        currentBlock = currentBlock[typedSegment];
-      }
-      // @ts-ignore
-      currentBlock[segments.at(-1)] = ev.value;
       this.validatorState = this.getValidator().validate(
         removeFalseIshAndEmptyProperties(this.value),
       );
@@ -146,6 +142,26 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
     this.readonly = false;
     /**@type {'form' | 'schema'} */
     this.mode = 'form';
+  }
+
+  /**
+   * @param {string} path
+   * @param {unknown} value
+   */
+  setValueAtPath(path, value) {
+    const segments = dataPathSegments(path);
+    let currentBlock = this.value;
+    for (let i = 0; i < segments.length - 1; i++) {
+      const segment = segments[i];
+      const typedSegment = /**@type {keyof currentBlock} */ (segment);
+      if (!currentBlock[typedSegment]) {
+        // @ts-ignore
+        currentBlock[typedSegment] = {};
+      }
+      currentBlock = currentBlock[typedSegment];
+    }
+    // @ts-ignore
+    currentBlock[segments.at(-1)] = value;
   }
 
   validate() {

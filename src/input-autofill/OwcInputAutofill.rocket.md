@@ -88,8 +88,8 @@ export const preselected = () => {
 ## Events
 
 An `input` event fires while typing free text. A `change` event fires when an option is
-picked from the dropdown or typed text is committed (on blur). Read the current value from
-`ev.target.value`.
+picked from the dropdown. Read the current value from `ev.target.value`; options may also
+provide a `fill` map through `ev.detail.fill` for consumers such as Json Form.
 
 ```js demo
 export const events = () => {
@@ -125,15 +125,19 @@ export const events = () => {
 | `label`       | `string`   | `''`    | Label shown above the text input.                          |
 | `placeholder` | `string`   | `''`    | Placeholder for the text input.                            |
 | `open`        | `boolean`  | `false` | Whether the dropdown is open; reflected as an attribute.   |
+| `multi`       | `boolean`  | `false` | Render a textarea instead of a single-line input.          |
+| `disabled`    | `boolean`  | `false` | Disable the input and dropdown.                            |
+| `readonly`    | `boolean`  | `false` | Make the input readonly and disable the dropdown.          |
 
 ### Option config
 
 Importable as `OwcInputAutofillOption` from `@open-wc/components/OwcInputAutofill.types.js`.
 
-| Field   | Type     | Description                                         |
-| ------- | -------- | --------------------------------------------------- |
-| `value` | `string` | Written into the input when the option is picked.   |
-| `label` | `string` | Shown in the dropdown list; may be an empty string. |
+| Field   | Type                      | Description                                                  |
+| ------- | ------------------------- | ------------------------------------------------------------ |
+| `value` | `string`                  | Written into the input when the option is picked.            |
+| `label` | `string`                  | Shown in the dropdown list; may be an empty string.          |
+| `fill`  | `Record<string, unknown>` | Optional atomic path/value map included in the change event. |
 
 ### Events
 

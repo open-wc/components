@@ -55,6 +55,65 @@ export const simple = () =>
   ></json-form>`;
 ```
 
+## Autofill presets
+
+Add `options.autofill` to a text control to keep free-text entry while offering common values.
+Use `value` for a single field or `fill` to update several form paths atomically. Combining
+`multi: true` with autofill renders a textarea.
+
+```js demo
+export const autofill = () =>
+  html`<json-form
+    @formDataChange=${ev => console.log(ev.target.value)}
+    .schema=${{
+      type: 'object',
+      properties: {
+        iban: { type: 'string', title: 'IBAN' },
+        bic: { type: 'string', title: 'BIC' },
+        accountHolder: { type: 'string', title: 'Account holder' },
+        internalNote: { type: 'string', title: 'Internal note' },
+      },
+    }}
+    .uiSchema=${{
+      type: 'VerticalLayout',
+      elements: [
+        {
+          type: 'Control',
+          scope: '#/properties/iban',
+          options: {
+            autofill: [
+              {
+                label: 'Main account · Example Bank',
+                fill: {
+                  '#/properties/iban': 'AT12 3456 7890',
+                  '#/properties/bic': 'EXAMPLEAT',
+                  '#/properties/accountHolder': 'Jane Doe',
+                },
+              },
+            ],
+          },
+        },
+        { type: 'Control', scope: '#/properties/bic' },
+        { type: 'Control', scope: '#/properties/accountHolder' },
+        {
+          type: 'Control',
+          scope: '#/properties/internalNote',
+          options: {
+            multi: true,
+            autofill: [
+              {
+                label: 'Follow-up required',
+                value: 'Please follow up with the customer.',
+              },
+            ],
+          },
+        },
+      ],
+    }}
+    .value=${{}}
+  ></json-form>`;
+```
+
 ## Controls
 
 These are the default Json-Form controls:

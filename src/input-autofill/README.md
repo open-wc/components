@@ -30,8 +30,11 @@ html`<owc-input-autofill
   (pure logic in [optionHelpers.js](./optionHelpers.js)); free text clears the
   dropdown selection
 - Options with an empty `label` stay selectable - the label is display only
+- Optional `fill` maps are included in a picked option's `change` event
+- `multi` switches the free-text control to a textarea
+- `disabled` and `readonly` are forwarded to the text control and dropdown
 - `input` fires while typing; `change` fires (bubbling, composed) when an
-  option is picked or typed text is committed
+  option is picked
 - Typing in the dropdown's internal search field does not leak `input` events
   to consumers
 
