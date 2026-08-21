@@ -2,6 +2,7 @@ import { LitElement, css, html } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import { HasSlotController } from '../autocomplete/HasSlotController.js';
 import '@awesome.me/webawesome/dist/components/details/details.js';
+import '@awesome.me/webawesome/dist/components/badge/badge.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 
 /**

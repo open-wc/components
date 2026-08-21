@@ -47,7 +47,6 @@ export const docsData = {
   headContent: () => html`
     <script type="module">
       import { registerIconLibrary } from '@awesome.me/webawesome/dist/webawesome.js';
-
       registerIconLibrary('default', {
         resolver: (name, family) => {
           if (name === 'arrow-up-right-from-square') {
@@ -76,7 +75,7 @@ export const heroData = {
     body: 'Framework-agnostic Lit components with typed APIs and copy-paste demos. Import only what you use — unbundled modules, no build step required.',
     setupLink: '/components',
     setupText: 'Browse components',
-    documentationLink: '/table',
+    documentationLink: '/data/table',
     documentationText: 'See the Table',
     installLabel: 'Install',
     installCommand: 'npm install @open-wc/components',
