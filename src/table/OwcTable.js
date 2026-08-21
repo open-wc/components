@@ -328,6 +328,10 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   /** @type {ResizeObserver | undefined} */
   #infoResizeObserver;
 
+  #virtualizerReady = false;
+
+  #virtualizerReadyFrame = 0;
+
   #updateInfoHeight() {
     const wrapper = this.shadowRoot?.querySelector('#info-outer-wrapper');
     const height = wrapper?.getBoundingClientRect().height ?? 0;
@@ -642,6 +646,15 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   connectedCallback() {
     super.connectedCallback();
     window.addEventListener('resize', this.#handleWindowResize);
+    if (!this.#virtualizerReady) {
+      this.#virtualizerReadyFrame = requestAnimationFrame(() => {
+        this.#virtualizerReadyFrame = 0;
+        if (this.isConnected) {
+          this.#virtualizerReady = true;
+          this.requestUpdate();
+        }
+      });
+    }
     this.handleInitialData();
     this.loadStateFromUrl();
   }
@@ -649,6 +662,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   disconnectedCallback() {
     window.removeEventListener('resize', this.#handleWindowResize);
     clearTimeout(this.#resizeTimeout);
+    cancelAnimationFrame(this.#virtualizerReadyFrame);
+    this.#virtualizerReadyFrame = 0;
     super.disconnectedCallback();
   }
 
@@ -1027,6 +1042,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       this.virtualizerMode === 'always' || (this.virtualizerMode === 'auto' && items.length >= 300);
 
     if (shouldUseVirtualizer) {
+      if (!this.#virtualizerReady) {
+        return nothing;
+      }
       return html`${virtualize({ items, renderItem })}`;
     }
 
