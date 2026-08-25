@@ -1,5 +1,6 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
+import { keyed } from 'lit/directives/keyed.js';
 import { until } from 'lit/directives/until.js';
 import { virtualize, virtualizerRef } from '@lit-labs/virtualizer/virtualize.js';
 
@@ -328,6 +329,11 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   /** @type {ResizeObserver | undefined} */
   #infoResizeObserver;
 
+  /** @type {ResizeObserver | undefined} */
+  #growFullWidthResizeObserver;
+
+  #lastGrowFullWidth = 0;
+
   #virtualizerReady = false;
 
   #virtualizerReadyFrame = 0;
@@ -396,12 +402,20 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       this.#infoResizeObserver.observe(wrapper);
     }
 
-    // firstUpdated
-    if (this.growFullWidth) {
-      this.#resetAndFillColumnWidths();
-    }
-
     super.firstUpdated(changedProperties);
+  }
+
+  /** @param {import('lit').PropertyValues} changedProperties */
+  updated(changedProperties) {
+    if (changedProperties.has('growFullWidth')) {
+      if (this.growFullWidth) {
+        this.#observeGrowFullWidth();
+      } else {
+        this.#growFullWidthResizeObserver?.disconnect();
+        this.#lastGrowFullWidth = 0;
+      }
+    }
+    super.updated(changedProperties);
   }
 
   /**
@@ -646,6 +660,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   connectedCallback() {
     super.connectedCallback();
     window.addEventListener('resize', this.#handleWindowResize);
+    this.#growFullWidthResizeObserver?.observe(this);
     if (!this.#virtualizerReady) {
       this.#virtualizerReadyFrame = requestAnimationFrame(() => {
         this.#virtualizerReadyFrame = 0;
@@ -661,6 +676,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   disconnectedCallback() {
     window.removeEventListener('resize', this.#handleWindowResize);
+    this.#growFullWidthResizeObserver?.disconnect();
     clearTimeout(this.#resizeTimeout);
     cancelAnimationFrame(this.#virtualizerReadyFrame);
     this.#virtualizerReadyFrame = 0;
@@ -1038,10 +1054,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
    * @returns
    */
   #renderList({ items, renderItem }) {
-    const shouldUseVirtualizer =
-      this.virtualizerMode === 'always' || (this.virtualizerMode === 'auto' && items.length >= 300);
-
-    if (shouldUseVirtualizer) {
+    if (this.#shouldUseVirtualizer(items)) {
       if (!this.#virtualizerReady) {
         return nothing;
       }
@@ -1052,6 +1065,26 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       const result = renderItem(item, index);
       return result;
     })}`;
+  }
+
+  /** @param {T[]} items */
+  #shouldUseVirtualizer(items) {
+    return (
+      this.virtualizerMode === 'always' || (this.virtualizerMode === 'auto' && items.length >= 300)
+    );
+  }
+
+  /** @param {T[]} items */
+  #renderListHost(items) {
+    // The virtualizer leaves sizing and containment styles on its host when
+    // disconnected. Replace the host when crossing the threshold so a short,
+    // non-virtual list does not inherit the previous virtual scroll height.
+    return keyed(
+      this.#shouldUseVirtualizer(items),
+      html`<div id="virtualize-container">
+        ${this.#renderList({ items, renderItem: this.#renderItem })}
+      </div>`,
+    );
   }
 
   #renderDataTable() {
@@ -1068,12 +1101,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
             this.allData && this.allData.length > 0
               ? this.groupList?.length > 0 && this.groupSelector
                 ? html`${this.#renderGroups()}`
-                : html`<div id="virtualize-container">
-                    ${this.#renderList({
-                      items: this.allData,
-                      renderItem: this.#renderItem,
-                    })}
-                  </div>`
+                : this.#renderListHost(this.allData)
               : html`<div id="empty-message-wrapper">
                   <p>${this.#localize.term('tableEmptyMessage')}</p>
                 </div>`
@@ -1437,7 +1465,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }),
       additionalFormatter: (_data, { config, content, custom }) => {
         if (config.formatter === 'rownum') {
-          return `${(custom?.index || 0) + 1}`;
+          const rowIndex = typeof custom?.index === 'number' ? custom.index : 0;
+          return `${rowIndex + 1}`;
         }
         return content;
       },
@@ -1499,11 +1528,28 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     });
   }
 
+  #observeGrowFullWidth() {
+    if (!this.#growFullWidthResizeObserver) {
+      this.#growFullWidthResizeObserver = new ResizeObserver(entries => {
+        const width = Math.round(entries.at(-1)?.contentRect.width ?? 0);
+        if (!this.growFullWidth || width <= 0 || width === this.#lastGrowFullWidth) {
+          return;
+        }
+        this.#lastGrowFullWidth = width;
+        void this.#resetAndFillColumnWidths();
+      });
+    }
+    this.#growFullWidthResizeObserver.observe(this);
+  }
+
   async #resetAndFillColumnWidths() {
-    const isSystemColumn = column => !this.columns.some(c => c.field === column.field);
-    const isNonResizable = column => column.resizable === false;
-    const isUntouchable = column => isSystemColumn(column) || isNonResizable(column);
-    const hasExplicitWidth = column =>
+    /** @typedef {import('./OwcTable.types.js').Column<T>} Column */
+    const isSystemColumn = (/** @type {Column} */ column) =>
+      !this.columns.some(c => c.field === column.field);
+    const isNonResizable = (/** @type {Column} */ column) => column.resizable === false;
+    const isUntouchable = (/** @type {Column} */ column) =>
+      isSystemColumn(column) || isNonResizable(column);
+    const hasExplicitWidth = (/** @type {Column} */ column) =>
       this.#defaultColumnWidths[column.field] != null || this.#columnWidths[column.field] != null;
 
     for (const column of this.#visibleColumns) {

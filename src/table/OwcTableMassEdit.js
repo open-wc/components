@@ -75,10 +75,10 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
           }
         }
         this.table.compareOverrides = comparisonData;
-        this.table.renderType = 'compare';
+        this.table._renderType = 'compare';
       } else {
         this.table.compareOverrides = undefined;
-        this.table.renderType = 'html';
+        this.table._renderType = 'html';
       }
     }
     super.update(changedProperties);

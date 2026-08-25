@@ -199,11 +199,17 @@ export class OwcLayoutSidebar extends LitElement {
   /**
    * @param {MenuItem} menuItem
    */
-  _expandAndOpenGroup(menuItem) {
+  async _expandAndOpenGroup(menuItem) {
     this._closeAllGroups(this.menuItemList);
     this._closeAllGroups(this.menuBottomItemList);
-    menuItem.open = true;
     this.collapsed = false;
+    this.requestUpdate();
+
+    // Render the expanded sidebar with the group closed first. If the details
+    // element mounts already open, Web Awesome treats that as its initial state
+    // and skips its show animation.
+    await this.updateComplete;
+    menuItem.open = true;
     this.requestUpdate();
   }
 
@@ -310,7 +316,10 @@ export class OwcLayoutSidebar extends LitElement {
       return;
     }
 
-    const panel = event.currentTarget;
+    const panel =
+      /** @type {import('@awesome.me/webawesome/dist/components/split-panel/split-panel.js').default | null} */ (
+        event.currentTarget
+      );
     const rawPosition =
       typeof panel?.positionInPixels === 'number'
         ? panel.positionInPixels

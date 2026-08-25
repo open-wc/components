@@ -23,6 +23,12 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- `OwcTable`: `grow-full-width` now fills available space when a table becomes visible after its
+  initial render, such as inside an inactive tab panel.
+- `OwcTable`: virtualized rows now update while scrolling through nested component layouts whose
+  scroll container includes a boxless `display: contents` slot.
+- `OwcTable`: filtering an automatically virtualized table below the virtualization threshold now
+  releases the old virtual scroll height, so the page shrinks to fit the filtered rows.
 - `OwcCountUp`: property changes after the first render now take effect - the merged
   countup.js options used to be written back into the `options` property, so the stale
   first merge shadowed every later `start`/`duration`/`separator` change.
@@ -60,6 +66,8 @@ All notable changes to this project will be documented in this file.
   the whole apexcharts dependency into the questionnaire bundle.
 - `OwcLayoutSidebar`: the documented `menuTopTemplate` property is now rendered (between
   logo and menu) - it existed in the public types but was silently ignored.
+- `OwcLayoutSidebar`: opening a menu group from the collapsed icon rail now plays the
+  submenu's opening animation instead of mounting it directly in its final open state.
 - `decompressStringFromBase64`: invalid input no longer causes unhandled promise rejections
   on top of the returned rejection; the leftover `compress.demo.js` scratch file was removed
   from the package.

@@ -171,7 +171,7 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
       this.data[colIndex] = [...this.data[colIndex], data];
       return;
     }
-    const zone = this.dropZones[column];
+    const zone = column === 'delete' || column === 'success' ? this.dropZones[column] : undefined;
     if (zone && Array.isArray(zone.data)) {
       zone.data = [...zone.data, data];
     }
@@ -188,7 +188,7 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
       this.data[colIndex] = this.data[colIndex].filter(elm => elm !== data);
       return;
     }
-    const zone = this.dropZones[column];
+    const zone = column === 'delete' || column === 'success' ? this.dropZones[column] : undefined;
     if (zone && Array.isArray(zone.data)) {
       zone.data = zone.data.filter((/** @type {T} */ elm) => elm !== data);
     }

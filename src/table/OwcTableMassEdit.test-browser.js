@@ -16,7 +16,7 @@ function makeTableStub() {
     overrides: { visibility: {} },
     requestUpdate() {},
     compareOverrides: undefined,
-    renderType: 'html',
+    _renderType: 'html',
     /** @type {any[]} */
     updates: [],
   };
@@ -92,12 +92,12 @@ describe('owc-table-mass-edit', () => {
     el.preview = true;
     await el.updateComplete;
 
-    expect(table.renderType).to.equal('compare');
+    expect(table._renderType).to.equal('compare');
     expect(table.compareOverrides).to.deep.equal({ 1: { name: 'new' } });
 
     el.preview = false;
     await el.updateComplete;
-    expect(table.renderType).to.equal('html');
+    expect(table._renderType).to.equal('html');
     expect(table.compareOverrides).to.equal(undefined);
   });
 
