@@ -4,7 +4,7 @@
  * same-origin link into a download instead of a navigation. Links opening in
  * another browsing context get `rel="noreferrer noopener"`.
  *
- * @param {{ href: string, target: string, download: string }} props
+ * @param {{ href: string, target: string, download?: string }} props
  * @returns {{ href: string, target: string | undefined, download: string | undefined, rel: string | undefined }}
  */
 export function getLinkAttributes({ href, target, download }) {

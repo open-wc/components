@@ -1,4 +1,4 @@
-import { fixture, html, expect } from '@open-wc/testing';
+import { fixture, html, expect, oneEvent } from '@open-wc/testing';
 import { OwcLayoutSidebar } from './OwcLayoutSidebar.js';
 
 customElements.define('owc-layout-sidebar', OwcLayoutSidebar);
@@ -56,6 +56,26 @@ describe('owc-layout-sidebar', () => {
     expect(details).to.exist;
     expect(details.hasAttribute('open')).to.equal(true);
     expect(details.querySelector('a').getAttribute('href')).to.equal('/child');
+  });
+
+  it('animates a group open when its rail item expands the sidebar', async () => {
+    const group = {
+      label: 'Group',
+      icon: 'folder',
+      subMenuItemList: [{ label: 'Child', href: '/child' }],
+    };
+    const el = await fixture(
+      html`<owc-layout-sidebar .collapsed=${true} .menuItemList=${[group]}> </owc-layout-sidebar>`,
+    );
+    const showEvent = oneEvent(el, 'wa-show');
+
+    el.shadowRoot.querySelector('.rail-item.has-children').click();
+    await showEvent;
+
+    const details = el.shadowRoot.querySelector('#top wa-details');
+    expect(el.collapsed).to.equal(false);
+    expect(group.open).to.equal(true);
+    expect(details.open).to.equal(true);
   });
 
   it('marks the item matching the current URL as selected and opens its parents', async () => {
