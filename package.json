@@ -13,6 +13,17 @@
   "license": "MIT",
   "author": "Open Web Components",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/open-wc/components.git"
+  },
+  "homepage": "https://open-wc.org/components/",
+  "bugs": {
+    "url": "https://github.com/open-wc/components/issues"
+  },
+  "funding": {
+    "url": "https://opencollective.com/modern-web"
+  },
   "exports": {
     "./*": {
       "types": "./dist-types/exports/*",

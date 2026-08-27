@@ -6,5 +6,5 @@ export default {
     siteName: 'Open Web Components',
     defaultDescription: 'Easy web components',
   },
-  siteOrigin: 'https://example.com',
+  siteOrigin: 'https://open-wc.org/',
 };
