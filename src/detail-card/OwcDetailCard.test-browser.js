@@ -64,4 +64,28 @@ describe('owc-detail-card', () => {
       'rgb(200, 0, 0)',
     );
   });
+
+  it('supports semantic border, background, radius, and shadow custom properties', async () => {
+    const el = await fixture(
+      html`<owc-detail-card
+        style="
+          --owc-detail-card-background: rgb(241, 247, 250);
+          --owc-detail-card-border-style: dashed;
+          --owc-detail-card-border-color: rgb(86, 135, 168);
+          --owc-detail-card-shadow: none;
+        "
+      >
+        <div slot="text">Recommendation</div>
+      </owc-detail-card>`,
+    );
+    const content = el.shadowRoot.querySelector('.content');
+    const styles = getComputedStyle(content);
+
+    expect(styles.backgroundColor).to.equal('rgb(241, 247, 250)');
+    expect(styles.borderTopStyle).to.equal('dashed');
+    expect(styles.borderTopWidth).to.equal('1.5px');
+    expect(styles.borderTopColor).to.equal('rgb(86, 135, 168)');
+    expect(styles.borderTopRightRadius).to.equal('8px');
+    expect(styles.boxShadow).to.equal('none');
+  });
 });

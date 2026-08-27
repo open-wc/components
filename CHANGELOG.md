@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- `OwcDetailCard`: background, border width/style/color/radius, leading-border width, and shadow
+  can now be customized with semantic CSS custom properties.
 - `JsonFormTypes.ts` now exports the JSON-form-owned `JsonSchema7`, `UISchemaElement`, layout,
   control, rule, and option types, replacing the package's type-only dependency on
   `@jsonforms/core`.

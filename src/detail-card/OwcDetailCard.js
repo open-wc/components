@@ -16,6 +16,15 @@ import '@awesome.me/webawesome/dist/components/icon/icon.js';
  * @slot detail - The right-aligned summary column, e.g. price and period.
  * @slot suffix - An optional trailing indicator. Defaults to a chevron.
  * @cssproperty --owc-detail-card-accent-color - The accent rail color.
+ * @cssproperty --owc-detail-card-accent-width - The accent rail width.
+ * @cssproperty --owc-detail-card-background - The header and body background.
+ * @cssproperty --owc-detail-card-border - The header and body border shorthand.
+ * @cssproperty --owc-detail-card-border-width - The header and body border width.
+ * @cssproperty --owc-detail-card-border-style - The header and body border style.
+ * @cssproperty --owc-detail-card-border-color - The header and body border color.
+ * @cssproperty --owc-detail-card-border-inline-start-width - The header's leading border width.
+ * @cssproperty --owc-detail-card-border-radius - The card corner radius.
+ * @cssproperty --owc-detail-card-shadow - The header shadow.
  */
 export class OwcDetailCard extends LitElement {
   static properties = {
@@ -104,16 +113,25 @@ export class OwcDetailCard extends LitElement {
     css`
       :host {
         --owc-detail-card-accent-color: var(--wa-color-brand-fill-loud);
+        --owc-detail-card-accent-width: 0.5625rem;
+        --owc-detail-card-background: var(--wa-color-surface-default);
+        --owc-detail-card-border-width: 1.5px;
+        --owc-detail-card-border-style: solid;
+        --owc-detail-card-border-color: var(--wa-color-surface-border);
+        --owc-detail-card-border: var(--owc-detail-card-border-width)
+          var(--owc-detail-card-border-style) var(--owc-detail-card-border-color);
+        --owc-detail-card-border-inline-start-width: 0;
+        --owc-detail-card-border-radius: 0.5rem;
+        --owc-detail-card-shadow: var(--wa-shadow-s);
         display: block;
         color: var(--wa-color-text-normal);
       }
 
       wa-details::part(base) {
-        --owc-detail-card-accent-width: 0.5625rem;
         border: none;
         padding: 0;
         box-shadow: none;
-        border-radius: 0.5rem;
+        border-radius: var(--owc-detail-card-border-radius);
         overflow: visible;
         background: linear-gradient(
           90deg,
@@ -157,12 +175,12 @@ export class OwcDetailCard extends LitElement {
         min-inline-size: 0;
         padding: 0.75rem 1rem;
         margin-inline-start: var(--owc-detail-card-accent-width);
-        background-color: var(--wa-color-surface-default);
-        border: 1.5px solid var(--wa-color-surface-border);
-        border-inline-start-width: 0;
-        border-start-end-radius: 0.5rem;
-        border-end-end-radius: 0.5rem;
-        box-shadow: var(--wa-shadow-s);
+        background-color: var(--owc-detail-card-background);
+        border: var(--owc-detail-card-border);
+        border-inline-start-width: var(--owc-detail-card-border-inline-start-width);
+        border-start-end-radius: var(--owc-detail-card-border-radius);
+        border-end-end-radius: var(--owc-detail-card-border-radius);
+        box-shadow: var(--owc-detail-card-shadow);
       }
 
       wa-details[open] .content {
@@ -227,10 +245,10 @@ export class OwcDetailCard extends LitElement {
         box-sizing: border-box;
         position: relative;
         margin-inline-start: var(--owc-detail-card-accent-width);
-        border: 1.5px solid var(--wa-color-surface-border);
+        border: var(--owc-detail-card-border);
         border-top-width: 0;
-        border-end-end-radius: 0.5rem;
-        background-color: var(--wa-color-surface-default);
+        border-end-end-radius: var(--owc-detail-card-border-radius);
+        background-color: var(--owc-detail-card-background);
         padding: 0.75rem 1rem;
       }
 
@@ -239,7 +257,7 @@ export class OwcDetailCard extends LitElement {
         position: absolute;
         inset-inline: 1rem;
         inset-block-start: 0;
-        border-top: 1px solid var(--wa-color-surface-border);
+        border-top: 1px solid var(--owc-detail-card-border-color);
       }
 
       @supports (text-box: trim-both cap alphabetic) {

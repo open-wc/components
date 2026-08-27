@@ -221,7 +221,15 @@ export const detailCardList = () => html`
 
 ### CSS custom properties
 
-| Property                         | Default                           | Description        |
-| -------------------------------- | --------------------------------- | ------------------ |
-| `--owc-detail-card-accent-color` | `var(--wa-color-brand-fill-loud)` | Accent rail color. |
-| `--owc-detail-card-accent-width` | `0.5625rem`                       | Accent rail width. |
+| Property                                      | Default                           | Description                                      |
+| --------------------------------------------- | --------------------------------- | ------------------------------------------------ |
+| `--owc-detail-card-accent-color`              | `var(--wa-color-brand-fill-loud)` | Accent rail color.                               |
+| `--owc-detail-card-accent-width`              | `0.5625rem`                       | Accent rail width.                               |
+| `--owc-detail-card-background`                | `var(--wa-color-surface-default)` | Summary and body background.                     |
+| `--owc-detail-card-border-width`              | `1.5px`                           | Summary and body border width.                   |
+| `--owc-detail-card-border-style`              | `solid`                           | Summary and body border style.                   |
+| `--owc-detail-card-border-color`              | `var(--wa-color-surface-border)`  | Summary and body border color.                   |
+| `--owc-detail-card-border`                    | Composed border tokens            | Shorthand override for the complete card border. |
+| `--owc-detail-card-border-inline-start-width` | `0`                               | Leading border width beside the accent rail.     |
+| `--owc-detail-card-border-radius`             | `0.5rem`                          | Card corner radius.                              |
+| `--owc-detail-card-shadow`                    | `var(--wa-shadow-s)`              | Summary-row shadow.                              |
