@@ -2,9 +2,16 @@
   "name": "@open-wc/components",
   "version": "0.1.0",
   "description": "Reusable web components and helpers for data, forms, and workflow interfaces.",
-  "keywords": [],
+  "keywords": [
+    "web components",
+    "custom elements",
+    "components",
+    "table",
+    "rich table",
+    "autocomplete"
+  ],
   "license": "MIT",
-  "author": "Finum <admin@finum.at>",
+  "author": "Open Web Components",
   "type": "module",
   "exports": {
     "./*": {
@@ -17,13 +24,8 @@
     "CONTRIBUTING.md",
     "LICENSE",
     "README.md",
-    "components.rocket.md",
     "dist-types/**/*",
-    "docs/public-exports.md",
-    "docs/release-validation.md",
     "exports/**/*",
-    "home.rocket.md",
-    "public/open-wc-components-logo.svg",
     "src/**/*",
     "!**/*.test.*",
     "!**/*.test-browser.*",
@@ -40,7 +42,6 @@
     "lint": "eslint . --ignore-pattern .gitignore && prettier \"**/*.{ts,js,json,md}\" --check --ignore-path .gitignore --ignore-path .prettierignore",
     "postinstall": "patch-package",
     "start": "rocket start",
-    "start:demo": "web-dev-server --node-resolve --watch --open src/index.html",
     "test": "wireit",
     "types": "wireit"
   },
@@ -63,16 +64,9 @@
     "@lit-labs/virtualizer": "2.1.1",
     "@open-wc/lit-helpers": "0.7.0",
     "@open-wc/scoped-elements": "~2.1.4",
-    "@shoelace-style/shoelace": "^2.20.0",
-    "@types/dompurify": "^3.0.5",
     "apexcharts": "4.5.0",
     "countup.js": "^2.9.0",
-    "dompurify": "^3.2.6",
-    "grapesjs": "^0.22.16",
-    "grapesjs-mjml": "^1.0.8",
-    "lit": "^3.3.1",
-    "mjml": "^4.18.0",
-    "mjml-browser": "^4.18.0"
+    "lit": "^3.3.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",

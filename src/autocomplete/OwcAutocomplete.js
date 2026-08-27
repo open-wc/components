@@ -2,7 +2,7 @@ import { css, html, LitElement, nothing } from 'lit';
 import { classMap } from 'lit/directives/class-map.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { HasSlotController } from './HasSlotController.js';
-import { LocalizeController } from '@shoelace-style/shoelace/dist/utilities/localize.js';
+import { LocalizeController } from '@awesome.me/webawesome/dist/utilities/localize.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { OwcIconButton } from '../icon-button/OwcIconButton.js';
 import { virtualize, virtualizerRef } from '@lit-labs/virtualizer/virtualize.js';
