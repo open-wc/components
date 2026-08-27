@@ -100,9 +100,9 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
   constructor() {
     super();
     this.rootForm = true;
-    /**@type {import("@jsonforms/core").JsonSchema7} */
+    /**@type {import("../types/schema.js").JsonSchema7} */
     this.schema = {};
-    /**@type {import("@jsonforms/core").UISchemaElement} */
+    /**@type {import("../types/schema.js").UISchemaElement} */
     // @ts-ignore
     this.uiSchema = {};
     /**@type {Record<string, any>} */
@@ -264,7 +264,7 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
     if (!this.uiSchema?.type) {
       return nothing;
     } else if (this.uiSchema.type === 'Control') {
-      const typedUiSchema = /**@type {import("@jsonforms/core").ControlElement} */ (
+      const typedUiSchema = /**@type {import("../types/schema.js").ControlElement} */ (
         structuredClone(this.uiSchema)
       );
       if (this.readonly) {
@@ -287,6 +287,7 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
         schema.type === 'array' &&
         !(schema.items instanceof Array) &&
         schema.items !== undefined &&
+        typeof schema.items !== 'boolean' &&
         (schema.items.enum || schema.items.oneOf)
       ) {
         renderer = this.processedRenderers.multiEnum;
@@ -339,8 +340,7 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
         this.value,
       );
     } else if (this.uiSchema.type === 'Label') {
-      const typedUiSchema =
-        /**@type {import("@jsonforms/core").LabelElement & {scope?: string}} */ (this.uiSchema);
+      const typedUiSchema = /**@type {import("../types/schema.js").LabelElement} */ (this.uiSchema);
       if (typedUiSchema.scope) {
         const schema = resolveSchema(this.schema, typedUiSchema.scope, this.value);
         const value = resolveDataSchema(this.value, typedUiSchema.scope);
@@ -360,7 +360,7 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
         >${typedUiSchema.options?.label || ''}</owc-separator
       >`;
     } else {
-      const typedUiSchema = /**@type {import("@jsonforms/core").Layout} */ (this.uiSchema);
+      const typedUiSchema = /**@type {import("../types/schema.js").Layout} */ (this.uiSchema);
       // @ts-ignore
       const ruleOptions = evaluateRule(this.uiSchema.rule, this.value);
       return layoutRenderer(

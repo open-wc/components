@@ -1,6 +1,6 @@
 import { ValidationResult } from '@cfworker/json-schema';
-import { ControlElement, JsonSchema7 } from '@jsonforms/core';
 import { TemplateResult } from 'lit';
+import { ControlElement, JsonSchema7 } from './schema.js';
 
 export type ControlRenderer = (
   state: State,
@@ -22,9 +22,7 @@ export type RendererKind =
   | 'enum'
   | 'multiEnum';
 
-export type AutofillOption =
-  | { label: string; value: string; fill?: never }
-  | { label: string; fill: Record<string, unknown>; value?: never };
+export type { AutofillOption } from './schema.js';
 
 export type RendererRecord = Partial<Record<RendererKind, ControlRenderer>>;
 export type FullRendererRecord = Record<RendererKind, ControlRenderer>;

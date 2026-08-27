@@ -60,7 +60,6 @@
   "dependencies": {
     "@awesome.me/webawesome": "3.11.0",
     "@cfworker/json-schema": "^4.1.1",
-    "@jsonforms/core": "^3.6.0",
     "@lit-labs/virtualizer": "2.1.1",
     "@open-wc/lit-helpers": "0.7.0",
     "@open-wc/scoped-elements": "~2.1.4",

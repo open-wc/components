@@ -15,7 +15,7 @@ function eventCollector() {
   };
 }
 
-const uiSchema = /**@type {import("@jsonforms/core").ControlElement} */ ({
+const uiSchema = /**@type {import("../types/schema.js").ControlElement} */ ({
   type: 'Control',
   scope: '#/properties/name',
 });

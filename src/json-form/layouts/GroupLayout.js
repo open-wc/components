@@ -18,10 +18,10 @@ export class GroupLayout extends ScopedElementsMixin(LitElement) {
 
   constructor() {
     super();
-    /**@type {import("@jsonforms/core").JsonSchema7} */
+    /**@type {import("../types/schema.js").JsonSchema7} */
     this.schema = {};
     this.forceErrors = false;
-    this.uiSchema = /**@type {import("@jsonforms/core").GroupLayout} */ ({});
+    this.uiSchema = /**@type {import("../types/schema.js").GroupLayout} */ ({});
     this.value = {};
     /**@type {import("@cfworker/json-schema").ValidationResult} */
     this.validatorState = { valid: true, errors: [] };

@@ -2,7 +2,7 @@ import { FormDataChangeEvent } from '../FormDataChangeEvent.js';
 
 /**
  * Returns the input Listener
- * @param {import("@jsonforms/core").ControlElement} [uiSchema]
+ * @param {import("../types/schema.js").ControlElement} [uiSchema]
  * @param {string} [dataField]
  * @param {(arg0: any) => any} postProcessing
  * @returns {(event: {target: {value: unknown; } }) => void}

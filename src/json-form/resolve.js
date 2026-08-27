@@ -4,7 +4,7 @@ const { mergeSchemas } = MergeSchemas;
 
 /**
  * Resolve the given schema path in order to obtain a subschema.
- * @param {import("@jsonforms/core").JsonSchema7} schema the root schema from which to start
+ * @param {import("./types/schema.js").JsonSchema7} schema the root schema from which to start
  * @param {string} schemaPath the schema path to be resolved
  * @param {object} [value] Value of schema needed to resolve schema combinations (allOf, anyOf, oneOf)
  */
@@ -44,7 +44,7 @@ export const resolveSchema = (schema, schemaPath, value) => {
 
 /**
  * Resolve the given schema path in order to find out if the paths element is required.
- * @param {import("@jsonforms/core").JsonSchema7} schema the root schema from which to start
+ * @param {import("./types/schema.js").JsonSchema7} schema the root schema from which to start
  * @param {string} schemaPath the schema path to be resolved
  * @param {object} [value]
  */
@@ -115,9 +115,9 @@ export function dataPathSegments(schemaPath) {
 
 /**
  *
- * @param {import("@jsonforms/core").JsonSchema7} schema
+ * @param {import("./types/schema.js").JsonSchema7} schema
  * @param {object} [value]
- * @returns {import("@jsonforms/core").JsonSchema7}
+ * @returns {import("./types/schema.js").JsonSchema7}
  */
 function resolveComposition(schema, value) {
   const schemaClone = { ...schema };

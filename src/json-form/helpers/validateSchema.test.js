@@ -48,11 +48,11 @@ describe('removeFalseIshAndEmptyProperties', () => {
 });
 
 describe('validateSchemaSystem', () => {
-  const schema = {
+  const schema = /**@type {import("../types/schema.js").JsonSchema7} */ ({
     type: 'object',
     properties: { name: { type: 'string' }, age: { type: 'integer' } },
     required: ['name'],
-  };
+  });
 
   it('01: reports valid data as valid', () => {
     const result = validateSchemaSystem(schema, { name: 'foo', age: 5 });

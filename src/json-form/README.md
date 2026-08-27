@@ -34,6 +34,26 @@ see `validatorState`, `forceErrors`, `validate()` and `getFirstInvalid()`.
 
 The `rootForm` and `validatorState` properties are managed internally — don't set them.
 
+TypeScript consumers can type both inputs without depending on JSON Forms:
+
+```ts
+import type { JsonSchema7, UISchemaElement } from '@open-wc/components/JsonFormTypes.js';
+
+const schema: JsonSchema7 = {
+  type: 'object',
+  properties: { name: { type: 'string' } },
+};
+
+const uiSchema: UISchemaElement = {
+  type: 'VerticalLayout',
+  elements: [{ type: 'Control', scope: '#/properties/name' }],
+};
+```
+
+`JsonSchema7` builds on the schema type used by the existing `@cfworker/json-schema` validator.
+`UISchemaElement` describes this component's supported controls, layouts, labels, separators,
+rules, and custom options rather than the broader JSON Forms model.
+
 ## Features
 
 - Controls: `string`, `boolean`, `number`, `integer` plus the string formats `date`, `time` and `datetime`; text controls support single- and multi-field `autofill` presets

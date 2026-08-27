@@ -16,10 +16,10 @@ export class VerticalLayout2 extends ScopedElementsMixin(LitElement) {
 
   constructor() {
     super();
-    /**@type {import("@jsonforms/core").JsonSchema7} */
+    /**@type {import("../types/schema.js").JsonSchema7} */
     this.schema = {};
 
-    this.uiSchema = /**@type {import("@jsonforms/core").VerticalLayout}} */ ({});
+    this.uiSchema = /**@type {import("../types/schema.js").VerticalLayout} */ ({});
     this.value = {};
     /**@type {import("@cfworker/json-schema").ValidationResult} */
     this.validatorState = { valid: true, errors: [] };

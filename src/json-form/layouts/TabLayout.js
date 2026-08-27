@@ -7,7 +7,7 @@ import '@awesome.me/webawesome/dist/components/tab-group/tab-group.js';
 import '@awesome.me/webawesome/dist/components/tab/tab.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 
-/**@typedef {import("@jsonforms/core").Layout & {options: {tabNames: string[]}}} TabLayoutType*/
+/**@typedef {import("../types/schema.js").ElementListLayout & {options: {tabNames: string[]}}} TabLayoutType*/
 
 export class TabLayout extends ScopedElementsMixin(LitElement) {
   static properties = {
@@ -23,7 +23,7 @@ export class TabLayout extends ScopedElementsMixin(LitElement) {
 
   constructor() {
     super();
-    /**@type {import("@jsonforms/core").JsonSchema7} */
+    /**@type {import("../types/schema.js").JsonSchema7} */
     this.schema = {};
 
     this.uiSchema = /**@type {TabLayoutType}} */ ({});

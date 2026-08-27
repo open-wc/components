@@ -68,7 +68,7 @@ export const enumRenderer = (state, ruleOptions, value) => {
  */
 function renderAutocomplete(state, ruleOptions, value, options = {}) {
   const items =
-    /**@type {import("@jsonforms/core").JsonSchema7} */ (state.schema.items) || state.schema;
+    /**@type {import("../types/schema.js").JsonSchema7} */ (state.schema.items) || state.schema;
   const _enum = items?.oneOf ? items.oneOf : enumToOneOf(items?.enum);
   const userInteracted = Boolean(resolveDataSchema(value, state.uiSchema.scope) !== null);
   const error = getError(state.uiSchema, state.validatorState);
@@ -116,7 +116,7 @@ function renderAutocomplete(state, ruleOptions, value, options = {}) {
 
 /**@type {import("../types/renderer.js").ControlRenderer} */
 export const multiEnumRenderer = (state, ruleOptions, value) => {
-  const items = /**@type {import("@jsonforms/core").JsonSchema7} */ (state.schema.items);
+  const items = /**@type {import("../types/schema.js").JsonSchema7} */ (state.schema.items);
   const _enum = items?.oneOf ? items.oneOf : enumToOneOf(items?.enum);
   const userInteracted = Boolean(resolveDataSchema(value, state.uiSchema.scope) !== null);
   const error = getError(state.uiSchema, state.validatorState);

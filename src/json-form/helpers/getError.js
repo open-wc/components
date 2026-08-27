@@ -7,7 +7,7 @@ import { dataPathSegments } from '../resolve.js';
  * property name. Required errors originating from an if/then/else branch carry
  * the branch in their instanceLocation, which has to be stripped before matching.
  * All other errors are matched by their exact instance location.
- * @param {import("@jsonforms/core").ControlElement} uiSchema
+ * @param {import("../types/schema.js").ControlElement} uiSchema
  * @param {import("@cfworker/json-schema").ValidationResult} validatorState
  * @returns {import("@cfworker/json-schema").OutputUnit | undefined}
  */

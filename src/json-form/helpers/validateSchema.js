@@ -2,7 +2,7 @@ import { Validator } from '@cfworker/json-schema';
 
 /**
  *
- * @param {import("@jsonforms/core").JsonSchema7} schema
+ * @param {import("../types/schema.js").JsonSchema7} schema
  * @param {any} data
  */
 export function validateSchemaSystem(schema, data) {

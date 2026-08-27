@@ -13,18 +13,21 @@ import { OwcLocalizeController } from '@open-wc/components/localization.js';
 
 /**
  *
- * @param {import("@jsonforms/core").VerticalLayout & {scope: string}} uiSchema
+ * @param {import("../types/schema.js").ArrayLayoutElement} uiSchema
  * @param {number} index
+ * @returns {import("../types/schema.js").ArrayLayoutElement}
  */
 function deepScopeReplace(uiSchema, index) {
   const scopeSearch = uiSchema.scope;
   const uiSchemaCopy = structuredClone(uiSchema);
-  return executeDeepScopeReplace(uiSchemaCopy, scopeSearch, index);
+  return /**@type {import("../types/schema.js").ArrayLayoutElement} */ (
+    executeDeepScopeReplace(uiSchemaCopy, scopeSearch, index)
+  );
 }
 
 /**
  *
- * @param {import("@jsonforms/core").VerticalLayout} uiSchema
+ * @param {import("../types/schema.js").ArrayLayoutElement | import("../types/schema.js").ElementListLayout} uiSchema
  * @param {string} scopeSearch
  * @param {number} index
  */
@@ -46,6 +49,7 @@ function executeDeepScopeReplace(uiSchema, scopeSearch, index) {
     }
     // @ts-ignore
     if (element.elements) {
+      // @ts-ignore
       executeDeepScopeReplace(element, scopeSearch, index);
     }
     return uiSchema;
@@ -95,11 +99,10 @@ export class ArrayLayout extends ScopedElementsMixin(LitElement) {
 
   constructor() {
     super();
-    /**@type {import("@jsonforms/core").JsonSchema7} */
+    /**@type {import("../types/schema.js").JsonSchema7} */
     this.schema = {};
 
-    this.uiSchema =
-      /**@type {import("@jsonforms/core").VerticalLayout & {scope: string, label?: string}} */ ({});
+    this.uiSchema = /**@type {import("../types/schema.js").ArrayLayoutElement} */ ({});
     this.value = {};
     /**@type {import("@cfworker/json-schema").ValidationResult} */
     this.validatorState = { valid: true, errors: [] };

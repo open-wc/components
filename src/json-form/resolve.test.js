@@ -10,18 +10,18 @@ import {
 
 describe('resolveSchema', () => {
   it('01: resolves a simple schema', () => {
-    const schema = {
+    const schema = /**@type {import("./types/schema.js").JsonSchema7} */ ({
       type: 'object',
       properties: { foo: { type: 'string' }, bar: { type: 'number' } },
-    };
+    });
     const resolvedSchema = resolveSchema(schema, '#/properties/foo');
     assert.deepEqual({ type: 'string' }, resolvedSchema);
   });
   it('02: resolves an array schema', () => {
-    const schema = {
+    const schema = /**@type {import("./types/schema.js").JsonSchema7} */ ({
       type: 'object',
       properties: { foo: { type: 'array', items: { type: 'string' } }, bar: { type: 'number' } },
-    };
+    });
     const resolvedSchema = resolveSchema(schema, '#/properties/foo/0');
     const resolvedSchema2 = resolveSchema(schema, '#/properties/foo/1');
     assert.deepEqual({ type: 'string' }, resolvedSchema);
@@ -125,7 +125,10 @@ describe('resolveSchema', () => {
     assert.deepEqual(elseSchema, { type: 'string' });
   });
   it('07: returns null for unknown paths', () => {
-    const schema = { type: 'object', properties: { foo: { type: 'string' } } };
+    const schema = /**@type {import("./types/schema.js").JsonSchema7} */ ({
+      type: 'object',
+      properties: { foo: { type: 'string' } },
+    });
     assert.equal(resolveSchema(schema, '#/properties/unknown'), null);
   });
 });

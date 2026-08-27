@@ -22,11 +22,10 @@ export class DetailsLayout extends ScopedElementsMixin(LitElement) {
 
   constructor() {
     super();
-    /**@type {import("@jsonforms/core").JsonSchema7} */
+    /**@type {import("../types/schema.js").JsonSchema7} */
     this.schema = {};
 
-    this.uiSchema =
-      /**@type {{type: 'DetailLayout', label: string, subLayout: import('@jsonforms/core').Layout, options?: {formatter?: string, formatterScope?: string}} }} */ ({});
+    this.uiSchema = /**@type {import('../types/schema.js').DetailsLayoutElement} */ ({});
     this.value = {};
     /**@type {import("@cfworker/json-schema").ValidationResult} */
     this.validatorState = { valid: true, errors: [] };

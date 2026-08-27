@@ -15,7 +15,7 @@ export const LAYOUTS = {
 
 /**
  * @param {unknown} schema
- * @param {import("@jsonforms/core").Layout} uiSchema
+ * @param {import("../types/schema.js").Layout} uiSchema
  * @param {unknown} value
  * @param {import("@cfworker/json-schema").ValidationResult} validatorState
  * @param {import("../types/renderer.js").RendererRecord} renderers
@@ -71,7 +71,7 @@ export function layoutRenderer(
 }
 
 /**
- * @param {import("@jsonforms/core").Layout} uiSchema
+ * @param {import("../types/schema.js").Layout} uiSchema
  * @param {string} fallbackValue
  */
 function withInheritedFallbackValue(uiSchema, fallbackValue) {
@@ -81,14 +81,11 @@ function withInheritedFallbackValue(uiSchema, fallbackValue) {
 }
 
 /**
- * @param {import("@jsonforms/core").UISchemaElement} uiSchema
+ * @param {import("../types/schema.js").UISchemaElement} uiSchema
  * @param {string | undefined} fallbackValue
  */
 function inheritFallbackValue(uiSchema, fallbackValue) {
-  const typedUiSchema =
-    /**@type {import("@jsonforms/core").UISchemaElement & {options?: {fallbackValue?: string}; elements?: import("@jsonforms/core").UISchemaElement[]}}*/ (
-      uiSchema
-    );
+  const typedUiSchema = /**@type {import("../types/schema.js").UISchemaElement} */ (uiSchema);
   const nextFallbackValue = typedUiSchema.options?.fallbackValue ?? fallbackValue;
   if (typedUiSchema.type === 'Control' && nextFallbackValue !== undefined) {
     typedUiSchema.options = {
@@ -96,8 +93,9 @@ function inheritFallbackValue(uiSchema, fallbackValue) {
       fallbackValue: nextFallbackValue,
     };
   }
-  if (typedUiSchema.elements) {
-    for (const element of typedUiSchema.elements) {
+  const elements = 'elements' in typedUiSchema ? typedUiSchema.elements : undefined;
+  if (elements) {
+    for (const element of /**@type {import("../types/schema.js").UISchemaElement[]} */ (elements)) {
       inheritFallbackValue(element, nextFallbackValue);
     }
   }

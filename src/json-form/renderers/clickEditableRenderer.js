@@ -273,7 +273,7 @@ function renderAutocomplete(
   const error = getError(state.uiSchema, state.validatorState);
   const userInteracted = Boolean(resolveDataSchema(value, state.uiSchema.scope) !== null);
   const items =
-    /**@type {import("@jsonforms/core").JsonSchema7} */ (state.schema.items) || state.schema;
+    /**@type {import("../types/schema.js").JsonSchema7} */ (state.schema.items) || state.schema;
   const _enum = items?.oneOf ? items.oneOf : enumToOneOf(items?.enum);
   return html`
     <owc-click-editable-autocomplete

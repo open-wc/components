@@ -37,9 +37,9 @@ export class CheckboxComboLayout extends ScopedElementsMixin(LitElement) {
 
   constructor() {
     super();
-    /**@type {import("@jsonforms/core").JsonSchema7} */
+    /**@type {import("../types/schema.js").JsonSchema7} */
     this.schema = {};
-    this.uiSchema = /**@type {import("@jsonforms/core").Layout & {label?: string}}  */ ({});
+    this.uiSchema = /**@type {import("../types/schema.js").ElementListLayout} */ ({});
     this.value = {};
     /**@type {import("@cfworker/json-schema").ValidationResult} */
     this.validatorState = { valid: true, errors: [] };
@@ -54,7 +54,7 @@ export class CheckboxComboLayout extends ScopedElementsMixin(LitElement) {
   getCheckedState() {
     const checkboxes = [];
     for (const elem of this.uiSchema.elements) {
-      const typedElem = /**@type {import("@jsonforms/core").ControlElement}*/ (elem);
+      const typedElem = /**@type {import("../types/schema.js").ControlElement}*/ (elem);
       checkboxes.push(resolveDataSchema(this.value, typedElem.scope));
     }
     const countChecked = checkboxes.filter(_ => _).length;
@@ -79,7 +79,7 @@ export class CheckboxComboLayout extends ScopedElementsMixin(LitElement) {
    */
   activateAll(event) {
     for (const elem of this.uiSchema.elements) {
-      const typedElem = /**@type {import("@jsonforms/core").ControlElement}*/ (elem);
+      const typedElem = /**@type {import("../types/schema.js").ControlElement}*/ (elem);
       const segments = dataPathSegments(typedElem.scope);
       let currentBlock = this.value;
       for (let i = 0; i < segments.length - 1; i++) {

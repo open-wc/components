@@ -1,5 +1,5 @@
 /**
- * @param {import('@jsonforms/core').ControlElement} uiSchema
+ * @param {Omit<import('../types/schema.js').ControlElement, 'options'> & {options?: Omit<import('../types/schema.js').UISchemaOptions, 'autofill'> & {autofill?: unknown}}} uiSchema
  * @returns {Array<{label: string, value: string, fill: Record<string, unknown>}>}
  */
 export function normalizeAutofillOptions(uiSchema) {
