@@ -6,7 +6,7 @@ customElements.define('owc-table-header-cell', OwcTableHeaderCell);
 describe('owc-table-header-cell', () => {
   it('uses German terms after the German translation is registered', async () => {
     const originalLanguage = document.documentElement.lang;
-    await import('../translations/de.js');
+    await import('@open-wc/components/register/de.js');
     document.documentElement.lang = 'de-AT';
 
     const el = await fixture(html`<owc-table-header-cell>Name</owc-table-header-cell>`);
@@ -17,7 +17,7 @@ describe('owc-table-header-cell', () => {
 
   it('falls back to English for an unsupported locale', async () => {
     const originalLanguage = document.documentElement.lang;
-    await import('../translations/en.js');
+    await import('@open-wc/components/register/en.js');
     document.documentElement.lang = 'fr-CA';
 
     const el = await fixture(html`<owc-table-header-cell>Name</owc-table-header-cell>`);
@@ -100,6 +100,6 @@ describe('owc-table-header-cell', () => {
     });
     el.shadowRoot.querySelector('#wrapper').click();
     expect(fired).to.be.false;
-    expect(el.order).to.equal(null);
+    expect(el.order).to.equal(undefined);
   });
 });

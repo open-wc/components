@@ -73,6 +73,7 @@ function sortable(rootEl, update) {
  */
 export class OwcTableSettings extends OwcAutocomplete {
   #localize = new OwcLocalizeController(this);
+  #overridesInitialized = false;
   /** @type {Record<string, {type: any, attribute?: any, converter?: any}>} */
   static properties = {
     storeNamePrefix: { type: String },
@@ -148,16 +149,6 @@ export class OwcTableSettings extends OwcAutocomplete {
    * @param {import('lit').PropertyValues} changedProperties
    */
   firstUpdated(changedProperties) {
-    const url = this.getOverridesFromUrl();
-    this.localOverrides = this.getOverridesFromLocalStorage();
-    if (url.order || Object.values(url.visibility).length > 0) {
-      this.saveOverridesToUrl(this.localOverrides);
-    }
-    this.overrides.visibility = this.mergeVisibility(
-      this.localOverrides.visibility,
-      url.visibility,
-    );
-    this.reorderColumns(url.order || this.localOverrides.order || this.columns.map(c => c.field));
     this.dispatchEvent(new CustomEvent('change'));
 
     sortable(/** @type {HTMLElement} */ (this.shadowRoot?.querySelector('#rows')), () => {
@@ -188,11 +179,28 @@ export class OwcTableSettings extends OwcAutocomplete {
     super.firstUpdated(changedProperties);
   }
 
+  #initializeOverrides() {
+    this.#overridesInitialized = true;
+    const url = this.getOverridesFromUrl();
+    this.localOverrides = this.getOverridesFromLocalStorage();
+    if (url.order || Object.values(url.visibility).length > 0) {
+      this.saveOverridesToUrl(this.localOverrides);
+    }
+    this.overrides.visibility = this.mergeVisibility(
+      this.localOverrides.visibility,
+      url.visibility,
+    );
+    this.reorderColumns(url.order || this.localOverrides.order || this.columns.map(c => c.field));
+  }
+
   /**
    * @param {import('lit').PropertyValues} changedProperties
    */
   update(changedProperties) {
     this.placeholder = this.#localize.term('tableColumns');
+    if (!this.#overridesInitialized) {
+      this.#initializeOverrides();
+    }
     super.update(changedProperties);
   }
 

@@ -1,21 +1,33 @@
 import { fixture, html, expect, aTimeout, waitUntil } from '@open-wc/testing';
+import { setupIgnoreWindowResizeObserverLoopErrors } from '@lit-labs/virtualizer/support/resize-observer-errors.js';
 import { OwcPinboard } from './OwcPinboard.js';
 
 customElements.define('owc-pinboard', OwcPinboard);
 
-// The virtualizer's ResizeObserver occasionally reports this benign browser
-// limitation; without suppression the runner counts it as an uncaught error.
-window.addEventListener('error', ev => {
-  if (ev.message?.includes('ResizeObserver loop completed')) {
-    ev.stopImmediatePropagation();
-    ev.preventDefault();
-  }
+setupIgnoreWindowResizeObserverLoopErrors(beforeEach, afterEach);
+
+let originalConsoleError;
+beforeEach(() => {
+  // eslint-disable-next-line no-console
+  originalConsoleError = console.error;
+  // eslint-disable-next-line no-console
+  console.error = (...args) => {
+    if (args.length !== 1 || args[0] !== null) {
+      originalConsoleError(...args);
+    }
+  };
+});
+afterEach(() => {
+  // eslint-disable-next-line no-console
+  console.error = originalConsoleError;
 });
 
 const columns = [
   { label: 'Todo', value: 'todo' },
   { label: 'Done', value: 'done' },
 ];
+
+const testImage = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
 
 /**
  * @param {object} [overrides]
@@ -59,7 +71,7 @@ describe('owc-pinboard', () => {
     const el = await pinboardFixture({
       fieldMapper: {
         body: row => row.title,
-        image: { src: () => '/img.png', alt: row => row.title },
+        image: { src: () => testImage, alt: row => row.title },
       },
     });
     const img = el.shadowRoot.querySelector('owc-card img');

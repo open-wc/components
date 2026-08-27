@@ -52,7 +52,7 @@ export class OwcDetailCard extends LitElement {
     this.withBody = false;
   }
 
-  updated() {
+  willUpdate() {
     this.withBody = this.hasSlotController.test('[default]');
     this.withIcon = this.hasSlotController.test('icon');
     this.withDetail = this.hasSlotController.test('detail');

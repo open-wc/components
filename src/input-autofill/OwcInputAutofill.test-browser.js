@@ -96,7 +96,7 @@ describe('owc-input-autofill', () => {
 
     expect(el.shadowRoot.querySelector('wa-textarea')).to.exist;
     expect(waInput(el).disabled).to.equal(true);
-    expect(waInput(el).readOnly).to.equal(true);
+    expect(waInput(el).readonly).to.equal(true);
     expect(autocomplete(el).disabled).to.equal(true);
   });
 

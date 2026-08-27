@@ -3,8 +3,10 @@ import { OwcCardList } from './OwcCardList.js';
 
 customElements.define('owc-card-list', OwcCardList);
 
+const testImage = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+
 const data = [
-  { id: 2, name: 'Beta', img: '/b.png' },
+  { id: 2, name: 'Beta', img: testImage },
   { id: 1, name: 'Alpha', img: '/a.png' },
   { id: 3, name: 'Gamma', img: '/c.png' },
 ];
@@ -66,7 +68,7 @@ describe('owc-card-list', () => {
     const img = cards(el)[0].querySelector('img');
     // it was slotted as "image", which owc-card does not have
     expect(img.getAttribute('slot')).to.equal('media');
-    expect(img.getAttribute('src')).to.equal('/b.png');
+    expect(img.getAttribute('src')).to.equal(testImage);
   });
 
   it('renders header and footer fields and forwards card links', async () => {

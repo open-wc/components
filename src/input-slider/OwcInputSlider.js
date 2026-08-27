@@ -71,6 +71,7 @@ export class OwcInputSlider extends ScopedElementsMixin(LitElement) {
     }
     if (changedProperties.has('value')) {
       this.adjustValueForMinMax();
+      this.textValue = this.value;
     }
     super.update(changedProperties);
   }

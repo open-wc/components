@@ -1,16 +1,25 @@
 import { aTimeout, fixture, html, expect, oneEvent } from '@open-wc/testing';
+import { setupIgnoreWindowResizeObserverLoopErrors } from '@lit-labs/virtualizer/support/resize-observer-errors.js';
 import { OwcTable } from './OwcTable.js';
 
 customElements.define('owc-table', OwcTable);
 
-// Chromium reports this benign limitation while the virtualizer and table
-// column measurements settle; without suppression the runner treats it as an
-// uncaught application error.
-window.addEventListener('error', ev => {
-  if (ev.message?.includes('ResizeObserver loop completed')) {
-    ev.stopImmediatePropagation();
-    ev.preventDefault();
-  }
+setupIgnoreWindowResizeObserverLoopErrors(beforeEach, afterEach);
+
+let originalConsoleError;
+beforeEach(() => {
+  // eslint-disable-next-line no-console
+  originalConsoleError = console.error;
+  // eslint-disable-next-line no-console
+  console.error = (...args) => {
+    if (args.length !== 1 || args[0] !== null) {
+      originalConsoleError(...args);
+    }
+  };
+});
+afterEach(() => {
+  // eslint-disable-next-line no-console
+  console.error = originalConsoleError;
 });
 
 const columns = [

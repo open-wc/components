@@ -24,8 +24,7 @@ html`<owc-file-upload @files-selected=${ev => console.log(ev.target.files)}></ow
   by reference
 - `files-selected` fires on every change; `detail.files` lists the newly
   added files
-- Customizable card content via `renderCardContent(file, removeFile)` and a
-  configurable empty-state `label`
+- Customizable card content via `renderCardContent(file, removeFile)`
 
 ## Docs & demos
 

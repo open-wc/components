@@ -20,16 +20,10 @@ export class OwcCard extends LitElement {
     this.href = '';
   }
 
-  updated() {
-    if (!this.withHeader && this.hasSlotController.test('header')) {
-      this.withHeader = true;
-    }
-    if (!this.withMedia && this.hasSlotController.test('media')) {
-      this.withMedia = true;
-    }
-    if (!this.withFooter && this.hasSlotController.test('footer')) {
-      this.withFooter = true;
-    }
+  willUpdate() {
+    this.withHeader = this.hasSlotController.test('header');
+    this.withMedia = this.hasSlotController.test('media');
+    this.withFooter = this.hasSlotController.test('footer');
   }
 
   render() {

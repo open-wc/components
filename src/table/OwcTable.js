@@ -338,6 +338,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   #virtualizerReadyFrame = 0;
 
+  #initialSortersApplied = false;
+
   #updateInfoHeight() {
     const wrapper = this.shadowRoot?.querySelector('#info-outer-wrapper');
     const height = wrapper?.getBoundingClientRect().height ?? 0;
@@ -372,15 +374,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       this.visibleData = this.allData.slice(ev.first, ev.last + 1);
     });
 
-    const sortedColumns = new Set();
-    for (const column of this.jsonSorters) {
-      sortedColumns.add(column.field);
-    }
-    let defaultSorters = this.#visibleColumns
-      .flatMap(column => column.sorter || [])
-      .map(sorter => ({ order: /** @type {'asc' | 'desc'} */ ('asc'), ...sorter }));
-    defaultSorters = defaultSorters.filter(sorter => !sortedColumns.has(sorter.field));
-    this.jsonSorters = [...this.jsonSorters, ...defaultSorters];
     const columnElements = /** @type {NodeListOf<OwcTableHeaderCell>} */ (
       this.shadowRoot?.querySelectorAll('#data-table owc-table-header-cell')
     );
@@ -533,6 +526,19 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         const width = this.#columnWidths[column.field];
         if (width != null) {
           column.width = width;
+        }
+      }
+      if (!this.#initialSortersApplied) {
+        this.#initialSortersApplied = true;
+        const sortedColumns = new Set(this.jsonSorters.map(sorter => sorter.field));
+        const defaultSorters = this.#visibleColumns
+          .flatMap(column => column.sorter || [])
+          .map(sorter => ({ order: /** @type {'asc' | 'desc'} */ ('asc'), ...sorter }))
+          .filter(sorter => !sortedColumns.has(sorter.field));
+        if (defaultSorters.length > 0) {
+          this.jsonSorters = [...this.jsonSorters, ...defaultSorters];
+          this.sorters = this.jsonSorters.map(jsonToSorters);
+          this.#applySorters();
         }
       }
     }

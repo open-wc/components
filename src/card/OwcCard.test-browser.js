@@ -27,6 +27,16 @@ describe('owc-card', () => {
     expect(el.hasAttribute('with-media')).to.equal(true);
   });
 
+  it('derives slot state without scheduling a follow-up update', async () => {
+    const el = document.createElement('owc-card');
+    el.innerHTML = '<div slot="header">Header</div>';
+    document.body.append(el);
+
+    expect(await el.updateComplete).to.equal(true);
+    expect(el.hasAttribute('with-header')).to.equal(true);
+    el.remove();
+  });
+
   it('detects a media element added later via slotchange (regression)', async () => {
     // the slot controller was registered for a non-existent 'image' slot,
     // so a late media element never re-rendered the card

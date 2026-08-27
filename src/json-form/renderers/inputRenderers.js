@@ -90,6 +90,13 @@ export const checkboxRenderer = (state, ruleOptions, value) => {
   const error = getError(state.uiSchema, state.validatorState);
   const invalid = Boolean(error);
   const staticTag = unsafeStatic(state.uiSchema.options?.toggle ? 'wa-switch' : 'wa-checkbox');
+  const sizeAliases = /** @type {Record<string, string>} */ ({
+    small: 's',
+    medium: 'm',
+    large: 'l',
+  });
+  const requestedSize = state.uiSchema.options?.size;
+  const size = sizeAliases[requestedSize ?? ''] || requestedSize || 'm';
 
   const checkbox = staticHtml`
   <div class=${classMap({
@@ -108,7 +115,7 @@ export const checkboxRenderer = (state, ruleOptions, value) => {
   <${staticTag}
     @input=${inputListener(state.uiSchema, 'checked')}
     ?disabled=${ruleOptions.disabled || state.uiSchema.options?.readonly || false}
-    .size=${state.uiSchema.options?.size || 'medium'}
+    .size=${size}
     ?checked=${resolveDataSchema(value, state.uiSchema.scope)}
     class=${classMap({
       hidden: ruleOptions.hidden,

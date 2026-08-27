@@ -1,5 +1,6 @@
 import { fixture, html, expect, oneEvent, aTimeout } from '@open-wc/testing';
 import { OwcFileUpload } from './OwcFileUpload.js';
+import '@open-wc/components/register/de.js';
 
 customElements.define('owc-file-upload', OwcFileUpload);
 
@@ -39,15 +40,11 @@ function selectFiles(el, files) {
 }
 
 describe('owc-file-upload', () => {
-  it('shows the upload label while empty, configurable via label', async () => {
-    const el = await fixture(html`<owc-file-upload></owc-file-upload>`);
+  it('shows the localized upload label while empty', async () => {
+    const el = await fixture(html`<owc-file-upload lang="de"></owc-file-upload>`);
     expect(el.shadowRoot.querySelector('.upload-label').textContent).to.equal(
       'Dateien hierher ziehen oder klicken, um hochzuladen',
     );
-
-    el.label = 'Drop files here';
-    await el.updateComplete;
-    expect(el.shadowRoot.querySelector('.upload-label').textContent).to.equal('Drop files here');
   });
 
   it('adds selected files as cards and fires files-selected with the added files', async () => {

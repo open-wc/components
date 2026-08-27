@@ -32,6 +32,7 @@ import { processLabel } from '../label/label.js';
 import { OwcTooltip } from '../../tooltip/OwcTooltip.js';
 import { OwcLocalizeController } from '@open-wc/components/localization.js';
 import { OwcInputAutofill } from '../../input-autofill/OwcInputAutofill.js';
+import { OwcAutocomplete } from '../../autocomplete/OwcAutocomplete.js';
 
 /**@type {import("../types/renderer.js").FullRendererRecord} */
 export const DEFAULT_RENDERERS = {
@@ -63,6 +64,7 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
     'owc-separator': OwcSeparator,
     'owc-tooltip': OwcTooltip,
     'owc-input-autofill': OwcInputAutofill,
+    'owc-autocomplete': OwcAutocomplete,
   };
   static properties = {
     schema: { type: Object },

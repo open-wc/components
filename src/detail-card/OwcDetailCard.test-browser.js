@@ -29,6 +29,16 @@ describe('owc-detail-card', () => {
     expect(el.hasAttribute('with-body')).to.equal(false);
   });
 
+  it('derives slot state without scheduling a follow-up update', async () => {
+    const el = document.createElement('owc-detail-card');
+    el.innerHTML = '<div slot="text">Text</div>Body';
+    document.body.append(el);
+
+    expect(await el.updateComplete).to.equal(true);
+    expect(el.hasAttribute('with-body')).to.equal(true);
+    el.remove();
+  });
+
   it('opens via property and syncs back when the inner details closes (regression)', async () => {
     const el = await fixture(
       html`<owc-detail-card>
@@ -70,6 +80,7 @@ describe('owc-detail-card', () => {
       html`<owc-detail-card
         style="
           --owc-detail-card-background: rgb(241, 247, 250);
+          --owc-detail-card-border-width: 2px;
           --owc-detail-card-border-style: dashed;
           --owc-detail-card-border-color: rgb(86, 135, 168);
           --owc-detail-card-shadow: none;
@@ -83,7 +94,7 @@ describe('owc-detail-card', () => {
 
     expect(styles.backgroundColor).to.equal('rgb(241, 247, 250)');
     expect(styles.borderTopStyle).to.equal('dashed');
-    expect(styles.borderTopWidth).to.equal('1.5px');
+    expect(styles.borderTopWidth).to.equal('2px');
     expect(styles.borderTopColor).to.equal('rgb(86, 135, 168)');
     expect(styles.borderTopRightRadius).to.equal('8px');
     expect(styles.boxShadow).to.equal('none');

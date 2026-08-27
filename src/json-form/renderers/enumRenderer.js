@@ -15,10 +15,6 @@ import { enumToOneOf } from '../helpers/enumToOneOf.js';
 import { when } from 'lit/directives/when.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 
-if (!customElements.get('owc-autocomplete')) {
-  import('@open-wc/components/define/owc-autocomplete.js');
-}
-
 /**@type {import("../types/renderer.js").ControlRenderer} */
 export const enumRenderer = (state, ruleOptions, value) => {
   const _enum = state.schema.oneOf ? state.schema.oneOf : enumToOneOf(state.schema.enum);
