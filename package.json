@@ -54,6 +54,8 @@
     "postinstall": "patch-package",
     "start": "rocket start",
     "test": "wireit",
+    "test:node": "wireit",
+    "test:browser": "wireit",
     "types": "wireit"
   },
   "prettier": {
@@ -69,12 +71,11 @@
     ]
   },
   "dependencies": {
-    "@awesome.me/webawesome": "3.11.0",
+    "@awesome.me/webawesome": "^3.11.0",
     "@cfworker/json-schema": "^4.1.1",
-    "@lit-labs/virtualizer": "2.1.1",
-    "@open-wc/lit-helpers": "0.7.0",
-    "@open-wc/scoped-elements": "~2.1.4",
-    "apexcharts": "4.5.0",
+    "@lit-labs/virtualizer": "^2.1.1",
+    "@open-wc/lit-helpers": "^0.7.0",
+    "@open-wc/scoped-elements": "^3.0.0",
     "countup.js": "^2.9.0",
     "lit": "^3.3.1"
   },
@@ -102,14 +103,29 @@
   },
   "wireit": {
     "test": {
+      "dependencies": [
+        "test:browser",
+        "test:node"
+      ]
+    },
+    "test:browser": {
+      "command": "web-test-runner",
+      "files": [
+        "exports/**/*",
+        "src/**/*",
+        "!src/**/*.test.js"
+      ],
+      "output": []
+    },
+    "test:node": {
       "command": "node --test",
       "files": [
         "exports/**/*",
         "src/**/*",
-        "test/**/*",
-        "types/**/*",
-        "tsconfig.json"
-      ]
+        "scripts/**/*.js",
+        "!src/**/*.test-browser.js"
+      ],
+      "output": []
     },
     "types": {
       "command": "tsc --build --pretty",
