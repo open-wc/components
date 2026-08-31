@@ -4,7 +4,7 @@ export interface Tab<T> {
   label?: string | TemplateResult;
   labelPrefix?: string | TemplateResult;
   labelSuffix?: string | TemplateResult;
-  content?: (options: T & { open: boolean }) => string | TemplateResult;
+  content?: (options: T & { open: boolean; closeTab: () => void }) => string | TemplateResult;
   visible?: boolean | ((data: T) => boolean);
   order?: number;
 }

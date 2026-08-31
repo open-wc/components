@@ -49,7 +49,7 @@ export type FieldPathConfig<T> = {
 };
 
 // FIXME: Remove "id" after we removed hardcoded "id" field in csv.js
-export type Field<T> = Leaves<T, 3> | `_${string}` | '' | 'id';
+export type Field<T> = Leaves<T, 4> | `_${string}` | '' | 'id';
 
 export type FieldPathLabel = TemplateResult | string | (() => TemplateResult);
 

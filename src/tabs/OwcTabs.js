@@ -61,9 +61,12 @@ export class OwcTabs extends LitElement {
                 ${
                   this.renderMode === 'eager' || this.active === key
                     ? tab.content
-                      ? tab.content({
+                        ? tab.content({
                           ...options,
                           open: this.active === key,
+                          closeTab: () => {
+                            this.active = '';
+                          },
                         })
                       : `Please define a content function for the tab "${key}"`
                     : nothing

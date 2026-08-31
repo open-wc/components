@@ -6,7 +6,7 @@ import { Validator } from '@cfworker/json-schema';
  * @param {any} data
  */
 export function validateSchemaSystem(schema, data) {
-  // @ts-ignore
+  // @ts-ignore JsonForms' broader schema is valid input for the Draft 7 validator.
   const validator = new Validator(schema, '7', false);
   return validator.validate(removeFalseIshAndEmptyProperties(data));
 }

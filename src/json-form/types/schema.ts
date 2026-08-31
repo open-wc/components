@@ -1,22 +1,42 @@
-import type { Schema } from '@cfworker/json-schema';
+import type { InstanceType, Schema } from '@cfworker/json-schema';
 
-/**
- * JSON Schema Draft 7 as consumed by JsonForm.
- *
- * Validation is provided by @cfworker/json-schema, so this type builds on the
- * schema accepted by that validator and adds the annotation fields JsonForm
- * renders directly.
- */
-export interface JsonSchema7 extends Schema {
+export type JsonSchemaValue = string | number | boolean | null;
+
+/** Only the recursive positions whose JsonForm API differs from cfworker's schema type. */
+interface JsonSchemaOverrides {
   title?: string;
   description?: string;
   default?: unknown;
+  exclusiveMaximum?: number;
+  exclusiveMinimum?: number;
+  additionalItems?: boolean | JsonSchema7;
+  items?: JsonSchema7 | JsonSchema7[];
+  additionalProperties?: boolean | JsonSchema7;
+  definitions?: Record<string, JsonSchema7>;
+  properties?: Record<string, JsonSchema7>;
+  patternProperties?: Record<string, JsonSchema7>;
+  dependencies?: Record<string, JsonSchema7 | string[]>;
+  enum?: JsonSchemaValue[];
+  type?: InstanceType | InstanceType[];
+  allOf?: JsonSchema7[];
+  anyOf?: JsonSchema7[];
+  oneOf?: JsonSchema7[];
+  not?: JsonSchema7;
   unit?: string;
   readOnly?: boolean;
   writeOnly?: boolean;
   examples?: unknown[];
+  contains?: JsonSchema7;
+  propertyNames?: JsonSchema7;
+  const?: JsonSchemaValue;
+  if?: JsonSchema7;
+  then?: JsonSchema7;
+  else?: JsonSchema7;
   errorMessage?: unknown;
 }
+
+/** JSON Schema Draft 7 as consumed by JsonForm. */
+export type JsonSchema7 = Omit<Schema, keyof JsonSchemaOverrides> & JsonSchemaOverrides;
 
 export type RuleEffect = 'SHOW' | 'HIDE' | 'ENABLE' | 'DISABLE';
 

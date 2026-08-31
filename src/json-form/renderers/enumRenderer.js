@@ -45,7 +45,7 @@ export const enumRenderer = (state, ruleOptions, value) => {
       // @ts-ignore
       _enum,
       option =>
-        html`<${staticInner} .value=${option.const.toString()}>${option.title}</${staticInner}>`,
+        html`<${staticInner} .value=${String(option.const)}>${option.title}</${staticInner}>`,
     )}
   </${staticOuter}>
   ${when(
