@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.3
+
+Table operator type improvements
+
 ## 0.1.2
 
 Json Form Type Fixes
