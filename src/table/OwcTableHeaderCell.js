@@ -87,6 +87,7 @@ export class OwcTableHeaderCell extends LitElement {
         flex: 1;
         min-width: 0;
         overflow: hidden;
+        justify-content: var(--owc-table-header-cell-align, var(--owc-table-header-align, start));
       }
 
       #slot-wrapper ::slotted(*) {
