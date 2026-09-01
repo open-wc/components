@@ -338,6 +338,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   #virtualizerReadyFrame = 0;
 
+  #measureColumnsOnNextVirtualizerRange = true;
+
   #initialSortersApplied = false;
 
   #updateInfoHeight() {
@@ -369,11 +371,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
    * @param {import('lit').PropertyValues} changedProperties
    */
   firstUpdated(changedProperties) {
-    this.virtualizerHost?.addEventListener('rangeChanged', ev => {
-      // @ts-ignore
-      this.visibleData = this.allData.slice(ev.first, ev.last + 1);
-    });
-
     const columnElements = /** @type {NodeListOf<OwcTableHeaderCell>} */ (
       this.shadowRoot?.querySelectorAll('#data-table owc-table-header-cell')
     );
@@ -468,7 +465,11 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     ) {
       this.#applyFilters();
       this.#applySorters();
-      this.recalculateColumnWidths();
+      if (this.#shouldUseVirtualizer(this.allData)) {
+        this.#measureColumnsOnNextVirtualizerRange = true;
+      } else {
+        this.recalculateColumnWidths();
+      }
     }
     if (changedProperties.has('actionTabActive')) {
       this.#saveStateToUrl();
@@ -543,7 +544,11 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
     }
     if (changedProperties.has('overrides')) {
-      this.recalculateColumnWidths();
+      if (this.#shouldUseVirtualizer(this.allData)) {
+        this.#measureColumnsOnNextVirtualizerRange = true;
+      } else {
+        this.recalculateColumnWidths();
+      }
     }
     if (changedProperties.has('filter')) {
       if (this.filterMode === 'global-search-with-builder' || this.filterMode === 'global-search') {
@@ -1087,11 +1092,29 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     // non-virtual list does not inherit the previous virtual scroll height.
     return keyed(
       this.#shouldUseVirtualizer(items),
-      html`<div id="virtualize-container">
+      html`<div id="virtualize-container" @rangeChanged=${this.#handleVirtualizerRangeChanged}>
         ${this.#renderList({ items, renderItem: this.#renderItem })}
       </div>`,
     );
   }
+
+  #handleVirtualizerRangeChanged = (/** @type {Event & { first: number; last: number }} */ ev) => {
+    this.visibleData = this.allData.slice(ev.first, ev.last + 1);
+    if (this.#measureColumnsOnNextVirtualizerRange) {
+      this.#measureColumnsOnNextVirtualizerRange = false;
+      const measure = () => {
+        if (this.isConnected) {
+          void this.recalculateColumnWidths();
+        }
+      };
+      const layoutComplete = this.virtualizer?.layoutComplete;
+      if (layoutComplete) {
+        void layoutComplete.then(measure, () => undefined);
+      } else {
+        requestAnimationFrame(measure);
+      }
+    }
+  };
 
   #renderDataTable() {
     return html`
@@ -1382,40 +1405,43 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     </div>`;
 
     const rowId = this.getRowId(row);
-    const rowDetail =
+    const hasDetailRow =
       mode === 'data-table' &&
       (this.renderMode === 'detail' ||
         this.renderMode === 'detailDeferred' ||
         this.renderMode === 'linkWithDetail') &&
-      rowId
-        ? html`
-            <wa-details
-              summary=${this.#localize.term('tableOpenDetails')}
-              ?open=${this.openDetails?.includes(rowId)}
-              @wa-after-show=${this.handleDetailsOpen}
-            >
-              ${
-                this.#shouldRenderDetail(rowId)
-                  ? until(
-                      Promise.resolve(
-                        this.renderDetail(row, {
-                          jsonFilters: this.jsonFilters,
-                          closeDetail: () => {
-                            this.openDetails = this.openDetails.filter(elm => elm !== rowId);
-                          },
-                        }),
-                      ),
-                      html`<div
-                        style="display: flex; justify-content: center; align-items: center; min-height: 100px;"
-                      >
-                        <wa-spinner></wa-spinner>
-                      </div>`,
-                    )
-                  : nothing
-              }
-            </wa-details>
-          `
+      rowId;
+    const detailContent =
+      hasDetailRow && this.#shouldRenderDetail(rowId)
+        ? this.renderDetail(row, {
+            jsonFilters: this.jsonFilters,
+            closeDetail: () => {
+              this.openDetails = this.openDetails.filter(elm => elm !== rowId);
+            },
+          })
         : nothing;
+    const rowDetail = hasDetailRow
+      ? html`
+          <wa-details
+            summary=${this.#localize.term('tableOpenDetails')}
+            ?open=${this.openDetails?.includes(rowId)}
+            @wa-after-show=${this.handleDetailsOpen}
+          >
+            ${
+              detailContent instanceof Promise
+                ? until(
+                    detailContent,
+                    html`<div
+                      style="display: flex; justify-content: center; align-items: center; min-height: 100px;"
+                    >
+                      <wa-spinner></wa-spinner>
+                    </div>`,
+                  )
+                : detailContent
+            }
+          </wa-details>
+        `
+      : nothing;
     return mode === 'data-table'
       ? html`<div class="row-container ${setLast && index === lastIndex ? 'last-row' : ''}">
           ${annotationContent}${rawRowContent}${rowDetail}
@@ -1749,7 +1775,16 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     for (const row of Array.from(bodyRows)) {
       const cells = row.querySelectorAll(':scope > .cell');
       cells.forEach((cell, index) => {
-        const width = Math.ceil(cell.scrollWidth + 36); // padding recalculation
+        const content = cell.querySelector(':scope > .cell-content');
+        const contentValue = content?.querySelector(':scope > .cell-text, :scope > .cell-full');
+        const contentStyle = content ? getComputedStyle(content) : undefined;
+        const horizontalPadding = contentStyle
+          ? parseFloat(contentStyle.paddingLeft) + parseFloat(contentStyle.paddingRight)
+          : 0;
+        const naturalContentWidth = contentValue
+          ? Math.max(contentValue.scrollWidth, contentValue.getBoundingClientRect().width)
+          : (content?.scrollWidth ?? cell.scrollWidth);
+        const width = Math.ceil(naturalContentWidth + horizontalPadding);
         if (width > (measuredWidths[index] ?? 0)) {
           measuredWidths[index] = width;
         }
