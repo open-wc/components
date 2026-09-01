@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 0.1.4
 
 - Render synchronous table row details immediately while retaining the loading state for asynchronous details.
 - Measure formatted table cells after virtualized rows become available instead of retaining header-only column widths.
