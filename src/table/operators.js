@@ -36,6 +36,13 @@ export const ARRAY_OPERATORS = {
   every: 'jeder',
 };
 
+/**
+ * @type {typeof DATE_OPERATORS &
+ *   typeof NUMBER_OPERATORS &
+ *   typeof TEXT_OPERATORS &
+ *   typeof OTHER_OPERATORS &
+ *   typeof ARRAY_OPERATORS}
+ */
 export const OPERATORS = {
   ...DATE_OPERATORS,
   ...NUMBER_OPERATORS,
