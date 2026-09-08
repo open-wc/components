@@ -23,7 +23,9 @@ import '@awesome.me/webawesome/dist/components/icon/icon.js';
 
 # Detail Card
 
-A compact expandable card-like component with an accent rail, a leading icon slot, two summary slots, and a default slot for the expanded body.
+A compact expandable card-like component with an optional accent rail, a leading icon slot, two summary slots, and a default slot for the expanded body.
+
+Set `accent-color` to display the accent rail. Without it, the border and rounded corners wrap the entire card. If you previously relied on the default rail, add `accent-color="var(--wa-color-brand-fill-loud)"` to retain it.
 
 Use `owc-detail-card` when a dense list or overview needs to show the most important facts first
 and let users expand a row for supporting detail. The whole summary row toggles the body. Filled

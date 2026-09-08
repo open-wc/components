@@ -75,7 +75,7 @@ export class OwcDetailCard extends LitElement {
 
     return html`
       <wa-details
-        class="card"
+        class="card${this.accentColor ? ' card--with-accent' : ''}"
         style=${styleMap(styles ?? {})}
         ?open=${this.open}
         @wa-show=${this.handleToggle}
@@ -115,13 +115,13 @@ export class OwcDetailCard extends LitElement {
         --owc-detail-card-accent-color: var(--wa-color-brand-fill-loud);
         --owc-detail-card-accent-width: 0.5625rem;
         --owc-detail-card-background: var(--wa-color-surface-default);
-        --owc-detail-card-border-width: 1.5px;
+        --owc-detail-card-border-width: var(--wa-border-width-s, 1.5px);
         --owc-detail-card-border-style: solid;
         --owc-detail-card-border-color: var(--wa-color-surface-border);
         --owc-detail-card-border: var(--owc-detail-card-border-width)
           var(--owc-detail-card-border-style) var(--owc-detail-card-border-color);
         --owc-detail-card-border-inline-start-width: 0;
-        --owc-detail-card-border-radius: 0.5rem;
+        --owc-detail-card-border-radius: var(--wa-border-radius-l, 0.5rem);
         --owc-detail-card-shadow: var(--wa-shadow-s);
         display: block;
         color: var(--wa-color-text-normal);
@@ -171,9 +171,9 @@ export class OwcDetailCard extends LitElement {
         display: grid;
         grid-template-columns: auto minmax(0, 1fr) auto auto;
         align-items: center;
-        gap: 0.5rem;
+        gap: var(--wa-space-xs, 0.5rem);
         min-inline-size: 0;
-        padding: 0.75rem 1rem;
+        padding: var(--wa-space-s, 0.75rem) var(--wa-space-m, 1rem);
         margin-inline-start: var(--owc-detail-card-accent-width);
         background-color: var(--owc-detail-card-background);
         border: var(--owc-detail-card-border);
@@ -183,9 +183,25 @@ export class OwcDetailCard extends LitElement {
         box-shadow: var(--owc-detail-card-shadow);
       }
 
-      wa-details[open] .content {
+      :host([with-body]) wa-details[open] .content {
         border-block-end-width: 0;
+        border-end-start-radius: 0;
         border-end-end-radius: 0;
+      }
+
+      .card:not(.card--with-accent)::part(base) {
+        background: transparent;
+      }
+
+      .card:not(.card--with-accent) .content,
+      .card:not(.card--with-accent) .body {
+        margin-inline-start: 0;
+      }
+
+      .card:not(.card--with-accent) .content {
+        border-inline-start-width: var(--owc-detail-card-border-width);
+        border-start-start-radius: var(--owc-detail-card-border-radius);
+        border-end-start-radius: var(--owc-detail-card-border-radius);
       }
 
       .icon {
@@ -224,7 +240,7 @@ export class OwcDetailCard extends LitElement {
 
       .badge {
         display: flex;
-        gap: 0.25rem;
+        gap: var(--wa-space-2xs, 0.25rem);
         position: absolute;
         inset-block-start: 0;
         inset-inline-end: 1.25rem;
@@ -234,7 +250,7 @@ export class OwcDetailCard extends LitElement {
 
       slot[name='badge']::slotted(wa-badge) {
         padding: 0.18em 0.72em;
-        font-size: 11px;
+        font-size: var(--wa-font-size-2xs, 11px);
       }
 
       wa-details[open] .suffix {
@@ -249,13 +265,17 @@ export class OwcDetailCard extends LitElement {
         border-top-width: 0;
         border-end-end-radius: var(--owc-detail-card-border-radius);
         background-color: var(--owc-detail-card-background);
-        padding: 0.75rem 1rem;
+        padding: var(--wa-space-s, 0.75rem) var(--wa-space-m, 1rem);
+      }
+
+      .card:not(.card--with-accent) .body {
+        border-end-start-radius: var(--owc-detail-card-border-radius);
       }
 
       .body::before {
         content: '';
         position: absolute;
-        inset-inline: 1rem;
+        inset-inline: var(--wa-space-m, 1rem);
         inset-block-start: 0;
         border-top: 1px solid var(--owc-detail-card-border-color);
       }
