@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { join } from 'lit/directives/join.js';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import '@awesome.me/webawesome/dist/components/callout/callout.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 import '@awesome.me/webawesome/dist/components/progress-bar/progress-bar.js';
@@ -17,7 +18,9 @@ import { containerStyleFor, defaultIconForVariant } from './toastHelpers.js';
  *   icon?: OwcToastComponent['icon'],
  *   text?: OwcToastComponent['text'],
  *   title?: OwcToastComponent['title'],
- *   dismissible?: OwcToastComponent['dismissible']
+ *   dismissible?: OwcToastComponent['dismissible'],
+ *   content?: OwcToastComponent['content'],
+ *   allowUnsafeHtml?: boolean
  * }} options
  * @returns
  */
@@ -62,6 +65,8 @@ export class OwcToastComponent extends ScopedElementsMixin(LitElement) {
     text: { type: String },
     title: { type: String },
     icon: { type: String },
+    content: { attribute: false },
+    allowUnsafeHtml: { type: Boolean },
     progress: { type: Number },
     size: { type: String },
     state: { type: String, reflect: true },
@@ -78,6 +83,8 @@ export class OwcToastComponent extends ScopedElementsMixin(LitElement) {
    *   text?: OwcToastComponent['text'],
    *   title?: OwcToastComponent['title'],
    *   dismissible?: OwcToastComponent['dismissible'],
+   *   content?: OwcToastComponent['content'],
+   *   allowUnsafeHtml?: boolean,
    * }} [options]
    */
   constructor(options = {}) {
@@ -89,6 +96,8 @@ export class OwcToastComponent extends ScopedElementsMixin(LitElement) {
       text = '',
       title = '',
       dismissible = true,
+      content = undefined,
+      allowUnsafeHtml = false,
     } = options;
     super();
     /**@type {'brand' | 'neutral' | 'success' | 'warning' | 'danger'} */
@@ -107,6 +116,10 @@ export class OwcToastComponent extends ScopedElementsMixin(LitElement) {
     this.duration = duration;
     /**@type {boolean} */
     this.dismissible = dismissible;
+    /** @type {import('lit').TemplateResult | string | undefined} */
+    this.content = content;
+    /** @type {boolean} */
+    this.allowUnsafeHtml = allowUnsafeHtml;
     this.progress = 100;
 
     /** @type {'visible' | 'fade-out'} */
@@ -188,10 +201,17 @@ export class OwcToastComponent extends ScopedElementsMixin(LitElement) {
       >
         <wa-icon slot="icon" .name=${this.icon || this.defaultIcon}></wa-icon>
         <div class="callout-content">
-          <span>
-            ${this.title ? html`<strong>${this.title}</strong><br />` : ''}
-            ${join(String(this.text ?? '').split('\n'), html`<br />`)}
-          </span>
+          <div class="toast-content">
+            ${
+              (typeof this.content === 'string' && this.allowUnsafeHtml
+                ? unsafeHTML(this.content)
+                : this.content) ||
+              html`<span>
+                ${this.title ? html`<strong>${this.title}</strong><br />` : ''}
+                ${join(String(this.text ?? '').split('\n'), html`<br />`)}
+              </span>`
+            }
+          </div>
           ${
             this.dismissible
               ? html`<owc-icon-button name="x-lg" @click=${() => this.remove()}></owc-icon-button>`
@@ -251,7 +271,21 @@ export class OwcToastComponent extends ScopedElementsMixin(LitElement) {
 
       .callout-content {
         display: flex;
-        align-items: center;
+        align-items: start;
+        gap: var(--wa-space-s);
+      }
+
+      .toast-content {
+        flex: 1;
+      }
+
+      .toast-content > * {
+        margin: 0;
+      }
+
+      .toast-content wa-button {
+        width: 100%;
+        margin-top: var(--wa-space-s);
       }
 
       wa-callout {
