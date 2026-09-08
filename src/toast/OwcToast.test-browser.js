@@ -1,4 +1,5 @@
 import { expect, oneEvent, aTimeout } from '@open-wc/testing';
+import { html } from 'lit';
 import { toast, OwcToastComponent } from './OwcToast.js';
 
 function containers() {
@@ -50,6 +51,27 @@ describe('toast()', () => {
 
     expect(el.shadowRoot.querySelector('strong').textContent).to.equal('Title');
     expect(el.shadowRoot.querySelectorAll('.callout-content br').length).to.be.greaterThan(1);
+  });
+
+  it('renders Lit content', async () => {
+    const el = toast({ content: html`<strong data-content>Undo</strong>`, duration: 60 });
+    await el.updateComplete;
+
+    expect(el.shadowRoot.querySelector('[data-content]').textContent).to.equal('Undo');
+  });
+
+  it('only renders string content as HTML when explicitly enabled', async () => {
+    const safe = toast({ content: '<strong data-unsafe>Undo</strong>', duration: 60 });
+    const unsafe = toast({
+      content: '<strong data-unsafe>Undo</strong>',
+      allowUnsafeHtml: true,
+      duration: 60,
+    });
+    await safe.updateComplete;
+    await unsafe.updateComplete;
+
+    expect(safe.shadowRoot.querySelector('[data-unsafe]')).to.not.exist;
+    expect(unsafe.shadowRoot.querySelector('[data-unsafe]').textContent).to.equal('Undo');
   });
 });
 
