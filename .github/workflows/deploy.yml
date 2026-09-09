@@ -1,0 +1,42 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    timeout-minutes: 20
+    if: github.repository == 'open-wc/components' && github.ref == 'refs/heads/main'
+    name: Deploy components.open-wc.org
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - uses: google/wireit@setup-github-actions-caching/v2
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Deploy documentation to Netlify
+        run: npm run deploy
+        env:
+          NETLIFY_SITE_ID: 4d7abdca-81ca-498d-be1a-96b444086ff1
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
