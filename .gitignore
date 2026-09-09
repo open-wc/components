@@ -1,0 +1,31 @@
+node_modules
+dist
+dist-types
+dist-*
+dev.env
+prod.env
+.env.prod
+.env.dev
+.env
+.DS_Store
+temp
+
+# Local Netlify folder
+.netlify
+.wireit
+
+# imported shoelace icons
+sites/app/entrypoint/assets/icons/*
+sites/app-demo/entrypoint/assets/icons/*
+feat/login/src/assets/icons/*
+assets/icons/*
+
+# generated
+**/generated.*
+
+.codex
+*.tgz
+.vscode
+
+# removed feature
+removed-feature

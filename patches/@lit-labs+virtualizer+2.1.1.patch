@@ -1,0 +1,19 @@
+diff --git a/node_modules/@lit-labs/virtualizer/Virtualizer.js b/node_modules/@lit-labs/virtualizer/Virtualizer.js
+index 09f29a6..4f4d52e 100644
+--- a/node_modules/@lit-labs/virtualizer/Virtualizer.js
++++ b/node_modules/@lit-labs/virtualizer/Virtualizer.js
+@@ -719,12 +719,12 @@ function getElementAncestors(el, includeSelf = false) {
+ }
+ function getClippingAncestors(el, includeSelf = false) {
+     let foundFixed = false;
+     return getElementAncestors(el, includeSelf).filter((a) => {
+         if (foundFixed) {
+             return false;
+         }
+         const style = getComputedStyle(a);
+-        foundFixed = style.position === 'fixed';
++        foundFixed = style.position === 'fixed' || a.hasAttribute('no-clipping');
+-        return style.overflow !== 'visible';
++        return style.display !== 'contents' && style.overflow !== 'visible';
+     });
+ }

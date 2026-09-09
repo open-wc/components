@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "docs-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["rocket", "start", "-p", "8348", "--no-open"],
+      "port": 8348
+    },
+    {
+      "name": "docs-site",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["http-server", "dist", "-p", "8347", "-c-1"],
+      "port": 8347
+    }
+  ]
+}
