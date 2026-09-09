@@ -1,0 +1,148 @@
+{
+  "name": "@open-wc/components",
+  "version": "0.1.0",
+  "description": "Reusable web components and helpers for data, forms, and workflow interfaces.",
+  "keywords": [
+    "web components",
+    "custom elements",
+    "components",
+    "table",
+    "rich table",
+    "autocomplete"
+  ],
+  "license": "MIT",
+  "author": "Open Web Components",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/open-wc/components.git"
+  },
+  "homepage": "https://open-wc.org/components/",
+  "bugs": {
+    "url": "https://github.com/open-wc/components/issues"
+  },
+  "funding": {
+    "url": "https://opencollective.com/modern-web"
+  },
+  "exports": {
+    "./*": {
+      "types": "./dist-types/exports/*",
+      "default": "./exports/*"
+    }
+  },
+  "files": [
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "README.md",
+    "dist-types/**/*",
+    "exports/**/*",
+    "src/**/*",
+    "!**/*.test.*",
+    "!**/*.test-browser.*",
+    "!dist-types/tsconfig.tsbuildinfo"
+  ],
+  "scripts": {
+    "build": "rocket build",
+    "clear": "npm run clear:wireit && npm run clear:types && npm run clear:generated",
+    "clear:generated": "rm -rf $(find . -type f -name generated.* -not -path \"./node_modules/*\")",
+    "clear:types": "rm -rf dist-types",
+    "clear:wireit": "rm -rf .wireit",
+    "debug": "web-test-runner --watch",
+    "format": "eslint . --ignore-pattern .gitignore --fix && prettier \"**/*.{ts,js,json,md}\" --write --ignore-path .gitignore --ignore-path .prettierignore",
+    "lint": "eslint . --ignore-pattern .gitignore && prettier \"**/*.{ts,js,json,md}\" --check --ignore-path .gitignore --ignore-path .prettierignore",
+    "postinstall": "patch-package",
+    "start": "rocket start",
+    "test": "wireit",
+    "test:node": "wireit",
+    "test:browser": "wireit",
+    "types": "wireit"
+  },
+  "prettier": {
+    "arrowParens": "avoid",
+    "printWidth": 100,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "overrides": [
+      {
+        "excludeFiles": "*",
+        "files": "generated.*"
+      }
+    ]
+  },
+  "dependencies": {
+    "@awesome.me/webawesome": "^3.11.0",
+    "@cfworker/json-schema": "^4.1.1",
+    "@lit-labs/virtualizer": "^2.1.1",
+    "@open-wc/lit-helpers": "^0.7.0",
+    "@open-wc/scoped-elements": "2.1.5",
+    "countup.js": "^2.9.0",
+    "lit": "^3.3.1"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.30.1",
+    "@open-wc/testing": "^4.0.0",
+    "@rocket/js": "^0.2.1",
+    "@types/node": "^22.16.0",
+    "@web/dev-server": "^0.4.6",
+    "@web/mocks": "^1.3.2",
+    "@web/test-runner": "^0.20.2",
+    "@web/test-runner-playwright": "^0.11.1",
+    "esbuild": "^0.25.5",
+    "eslint": "^9.30.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-no-only-tests": "^3.3.0",
+    "globals": "^16.3.0",
+    "patch-package": "^8.0.0",
+    "prettier": "^3.6.2",
+    "prettier-plugin-packagejson": "^2.5.18",
+    "typescript": "5.8.3",
+    "typescript-eslint": "^8.35.1",
+    "wireit": "^0.14.12"
+  },
+  "wireit": {
+    "test": {
+      "dependencies": [
+        "test:browser",
+        "test:node"
+      ]
+    },
+    "test:browser": {
+      "command": "web-test-runner",
+      "files": [
+        "exports/**/*",
+        "src/**/*",
+        "!src/**/*.test.js"
+      ],
+      "output": []
+    },
+    "test:node": {
+      "command": "node --test",
+      "files": [
+        "exports/**/*",
+        "src/**/*",
+        "scripts/**/*.js",
+        "!src/**/*.test-browser.js"
+      ],
+      "output": []
+    },
+    "types": {
+      "command": "tsc --build --pretty",
+      "files": [
+        "demo/**/*.js",
+        "exports/**/*",
+        "src/**/*",
+        "test/**/*",
+        "types/**/*",
+        "tsconfig.json"
+      ],
+      "output": [
+        "dist-types/**"
+      ]
+    }
+  }
+}

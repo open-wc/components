@@ -1,0 +1,3 @@
+# Share JSON Filter semantics without normalizing public shape
+
+The JSON Filter module keeps `jsonToFilter()` and `jsonToSqlFilter()` as the public adapter interfaces for the first release, while moving shared operator evaluation and SQL support metadata under `src/filter/`. We deliberately avoid a normalized intermediate representation for now because the current adapters can consume the straight JSON Filter shape, and the first locality gain is centralizing semantics rather than introducing another model. UI labels stay in the table-filter module until the package has a localization approach.
