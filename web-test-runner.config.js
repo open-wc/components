@@ -1,4 +1,7 @@
+import { playwrightLauncher } from '@web/test-runner-playwright';
+
 export default {
+  browsers: [playwrightLauncher({ product: 'chromium' })],
   // browser: true is needed so packages with a browser entry (e.g. nanoid used
   // by webawesome) don't resolve to their node:* based entry points
   nodeResolve: { browser: true },

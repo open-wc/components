@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  verify:
+    uses: ./.github/workflows/verify.yml
+    permissions:
+      contents: read
+      pull-requests: read
+
+  release:
+    needs: verify
+    timeout-minutes: 20
+    # Prevents changesets action from creating a PR on forks
+    if: github.repository == 'open-wc/components'
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v7
+        with:
+          # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
+          fetch-depth: 0
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # Prevent Changesets v1 from creating a token-based npm configuration.
+      - name: Configure npm trusted publishing
+        run: echo "registry=https://registry.npmjs.org" > "$HOME/.npmrc"
+
+      - name: Create Release Pull Request or Publish to npm
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: npm run version:release
+          commit: 'chore(release): version @open-wc/components'
+          title: 'chore(release): version @open-wc/components'
+          publish: npm run release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
