@@ -185,7 +185,7 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
   }
 
   /**
-   * Measures the max label width in the current option list
+   * Measures the max label width in the full option list, independent of the search.
    */
   #updatePopoverWidth() {
     if (!this.shadowRoot) {
@@ -193,9 +193,7 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
     }
     const anchorWidth = this.combobox?.getBoundingClientRect().width || 0;
 
-    const items = Array.isArray(this.limitedProcessedData)
-      ? this.limitedProcessedData
-      : this.processedData;
+    const items = this.data;
 
     const optionLabelEl = /** @type {HTMLElement | null} */ (
       this.shadowRoot.querySelector('.option-label')
@@ -349,8 +347,6 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
       }
 
       this.processedData = filterOptionsByLabel(this.data, value);
-
-      this.#updatePopoverWidth();
     } else {
       this.#selectedSet.clear();
       for (const id of matchFillInput(value, this.data, this.getOptionValue)) {
