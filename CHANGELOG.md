@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.6
+
+### Patch Changes
+
+- 5d2601d: Keep the autocomplete popover width stable while searching by measuring the full option list.
+
 All notable changes to this project will be documented in this file.
 
 ## 0.1.5
