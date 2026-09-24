@@ -27,6 +27,14 @@ columns keep a minimum width of 50px; if the container cannot accommodate those
 minimums and the fixed columns, the table overflows. Automatic widths are not saved
 as user preferences.
 
+Turning `growFullWidth` off restores content-based automatic widths; turning it on
+fits them to the container again. Finishing a manual column resize preserves that
+column's chosen width and refits the remaining automatic columns.
+
+Call `await table.recalculateColumnWidths()` after a custom content change to wait
+for the measured widths to be applied and rendered. Concurrent requests are combined;
+changes requested during measurement are processed before the promise resolves.
+
 Column definitions can be shared between tables. Read measured or manually resized
 widths from `table.visibleColumns`; runtime sizing no longer modifies the input
 `table.columns` definitions.

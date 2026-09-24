@@ -7,6 +7,7 @@ import { virtualize, virtualizerRef } from '@lit-labs/virtualizer/virtualize.js'
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { OwcTableHeaderCell } from './OwcTableHeaderCell.js';
 import { jsonToFilter } from './jsonToFilter.js';
+import { fitColumnWidths } from './fitColumnWidths.js';
 
 import '@awesome.me/webawesome/dist/components/spinner/spinner.js';
 import '@awesome.me/webawesome/dist/components/checkbox/checkbox.js';
@@ -136,12 +137,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   #initialSetFilterFields = new Set();
 
-  #resizeTimeout = 0;
   #handleWindowResize = () => {
-    clearTimeout(this.#resizeTimeout);
-    this.#resizeTimeout = window.setTimeout(() => {
-      void this.recalculateColumnWidths().then(() => this.resetVirtualizer());
-    }, 50);
+    void this.#scheduleColumnWidths(true);
   };
 
   /**
@@ -322,6 +319,13 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   #MIN_COLUMN_WIDTH = 50;
 
+  /** @type {Promise<void> | undefined} */
+  #columnSizingPromise;
+
+  #columnSizingPending = false;
+
+  #resetVirtualizerAfterSizing = false;
+
   get visibleColumns() {
     return [...this.#visibleColumns];
   }
@@ -404,6 +408,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         this.#growFullWidthResizeObserver?.disconnect();
         this.#lastGrowFullWidth = 0;
       }
+      void this.recalculateColumnWidths();
     }
     super.updated(changedProperties);
   }
@@ -673,6 +678,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     super.connectedCallback();
     window.addEventListener('resize', this.#handleWindowResize);
     this.#growFullWidthResizeObserver?.observe(this);
+    void this.recalculateColumnWidths();
     if (!this.#virtualizerReady) {
       this.#virtualizerReadyFrame = requestAnimationFrame(() => {
         this.#virtualizerReadyFrame = 0;
@@ -689,7 +695,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   disconnectedCallback() {
     window.removeEventListener('resize', this.#handleWindowResize);
     this.#growFullWidthResizeObserver?.disconnect();
-    clearTimeout(this.#resizeTimeout);
     cancelAnimationFrame(this.#virtualizerReadyFrame);
     this.#virtualizerReadyFrame = 0;
     super.disconnectedCallback();
@@ -1577,64 +1582,30 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     this.#growFullWidthResizeObserver.observe(this);
   }
 
-  #fillColumnWidths() {
-    if (!this.growFullWidth) {
-      return;
-    }
-
+  /** @param {number[]} naturalWidths */
+  #applyColumnWidths(naturalWidths) {
     const availableWidth = this.clientWidth || this.getBoundingClientRect().width;
-    if (availableWidth <= 0) {
-      return;
-    }
+    const definitions = new Set(this.columns.map(column => column.field));
+    const sizes = this.#visibleColumns.map((column, index) => {
+      const naturalWidth = Math.max(naturalWidths[index] ?? 0, this.#MIN_COLUMN_WIDTH);
+      const isAutomatic = column.resizable !== false && definitions.has(column.field);
+      return {
+        naturalWidth,
+        fixedWidth: column.width ?? (isAutomatic ? undefined : naturalWidth),
+      };
+    });
+    const widths =
+      this.growFullWidth && availableWidth > 0
+        ? fitColumnWidths(sizes, availableWidth, this.#MIN_COLUMN_WIDTH)
+        : sizes.map(column => column.fixedWidth ?? column.naturalWidth);
 
-    /** @typedef {import('./OwcTable.types.js').Column<T>} Column */
-    const isAutomatic = (/** @type {Column} */ column) =>
-      column.width == null &&
-      column.resizable !== false &&
-      this.columns.some(c => c.field === column.field);
-    let automaticColumns = this.#visibleColumns.filter(isAutomatic);
-    const fixedWidth = this.#visibleColumns
-      .filter(column => !isAutomatic(column))
-      .reduce(
-        (sum, column) => sum + (column.width ?? column._calculatedWidth ?? this.#MIN_COLUMN_WIDTH),
-        0,
-      );
-    let remainingWidth = Math.max(
-      availableWidth - fixedWidth,
-      automaticColumns.length * this.#MIN_COLUMN_WIDTH,
-    );
-
-    // Keep automatic sizes out of column.width and the persisted user-width map.
-    // Clamp small columns first, then distribute the remaining space proportionally.
-    while (automaticColumns.length > 0) {
-      const naturalTotal = automaticColumns.reduce(
-        (sum, column) => sum + (column._calculatedWidth ?? this.#MIN_COLUMN_WIDTH),
-        0,
-      );
-      const minimumColumns = automaticColumns.filter(
-        column =>
-          (remainingWidth * (column._calculatedWidth ?? this.#MIN_COLUMN_WIDTH)) / naturalTotal <
-          this.#MIN_COLUMN_WIDTH,
-      );
-      if (minimumColumns.length > 0) {
-        for (const column of minimumColumns) {
-          column._calculatedWidth = this.#MIN_COLUMN_WIDTH;
-          remainingWidth -= this.#MIN_COLUMN_WIDTH;
-        }
-        automaticColumns = automaticColumns.filter(column => !minimumColumns.includes(column));
-        continue;
+    // Measurements remain separate; only final allocations are exposed on visibleColumns.
+    this.#visibleColumns.forEach((column, index) => {
+      if (column.width == null) {
+        column._calculatedWidth = widths[index];
       }
-
-      let naturalSum = 0;
-      let allocatedWidth = 0;
-      for (const column of automaticColumns) {
-        naturalSum += column._calculatedWidth ?? this.#MIN_COLUMN_WIDTH;
-        const nextWidth = Math.round((remainingWidth * naturalSum) / naturalTotal);
-        column._calculatedWidth = nextWidth - allocatedWidth;
-        allocatedWidth = nextWidth;
-      }
-      break;
-    }
+    });
+    this.#updateColumnCssVariables();
   }
 
   /**
@@ -1730,6 +1701,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         // actual mouse-up position to avoid losing the end of a fast drag.
         if (hasResized) {
           onResizeMouseMove(event);
+          if (this.growFullWidth) {
+            void this.recalculateColumnWidths();
+          }
         }
         this.removeEventListener('mousemove', onResizeMouseMoveAndTrack);
         this.removeEventListener('mouseup', onResizeMouseUp);
@@ -1739,7 +1713,47 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     }
   }
 
-  async recalculateColumnWidths() {
+  /** Recalculate and render widths, including requests received during measurement. */
+  recalculateColumnWidths() {
+    return this.#scheduleColumnWidths();
+  }
+
+  /** @param {boolean} resetVirtualizer */
+  #scheduleColumnWidths(resetVirtualizer = false) {
+    this.#columnSizingPending = true;
+    this.#resetVirtualizerAfterSizing ||= resetVirtualizer;
+    if (!this.#columnSizingPromise) {
+      this.#columnSizingPromise = this.#flushColumnWidths();
+    }
+    return this.#columnSizingPromise;
+  }
+
+  async #flushColumnWidths() {
+    try {
+      do {
+        // Coalesce resize, property and manual requests before touching layout.
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        this.#columnSizingPending = false;
+        if (!this.isConnected) {
+          return;
+        }
+        await this.#measureColumnWidths();
+        await this.updateComplete;
+
+        if (!this.#columnSizingPending && this.#resetVirtualizerAfterSizing && this.isConnected) {
+          this.#resetVirtualizerAfterSizing = false;
+          this.resetVirtualizer();
+          await this.updateComplete;
+        }
+      } while (this.#columnSizingPending);
+    } finally {
+      this.#columnSizingPromise = undefined;
+      this.#columnSizingPending = false;
+      this.#resetVirtualizerAfterSizing = false;
+    }
+  }
+
+  async #measureColumnWidths() {
     for (const column of this.#visibleColumns) {
       if (column.width == null) {
         delete column._calculatedWidth;
@@ -1747,8 +1761,10 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     }
     this.#updateColumnCssVariables();
 
-    this.requestUpdate();
     await this.updateComplete;
+    if (!this.isConnected) {
+      return;
+    }
 
     const headerCells = this.shadowRoot?.querySelectorAll('#data-table .table-header .row > .cell');
     if (!headerCells || headerCells.length === 0) {
@@ -1780,27 +1796,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       });
     }
 
-    let changed = false;
-
-    this.#visibleColumns.forEach((column, index) => {
-      if (column.width != null) {
-        return;
-      }
-
-      const newWidth = Math.max(measuredWidths[index] ?? 0, this.#MIN_COLUMN_WIDTH);
-
-      if (newWidth !== column._calculatedWidth) {
-        column._calculatedWidth = newWidth;
-        changed = true;
-      }
-    });
-
-    this.#fillColumnWidths();
-    this.#updateColumnCssVariables();
-
-    if (changed) {
-      this.requestUpdate();
-    }
+    this.#applyColumnWidths(measuredWidths);
   }
 
   /**
