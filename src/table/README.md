@@ -18,6 +18,19 @@ public exports (`table/*`, `filter/*`).
 | `owc-table-mass-edit`      | Bulk-edit selected rows (mass-edit tab)                                    | [OwcTableMassEdit.js](./OwcTableMassEdit.js)           |
 | `owc-table-settings`       | Column visibility/order settings (settings tab)                            | [OwcTableSettings.js](./OwcTableSettings.js)           |
 
+## Responsive widths
+
+Set `grow-full-width` to fit automatically sized columns to the table's container.
+These columns grow and shrink when the container changes size. Configured widths,
+manually resized columns, and non-resizable columns retain their widths. Automatic
+columns keep a minimum width of 50px; if the container cannot accommodate those
+minimums and the fixed columns, the table overflows. Automatic widths are not saved
+as user preferences.
+
+Column definitions can be shared between tables. Read measured or manually resized
+widths from `table.visibleColumns`; runtime sizing no longer modifies the input
+`table.columns` definitions.
+
 ## Helper modules (pure logic)
 
 - **Filter domain**: [operatorSemantics.js](./operatorSemantics.js) (single

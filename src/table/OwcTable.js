@@ -507,7 +507,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
             const vis = override;
             return { ...column, ...{ visible: vis } };
           }
-          return column;
+          // Measurements and user widths belong to this table, not shared definitions.
+          return { ...column };
         })
         .filter(
           column =>
@@ -1564,88 +1565,76 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     if (!this.#growFullWidthResizeObserver) {
       this.#growFullWidthResizeObserver = new ResizeObserver(entries => {
         const width = Math.round(entries.at(-1)?.contentRect.width ?? 0);
-        if (!this.growFullWidth || width <= 0 || width === this.#lastGrowFullWidth) {
+        if (!this.growFullWidth || width === this.#lastGrowFullWidth) {
           return;
         }
         this.#lastGrowFullWidth = width;
-        void this.#resetAndFillColumnWidths();
+        if (width > 0) {
+          void this.recalculateColumnWidths();
+        }
       });
     }
     this.#growFullWidthResizeObserver.observe(this);
   }
 
-  async #resetAndFillColumnWidths() {
-    /** @typedef {import('./OwcTable.types.js').Column<T>} Column */
-    const isSystemColumn = (/** @type {Column} */ column) =>
-      !this.columns.some(c => c.field === column.field);
-    const isNonResizable = (/** @type {Column} */ column) => column.resizable === false;
-    const isUntouchable = (/** @type {Column} */ column) =>
-      isSystemColumn(column) || isNonResizable(column);
-    const hasExplicitWidth = (/** @type {Column} */ column) =>
-      this.#defaultColumnWidths[column.field] != null || this.#columnWidths[column.field] != null;
-
-    for (const column of this.#visibleColumns) {
-      if (isUntouchable(column)) {
-        continue;
-      }
-      if (hasExplicitWidth(column)) {
-        // keep the preset / URL-restored / manually dragged width as-is
-        continue;
-      }
-      delete this.#columnWidths[column.field];
-      const preset = this.#defaultColumnWidths[column.field];
-      if (preset != null) {
-        column.width = preset;
-      } else {
-        delete column.width;
-        delete column._calculatedWidth;
-      }
+  #fillColumnWidths() {
+    if (!this.growFullWidth) {
+      return;
     }
 
-    await this.recalculateColumnWidths();
-
-    const naturalWidths = this.#visibleColumns.map(
-      column => column.width ?? column._calculatedWidth ?? this.#MIN_COLUMN_WIDTH,
-    );
-    const totalNaturalWidth = naturalWidths.reduce((sum, w) => sum + w, 0);
     const availableWidth = this.clientWidth || this.getBoundingClientRect().width;
-
-    const extra = availableWidth - totalNaturalWidth;
-    if (extra <= 0) {
+    if (availableWidth <= 0) {
       return;
     }
 
-    const stretchIndexes = this.#visibleColumns
-      .map((column, index) => ({ column, index }))
-      .filter(({ column }) => {
-        if (isUntouchable(column)) {
-          return false;
-        }
-        if (this.#defaultColumnWidths[column.field] != null) {
-          return false;
-        }
-        if (this.#columnWidths[column.field] != null) {
-          return false;
-        }
-        return true;
-      })
-      .map(({ index }) => index);
+    /** @typedef {import('./OwcTable.types.js').Column<T>} Column */
+    const isAutomatic = (/** @type {Column} */ column) =>
+      column.width == null &&
+      column.resizable !== false &&
+      this.columns.some(c => c.field === column.field);
+    let automaticColumns = this.#visibleColumns.filter(isAutomatic);
+    const fixedWidth = this.#visibleColumns
+      .filter(column => !isAutomatic(column))
+      .reduce(
+        (sum, column) => sum + (column.width ?? column._calculatedWidth ?? this.#MIN_COLUMN_WIDTH),
+        0,
+      );
+    let remainingWidth = Math.max(
+      availableWidth - fixedWidth,
+      automaticColumns.length * this.#MIN_COLUMN_WIDTH,
+    );
 
-    const stretchTotal = stretchIndexes.reduce((sum, i) => sum + naturalWidths[i], 0);
-    if (stretchTotal === 0) {
-      return;
+    // Keep automatic sizes out of column.width and the persisted user-width map.
+    // Clamp small columns first, then distribute the remaining space proportionally.
+    while (automaticColumns.length > 0) {
+      const naturalTotal = automaticColumns.reduce(
+        (sum, column) => sum + (column._calculatedWidth ?? this.#MIN_COLUMN_WIDTH),
+        0,
+      );
+      const minimumColumns = automaticColumns.filter(
+        column =>
+          (remainingWidth * (column._calculatedWidth ?? this.#MIN_COLUMN_WIDTH)) / naturalTotal <
+          this.#MIN_COLUMN_WIDTH,
+      );
+      if (minimumColumns.length > 0) {
+        for (const column of minimumColumns) {
+          column._calculatedWidth = this.#MIN_COLUMN_WIDTH;
+          remainingWidth -= this.#MIN_COLUMN_WIDTH;
+        }
+        automaticColumns = automaticColumns.filter(column => !minimumColumns.includes(column));
+        continue;
+      }
+
+      let naturalSum = 0;
+      let allocatedWidth = 0;
+      for (const column of automaticColumns) {
+        naturalSum += column._calculatedWidth ?? this.#MIN_COLUMN_WIDTH;
+        const nextWidth = Math.round((remainingWidth * naturalSum) / naturalTotal);
+        column._calculatedWidth = nextWidth - allocatedWidth;
+        allocatedWidth = nextWidth;
+      }
+      break;
     }
-
-    for (const i of stretchIndexes) {
-      const ratio = naturalWidths[i] / stretchTotal;
-      const newWidth = Math.round(naturalWidths[i] + extra * ratio);
-      const column = this.#visibleColumns[i];
-      column.width = newWidth;
-      this.#columnWidths[column.field] = newWidth;
-    }
-
-    this.#updateColumnCssVariables();
-    this.requestUpdate();
   }
 
   /**
@@ -1806,6 +1795,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
     });
 
+    this.#fillColumnWidths();
     this.#updateColumnCssVariables();
 
     if (changed) {
@@ -2018,6 +2008,10 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         --owc-table-header-color: #6b7280;
         --owc-table-width: auto;
         display: block;
+      }
+
+      :host([grow-full-width]) {
+        contain: inline-size;
       }
 
       * {
