@@ -244,6 +244,29 @@ describe('owc-table', () => {
     expect(totalWidth).to.equal(600);
   });
 
+  it('restores natural widths when full-width sizing is disabled and refills when enabled', async () => {
+    const el = await tableFixture(html`
+      <owc-table
+        style="width: 600px"
+        virtualizer-mode="never"
+        .columns=${columns}
+        .data=${data}
+      ></owc-table>
+    `);
+    await aTimeout(100);
+    const naturalWidth = dataRows(el)[0].getBoundingClientRect().width;
+    expect(naturalWidth).to.be.lessThan(600);
+
+    for (const growFullWidth of [true, false, true, false]) {
+      el.growFullWidth = growFullWidth;
+      await aTimeout(100);
+      await el.updateComplete;
+      expect(dataRows(el)[0].getBoundingClientRect().width).to.equal(
+        growFullWidth ? 600 : naturalWidth,
+      );
+    }
+  });
+
   it('refills after data changes while hidden and the original width returns', async () => {
     const el = await tableFixture(html`
       <owc-table
@@ -268,6 +291,72 @@ describe('owc-table', () => {
     await el.updateComplete;
     expect(dataRows(el)[0].getBoundingClientRect().width).to.equal(600);
     expect(el.scrollWidth).to.equal(600);
+  });
+
+  for (const mode of ['never', 'always']) {
+    it(`finishes recalculation with data updated during measurement (virtualizer: ${mode})`, async () => {
+      let changeDataOnRender = false;
+      const measuredColumns = [
+        {
+          field: 'firstName',
+          label: 'Name',
+          formatter: row => {
+            if (changeDataOnRender) {
+              changeDataOnRender = false;
+              // Simulate content arriving while a sizing render is in progress.
+              queueMicrotask(() => {
+                el.data = [{ id: 'updated', firstName: 'Updated', contentWidth: 300 }];
+                void el.recalculateColumnWidths();
+              });
+            }
+            return html`<span style=${`display: inline-block; width: ${row.contentWidth}px`}>
+              ${row.firstName}
+            </span>`;
+          },
+        },
+      ];
+      const el = await tableFixture(html`
+        <owc-table
+          virtualizer-mode=${mode}
+          .columns=${measuredColumns}
+          .data=${[{ id: 'initial', firstName: 'Initial', contentWidth: 80 }]}
+        ></owc-table>
+      `);
+      await aTimeout(100);
+      await el.recalculateColumnWidths();
+      expect(dataRows(el)[0].getBoundingClientRect().width).to.equal(116);
+
+      changeDataOnRender = true;
+      await el.recalculateColumnWidths();
+      expect(dataRows(el)[0].textContent).to.include('Updated');
+      expect(dataRows(el)[0].getBoundingClientRect().width).to.equal(336);
+    });
+  }
+
+  it('settles pending sizing after removal and sizes again when reconnected', async () => {
+    const wrapper = await fixture(html`
+      <div style="width: 600px">
+        <owc-table
+          grow-full-width
+          virtualizer-mode="never"
+          .columns=${columns}
+          .data=${data}
+        ></owc-table>
+      </div>
+    `);
+    const el = wrapper.querySelector('owc-table');
+    await el.recalculateColumnWidths();
+    expect(dataRows(el)[0].getBoundingClientRect().width).to.equal(600);
+
+    const pending = el.recalculateColumnWidths();
+    el.remove();
+    await pending;
+
+    wrapper.style.width = '400px';
+    wrapper.append(el);
+    await el.recalculateColumnWidths();
+    expect(dataRows(el)[0].getBoundingClientRect().width).to.equal(400);
+    expect(el.scrollWidth).to.equal(400);
   });
 
   it('keeps widths local when tables share column definitions', async () => {
@@ -388,6 +477,13 @@ describe('owc-table', () => {
     el.dispatchEvent(new MouseEvent('mouseup', { clientX: 140 }));
     const draggedWidth = el.visibleColumns[1].width;
     expect(draggedWidth).to.equal(initialWidth + 40);
+
+    await aTimeout(100);
+    await el.updateComplete;
+    expect(el.visibleColumns[0].width).to.equal(180);
+    expect(el.visibleColumns[1].width).to.equal(draggedWidth);
+    expect(dataRows(el)[0].getBoundingClientRect().width).to.equal(900);
+    expect(el.scrollWidth).to.equal(900);
 
     for (const width of [800, 1000]) {
       wrapper.style.width = `${width}px`;
