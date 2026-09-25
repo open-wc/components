@@ -24,6 +24,7 @@ export const LAYOUTS = {
  * @param { boolean } readonly
  * @param { 'form' | 'schema' } mode
  * @param { string| undefined} syncWarning
+ * @param {import('../types/renderer.js').LayoutRecord} layouts
  */
 export function layoutRenderer(
   schema,
@@ -36,9 +37,17 @@ export function layoutRenderer(
   readonly,
   mode,
   syncWarning = undefined,
+  layouts = {},
 ) {
-  // @ts-ignore
-  const staticTag = unsafeStatic(LAYOUTS[uiSchema.type]);
+  const tagName = Object.hasOwn(layouts, uiSchema.type)
+    ? layouts[uiSchema.type].tagName
+    : LAYOUTS[/** @type {keyof typeof LAYOUTS} */ (uiSchema.type)];
+  if (typeof tagName !== 'string') {
+    throw new Error(
+      `Unknown JsonForm layout "${uiSchema.type}". Register it with the layouts property.`,
+    );
+  }
+  const staticTag = unsafeStatic(tagName);
   const processedUiSchema =
     uiSchema.options?.fallbackValue !== undefined
       ? withInheritedFallbackValue(uiSchema, uiSchema.options.fallbackValue)
@@ -63,6 +72,7 @@ export function layoutRenderer(
       .uiSchema=${processedUiSchema}
       .value=${value}
       .renderers=${processedRenderers}
+      .layouts=${layouts}
       .validatorState=${validatorState}
       ?forceErrors=${forceErrors}
       ?readonly=${readonly}

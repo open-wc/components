@@ -2,14 +2,20 @@ import { LitElement, css } from 'lit';
 import { map } from 'lit/directives/map.js';
 import { html } from 'lit/static-html.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
+import { JsonForm } from '../form/JsonForm.js';
 
 export class VerticalLayout extends ScopedElementsMixin(LitElement) {
+  static get scopedElements() {
+    return { 'json-form': JsonForm };
+  }
+
   static properties = {
     schema: { type: Object },
     uiSchema: { type: Object },
     value: { type: Object },
     validatorState: { type: Object },
     renderers: { type: Object },
+    layouts: { attribute: false },
     forceErrors: { type: Boolean },
     readonly: { type: Boolean },
     mode: { type: String },
@@ -26,6 +32,8 @@ export class VerticalLayout extends ScopedElementsMixin(LitElement) {
     this.validatorState = { valid: true, errors: [] };
     /**@type {import("../types/renderer.js").RendererRecord} */
     this.renderers = /**@type {import("../types/renderer.js").RendererRecord} */ ({});
+    /** @type {import('../types/renderer.js').LayoutRecord} */
+    this.layouts = {};
     this.forceErrors = false;
     this.readonly = false;
     /**@type {'form' | 'schema'} */
@@ -41,6 +49,7 @@ export class VerticalLayout extends ScopedElementsMixin(LitElement) {
             .uiSchema=${elem}
             .value=${this.value}
             .renderers=${this.renderers}
+            .layouts=${this.layouts}
             .validatorState=${this.validatorState}
             .rootForm=${false}
             ?forceErrors=${this.forceErrors}

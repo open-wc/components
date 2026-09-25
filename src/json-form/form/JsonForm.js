@@ -74,6 +74,7 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
     rootForm: { type: Boolean },
     forceErrors: { type: Boolean },
     renderers: { type: Object },
+    layouts: { attribute: false },
     readonly: { type: Boolean },
     mode: { type: String },
   };
@@ -114,6 +115,8 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
     this.processedRenderers = DEFAULT_RENDERERS;
     /**@type {import("../types/renderer.js").RendererRecord} */
     this.renderers = /**@type {import("../types/renderer.js").RendererRecord} */ ({});
+    /** @type {import('../types/renderer.js').LayoutRecord} */
+    this.layouts = {};
     /**@type {import("@cfworker/json-schema").ValidationResult} */
     this.validatorState = { valid: true, errors: [] };
     this.addEventListener('formDataChange', ev => {
@@ -212,6 +215,17 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
    * @param {import('lit').PropertyValues} changedProperties
    */
   update(changedProperties) {
+    if (changedProperties.has('layouts')) {
+      for (const { tagName, elementClass } of Object.values(this.layouts)) {
+        const registeredClass = this.registry.get(tagName);
+        if (registeredClass && registeredClass !== elementClass) {
+          throw new Error(
+            `JsonForm layout tag "${tagName}" is already registered with another class.`,
+          );
+        }
+        this.defineScopedElement(tagName, elementClass);
+      }
+    }
     if (changedProperties.has('renderers')) {
       // @ts-ignore
       this.processedRenderers = { ...DEFAULT_RENDERERS, ...this.renderers };
@@ -376,6 +390,7 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
         this.readonly,
         this.mode,
         this.#localize.term('jsonFormRenderSyncWarning'),
+        this.layouts,
       );
     }
   }
