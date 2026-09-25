@@ -1,6 +1,7 @@
 import { LitElement, css, nothing } from 'lit';
 import { html } from 'lit/static-html.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
+import { JsonForm } from '../form/JsonForm.js';
 
 import '@awesome.me/webawesome/dist/components/checkbox/checkbox.js';
 import { dataPathSegments, resolveDataSchema } from '../resolve.js';
@@ -8,11 +9,16 @@ import { spreadProps } from '@open-wc/lit-helpers';
 import { FormDataChangeEvent } from '../FormDataChangeEvent.js';
 
 export class CheckboxComboLayout extends ScopedElementsMixin(LitElement) {
+  static get scopedElements() {
+    return { 'json-form': JsonForm };
+  }
+
   static properties = {
     schema: { type: Object },
     uiSchema: { type: Object },
     value: { type: Object },
     renderers: { type: Object },
+    layouts: { attribute: false },
     validatorState: { type: Object },
     forceErrors: { type: Boolean },
     readonly: { type: Boolean },
@@ -45,6 +51,8 @@ export class CheckboxComboLayout extends ScopedElementsMixin(LitElement) {
     this.validatorState = { valid: true, errors: [] };
     /**@type {import("../types/renderer.js").RendererRecord} */
     this.renderers = /**@type {import("../types/renderer.js").RendererRecord} */ ({});
+    /** @type {import('../types/renderer.js').LayoutRecord} */
+    this.layouts = {};
     this.forceErrors = false;
     this.readonly = false;
     /**@type {'form' | 'schema'} */
@@ -117,6 +125,7 @@ export class CheckboxComboLayout extends ScopedElementsMixin(LitElement) {
             .value=${this.value}
             .validatorState=${this.validatorState}
             .renderers=${this.renderers}
+            .layouts=${this.layouts}
             .rootForm=${false}
             ?forceErrors=${this.forceErrors}
             ?readonly=${this.readonly}

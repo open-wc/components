@@ -27,6 +27,15 @@ export type { AutofillOption } from './schema.js';
 export type RendererRecord = Partial<Record<RendererKind, ControlRenderer>>;
 export type FullRendererRecord = Record<RendererKind, ControlRenderer>;
 
+/** A layout component registered in JsonForm's scoped custom element registry. */
+export interface LayoutDefinition {
+  tagName: string;
+  elementClass: CustomElementConstructor;
+}
+
+/** Keys match uiSchema.type; custom entries take precedence over built-in layouts. */
+export type LayoutRecord = Record<string, LayoutDefinition>;
+
 export interface State {
   schema: JsonSchema7; // only the part of the schema that the control sees, eg. { type: string, options: {...}, title: "Input"}
   uiSchema: ControlElement; // only the part of the schema that the control sees, eg. { type: 'Control', scope: "#/props/input"}

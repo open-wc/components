@@ -55,6 +55,86 @@ export const simple = () =>
   ></json-form>`;
 ```
 
+## Custom layouts
+
+The `layouts` property maps UI schema type names to `{ tagName, elementClass }` definitions.
+JsonForm registers each class using `ScopedElementsMixin`; no global definition or JsonForm
+subclass is needed. A mapping can also override a built-in type for the form receiving it.
+An unregistered type produces an error naming the missing layout.
+
+```js
+import { LitElement, css, html } from 'lit';
+import { ScopedElementsMixin } from '@open-wc/scoped-elements';
+import { JsonForm } from '@open-wc/components/JsonForm.js';
+
+class GridLayout extends ScopedElementsMixin(LitElement) {
+  static scopedElements = { 'json-form': JsonForm };
+
+  static properties = {
+    schema: { attribute: false },
+    uiSchema: { attribute: false },
+    value: { attribute: false },
+    validatorState: { attribute: false },
+    renderers: { attribute: false },
+    layouts: { attribute: false },
+    forceErrors: { type: Boolean },
+    readonly: { type: Boolean },
+    mode: { type: String },
+  };
+
+  static styles = css`
+    :host {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+      gap: 1rem;
+    }
+  `;
+
+  render() {
+    return html`${this.uiSchema.elements.map(
+      element => html`
+        <json-form
+          .schema=${this.schema}
+          .uiSchema=${element}
+          .value=${this.value}
+          .validatorState=${this.validatorState}
+          .renderers=${this.renderers}
+          .layouts=${this.layouts}
+          .rootForm=${false}
+          .forceErrors=${this.forceErrors}
+          .readonly=${this.readonly}
+          .mode=${this.mode}
+        ></json-form>
+      `,
+    )}`;
+  }
+}
+
+/** @type {import('@open-wc/components/JsonFormTypes.js').LayoutRecord} */
+const layouts = { GridLayout: { tagName: 'app-grid-layout', elementClass: GridLayout } };
+
+// Register 'json-form': JsonForm in the host component's scopedElements.
+html`<json-form
+  .layouts=${layouts}
+  .schema=${{ type: 'object', properties: { name: { type: 'string' } } }}
+  .uiSchema=${{
+    type: 'GridLayout',
+    elements: [{ type: 'Control', scope: '#/properties/name' }],
+  }}
+></json-form>`;
+```
+
+JsonForm supplies the properties shown above to the layout. Forward them to every child form,
+including `layouts` for nested custom layouts. Set `rootForm` to `false` so only the root form
+handles bubbling `formDataChange` events and validates the shared value. Layout visibility rules
+and inherited renderer/fallback options are processed before rendering the layout.
+
+Use a unique custom element tag for each layout class. Registries are shared by JsonForm instances;
+registering a different class under an existing tag throws an error. To change a mapping at runtime,
+assign a new `layouts` object, using a new tag when changing the class. The usual scoped-elements
+polyfill must be loaded before components for registry isolation; without it, the mixin uses the global
+registry. The UI schema type mapping remains local to each form in either mode.
+
 ## Autofill presets
 
 Add `options.autofill` to a text control to keep free-text entry while offering common values.
