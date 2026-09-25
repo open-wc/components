@@ -743,6 +743,7 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
                     part="fixedTrigger"
                     class="fixedTrigger"
                     slot="anchor"
+                    tabindex=${this.disabled ? '-1' : '0'}
                     @keydown=${this.handleComboboxKeyDown}
                     @mousedown=${this.handleComboboxMouseDown}
                   >
@@ -753,6 +754,7 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
                     part="combobox"
                     class="combobox"
                     slot="anchor"
+                    tabindex=${this.disabled ? '-1' : '0'}
                     @keydown=${this.handleComboboxKeyDown}
                     @mousedown=${this.handleComboboxMouseDown}
                   >
