@@ -1,6 +1,7 @@
 import { LitElement, css } from 'lit';
 import { html } from 'lit/static-html.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
+import { JsonForm } from '../form/JsonForm.js';
 import { OwcCard } from '@open-wc/components/OwcCard.js';
 import { resolveDataSchema, resolveSchema } from '../resolve.js';
 import { getError } from '../helpers/getError.js';
@@ -80,11 +81,14 @@ function executeDeepScopeReplace(uiSchema, scopeSearch, index) {
 
 export class ArrayLayout extends ScopedElementsMixin(LitElement) {
   #localize = new OwcLocalizeController(this);
-  static scopedElements = {
-    'owc-card': OwcCard,
-    'owc-icon-button': OwcIconButton,
-    'owc-tooltip': OwcTooltip,
-  };
+  static get scopedElements() {
+    return {
+      'json-form': JsonForm,
+      'owc-card': OwcCard,
+      'owc-icon-button': OwcIconButton,
+      'owc-tooltip': OwcTooltip,
+    };
+  }
 
   static properties = {
     schema: { type: Object },
@@ -92,6 +96,7 @@ export class ArrayLayout extends ScopedElementsMixin(LitElement) {
     value: { type: Object },
     validatorState: { type: Object },
     renderers: { type: Object },
+    layouts: { attribute: false },
     forceErrors: { type: Boolean },
     readonly: { type: Boolean },
     mode: { type: String },
@@ -108,6 +113,8 @@ export class ArrayLayout extends ScopedElementsMixin(LitElement) {
     this.validatorState = { valid: true, errors: [] };
     /**@type {import("../types/renderer.js").RendererRecord} */
     this.renderers = /**@type {import("../types/renderer.js").RendererRecord} */ ({});
+    /** @type {import('../types/renderer.js').LayoutRecord} */
+    this.layouts = {};
     this.forceErrors = false;
     this.readonly = false;
     /**@type {'form' | 'schema'} */
@@ -185,6 +192,7 @@ export class ArrayLayout extends ScopedElementsMixin(LitElement) {
                   .uiSchema=${deepScopeReplace(this.uiSchema, index).elements}
                   .value=${this.value}
                   .renderers=${this.renderers}
+                  .layouts=${this.layouts}
                   .validatorState=${this.validatorState}
                   .rootForm=${false}
                   ?forceErrors=${this.forceErrors}

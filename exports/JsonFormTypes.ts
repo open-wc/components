@@ -1,4 +1,8 @@
-export { ControlRenderer } from '../src/json-form/types/renderer.js';
+export {
+  ControlRenderer,
+  LayoutDefinition,
+  LayoutRecord,
+} from '../src/json-form/types/renderer.js';
 export {
   ArrayLayoutElement,
   AutofillOption,

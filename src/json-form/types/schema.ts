@@ -107,14 +107,8 @@ export interface SeparatorElement extends BaseUISchemaElement {
 }
 
 export interface ElementListLayout extends BaseUISchemaElement {
-  type:
-    | 'VerticalLayout'
-    | 'VerticalLayout2'
-    | 'VerticalLayoutGrid'
-    | 'HorizontalLayout'
-    | 'GroupLayout'
-    | 'CheckboxComboLayout'
-    | 'TabLayout';
+  /** A built-in layout name or a key from JsonForm.layouts. */
+  type: string;
   elements: UISchemaElement[];
   label?: string;
 }
