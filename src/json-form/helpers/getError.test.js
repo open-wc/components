@@ -66,4 +66,61 @@ describe('getError', () => {
     const error = getError(control('#/properties/employer'), validatorState);
     assert.equal(error?.keyword, 'required');
   });
+
+  it('06: does not match required errors to fields sharing a name prefix', () => {
+    const schema = /** @type {import('../types/schema.js').JsonSchema7} */ ({
+      type: 'object',
+      properties: {
+        salutation: { type: 'string' },
+        salutationType: { type: 'string' },
+      },
+      required: ['salutation'],
+    });
+    const validatorState = validateSchemaSystem(schema, { salutationType: 'Standard' });
+    assert.equal(getError(control('#/properties/salutation'), validatorState)?.keyword, 'required');
+    assert.equal(getError(control('#/properties/salutationType'), validatorState), undefined);
+  });
+
+  it('07: matches descendants of missing objects without matching similarly named objects', () => {
+    const schema = /** @type {import('../types/schema.js').JsonSchema7} */ ({
+      type: 'object',
+      properties: {
+        address: { type: 'object', properties: { city: { type: 'string' } } },
+        addressOther: { type: 'object', properties: { city: { type: 'string' } } },
+      },
+      required: ['address'],
+    });
+    const validatorState = validateSchemaSystem(schema, { addressOther: { city: 'Vienna' } });
+    assert.equal(getError(control('#/properties/address'), validatorState)?.keyword, 'required');
+    assert.equal(
+      getError(control('#/properties/address/properties/city'), validatorState)?.keyword,
+      'required',
+    );
+    assert.equal(
+      getError(control('#/properties/addressOther/properties/city'), validatorState),
+      undefined,
+    );
+  });
+
+  it('08: respects field boundaries for conditional required errors', () => {
+    for (const active of [true, false]) {
+      const schema = /** @type {import('../types/schema.js').JsonSchema7} */ ({
+        type: 'object',
+        properties: {
+          active: { type: 'boolean' },
+          salutation: { type: 'string' },
+          salutationType: { type: 'string' },
+        },
+        if: { properties: { active: { const: true } }, required: ['active'] },
+        then: { required: ['salutation'] },
+        else: { required: ['salutation'] },
+      });
+      const validatorState = validateSchemaSystem(schema, { active, salutationType: 'Standard' });
+      assert.equal(
+        getError(control('#/properties/salutation'), validatorState)?.keyword,
+        'required',
+      );
+      assert.equal(getError(control('#/properties/salutationType'), validatorState), undefined);
+    }
+  });
 });

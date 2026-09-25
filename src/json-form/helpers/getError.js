@@ -21,10 +21,8 @@ export function getError(uiSchema, validatorState) {
         splittedLocation.at(-2) === 'then' || splittedLocation.at(-2) === 'else'
           ? splittedLocation.slice(0, -2).join('/')
           : error.instanceLocation;
-      if (
-        errorPropertyName &&
-        path.startsWith(`${instanceLocationWithoutIf}/${errorPropertyName}`)
-      ) {
+      const requiredPath = `${instanceLocationWithoutIf}/${errorPropertyName}`;
+      if (errorPropertyName && (path === requiredPath || path.startsWith(`${requiredPath}/`))) {
         return error;
       }
     } else if (error.instanceLocation === path) {
