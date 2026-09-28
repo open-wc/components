@@ -1,4 +1,4 @@
-import { fixture, html, expect } from '@open-wc/testing';
+import { aTimeout, fixture, html, expect } from '@open-wc/testing';
 import { OwcDataDetail } from './OwcDataDetail.js';
 
 customElements.define('owc-data-detail', OwcDataDetail);
@@ -238,6 +238,52 @@ describe('owc-data-detail', () => {
       ></owc-data-detail>`,
     );
     expect(el.shadowRoot.querySelector('wa-details').open).to.equal(true);
+  });
+
+  it('fills a flex container and keeps an expanded table within it while resizing', async () => {
+    const wrapper = await fixture(html`
+      <div style="display: flex; width: 900px; padding: 20px; box-sizing: border-box">
+        <owc-data-detail
+          .data=${data}
+          .openColumns=${['firstName']}
+          .columns=${[
+            [
+              {
+                label: 'Name',
+                field: 'firstName',
+                type: 'expandable',
+                contentExpanded: () => html`
+                  <owc-table
+                    grow-full-width
+                    virtualizer-mode="never"
+                    .columns=${[
+                      { field: 'firstName', label: 'First name' },
+                      { field: 'lastName', label: 'Last name' },
+                    ]}
+                    .data=${[{ id: 'person', ...data }]}
+                  ></owc-table>
+                `,
+              },
+            ],
+            [{ label: 'Age', field: 'age' }],
+          ]}
+        ></owc-data-detail>
+      </div>
+    `);
+    const detail = wrapper.querySelector('owc-data-detail');
+    const table = detail.shadowRoot.querySelector('owc-table');
+
+    for (const width of [900, 360, 1400, 500]) {
+      wrapper.style.width = `${width}px`;
+      await aTimeout(100);
+      await table.updateComplete;
+
+      const availableWidth = width - 40;
+      expect(detail.getBoundingClientRect().width).to.equal(availableWidth);
+      expect(table.getBoundingClientRect().width).to.equal(availableWidth);
+      expect(table.scrollWidth).to.equal(availableWidth);
+      expect(wrapper.scrollWidth).to.equal(width);
+    }
   });
 
   it('renders an editable input for type editable', async () => {

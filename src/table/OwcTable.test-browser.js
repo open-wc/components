@@ -424,6 +424,52 @@ describe('owc-table', () => {
     expect(dataRows(el)[0].getBoundingClientRect().width).to.equal(500);
   });
 
+  it('keeps a rendered width throughout resizing and content remeasurement', async () => {
+    const wrapper = await fixture(html`
+      <div style="width: 600px">
+        <owc-table
+          grow-full-width
+          virtualizer-mode="never"
+          .columns=${columns}
+          .data=${data}
+        ></owc-table>
+      </div>
+    `);
+    const el = wrapper.querySelector('owc-table');
+    await el.recalculateColumnWidths();
+
+    const renderedWidths = [];
+    const observer = new MutationObserver(records => {
+      for (const record of records) {
+        const previousWidth = record.oldValue?.match(/--owc-table-width:\s*([\d.]+)px/);
+        if (previousWidth) {
+          renderedWidths.push(Number(previousWidth[1]));
+        }
+      }
+      renderedWidths.push(parseFloat(el.style.getPropertyValue('--owc-table-width')));
+    });
+    observer.observe(el, { attributes: true, attributeFilter: ['style'], attributeOldValue: true });
+
+    try {
+      for (const width of [350, 900, 450]) {
+        wrapper.style.width = `${width}px`;
+        await aTimeout(100);
+        expect(dataRows(el)[0].getBoundingClientRect().width).to.equal(width);
+        expect(el.scrollWidth).to.equal(el.clientWidth);
+        expect(el.scrollHeight).to.equal(el.clientHeight);
+      }
+
+      el.data = [{ id: 'updated', firstName: 'Updated content', age: 40 }];
+      await el.updateComplete;
+      await el.recalculateColumnWidths();
+      expect(dataRows(el)[0].textContent).to.include('Updated content');
+      expect(renderedWidths).to.not.be.empty;
+      expect(renderedWidths.every(width => width > 0)).to.equal(true);
+    } finally {
+      observer.disconnect();
+    }
+  });
+
   it('shrinks inside a details card in a grid', async () => {
     const wrapper = await fixture(html`
       <div style="width: 1200px; display: grid; min-width: 0">

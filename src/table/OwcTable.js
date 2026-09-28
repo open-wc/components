@@ -319,6 +319,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   #MIN_COLUMN_WIDTH = 50;
 
+  /** @type {Map<import('./OwcTable.types.js').Column<T>['field'], number>} */
+  #naturalColumnWidths = new Map();
+
   /** @type {Promise<void> | undefined} */
   #columnSizingPromise;
 
@@ -1574,7 +1577,19 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
           return;
         }
         this.#lastGrowFullWidth = width;
-        if (width > 0) {
+        if (width <= 0) {
+          return;
+        }
+
+        // Resizing changes the allocation, not the natural content measurements.
+        const hasMeasurements = this.#visibleColumns.every(column =>
+          this.#naturalColumnWidths.has(column.field),
+        );
+        if (hasMeasurements) {
+          this.#applyColumnWidths(
+            this.#visibleColumns.map(column => this.#naturalColumnWidths.get(column.field) ?? 0),
+          );
+        } else {
           void this.recalculateColumnWidths();
         }
       });
@@ -1759,7 +1774,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         delete column._calculatedWidth;
       }
     }
-    this.#updateColumnCssVariables();
+    // Keep the current table width while rendering unconstrained cells for measurement.
+    this.requestUpdate();
 
     await this.updateComplete;
     if (!this.isConnected) {
@@ -1796,6 +1812,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       });
     }
 
+    this.#naturalColumnWidths = new Map(
+      this.#visibleColumns.map((column, index) => [column.field, measuredWidths[index] ?? 0]),
+    );
     this.#applyColumnWidths(measuredWidths);
   }
 
@@ -2008,6 +2027,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
       :host([grow-full-width]) {
         contain: inline-size;
+        overflow-x: auto;
       }
 
       * {
@@ -2346,6 +2366,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
 
       #loading-indicator {
+        overflow: clip;
         top: 0;
         left: 0;
         position: absolute;

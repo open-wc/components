@@ -218,17 +218,23 @@ export class OwcDataDetail extends ScopedElementsMixin(LitElement) {
   static styles = [
     contentFormatterStyles,
     css`
+      :host {
+        display: block;
+        width: 100%;
+        min-width: 0;
+      }
+
       .dataDetail {
         display: grid;
         align-items: center;
-        /* grid-template-columns: auto 1fr auto 1fr; */
-        grid-template-columns: repeat(2, min-content auto);
-        width: fit-content;
+        grid-template-columns: repeat(2, minmax(0, 1fr) minmax(0, 2fr));
+        width: 100%;
       }
       .grid-row {
         display: contents;
       }
       .grid-cell {
+        min-width: 0;
         padding: 0.3em 0.5em 0.3em 0px;
       }
       .label {
@@ -238,12 +244,15 @@ export class OwcDataDetail extends ScopedElementsMixin(LitElement) {
         padding: 0;
       }
       .value {
+        flex-wrap: wrap;
+        overflow-wrap: anywhere;
         padding-right: 3em;
         display: flex;
         align-items: center;
         gap: 10px;
       }
       .expandable {
+        min-width: 0;
         grid-column: 1 / -1; /* Row goes across all columns */
       }
       .expandable-label {
