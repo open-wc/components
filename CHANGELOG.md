@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.8
+
+### Patch Changes
+
+- 665b6f0: Make closed autocomplete triggers reachable with Tab, including fixed triggers, while keeping disabled controls out of the tab order.
+- 665b6f0: Fix JSON form required-field errors appearing on unrelated controls whose names share a prefix, such as `salutation` and `salutationType`. Errors still apply to descendants of a missing required object.
+- 26c7bc2: Add a `layouts` property to JsonForm for caller-supplied layout components, registered through scoped elements and selected by `uiSchema.type`. Forward registrations through built-in layouts and register their child forms in the correct scope. Export `LayoutDefinition` and `LayoutRecord` types.
+
 ## 0.1.7
 
 ### Patch Changes
