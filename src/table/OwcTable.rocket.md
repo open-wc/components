@@ -2039,6 +2039,9 @@ export const addNewRow = () => {
 ```
 
 The returned object is inserted into the table and can immediately be edited.
+While a row is in `insertData`, it has no row link or detail toggle and does not emit
+`rowClick`. Its editable fields and action controls remain available. Normal row actions
+become available after the row is removed from `insertData` and added to `data`.
 
 ---
 

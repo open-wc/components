@@ -81,6 +81,51 @@ class TableDisplayContentsHost extends HTMLElement {
 customElements.define('table-display-contents-host', TableDisplayContentsHost);
 
 describe('owc-table', () => {
+  for (const renderMode of ['simple', 'link', 'linkWithDetail', 'detail', 'detailDeferred']) {
+    it(`disables row actions for pending inserts in ${renderMode} mode`, async () => {
+      const insertedRow = { id: 'new', firstName: 'New', age: 20 };
+      const linkedRows = [];
+      const el = await tableFixture(
+        html`<owc-table
+          .columns=${columns}
+          .data=${[data[0]]}
+          .insertData=${[insertedRow]}
+          .renderMode=${renderMode}
+          .getRowLinkSettings=${row => {
+            linkedRows.push(row);
+            return { href: `/person/${row.id}` };
+          }}
+        ></owc-table>`,
+      );
+
+      const [savedRow, pendingRow] = dataRows(el);
+      expect(pendingRow.querySelector('.row-click')).to.not.exist;
+      expect(pendingRow.querySelector('.row-no-click')).to.exist;
+      expect(pendingRow.parentElement.querySelector('wa-details')).to.not.exist;
+      expect(linkedRows).to.not.include(insertedRow);
+      if (renderMode !== 'simple') {
+        expect(savedRow.querySelector('.row-click')).to.exist;
+      }
+
+      const clickedRows = [];
+      el.addEventListener('rowClick', event => clickedRows.push(event.row));
+      pendingRow.querySelector('.cell').click();
+      expect(clickedRows).to.deep.equal([]);
+      savedRow.querySelector('.cell').click();
+      expect(clickedRows).to.deep.equal([data[0]]);
+
+      el.removeInsertData(insertedRow);
+      el.data = [data[0], insertedRow];
+      await el.updateComplete;
+      const committedRow = dataRows(el)[1];
+      if (renderMode !== 'simple') {
+        expect(committedRow.querySelector('.row-click')).to.exist;
+      }
+      committedRow.querySelector('.cell').click();
+      expect(clickedRows).to.deep.equal([data[0], insertedRow]);
+    });
+  }
+
   it('renders a header cell per column and a row per data entry', async () => {
     const el = await tableFixture(html`<owc-table .columns=${columns} .data=${data}></owc-table>`);
 
