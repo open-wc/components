@@ -1305,6 +1305,10 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
    * @returns {import('lit').TemplateResult}
    */
   renderRowMode(row) {
+    if (this.isInsert({ data: row })) {
+      return html`<div class="row-no-click"></div>`;
+    }
+
     if (this.renderMode === 'link' || this.renderMode === 'linkWithDetail') {
       const rowLinkSettings =
         row && this.getRowLinkSettings ? this.getRowLinkSettings(row) : undefined;
@@ -1413,6 +1417,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     const rowId = this.getRowId(row);
     const hasDetailRow =
       mode === 'data-table' &&
+      !this.isInsert({ data: row }) &&
       (this.renderMode === 'detail' ||
         this.renderMode === 'detailDeferred' ||
         this.renderMode === 'linkWithDetail') &&
@@ -1645,8 +1650,10 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     }
 
     if (clickArea === 'row' && index !== undefined) {
-      const row = this.processedData[index];
-      this.dispatchEvent(new RowClickEvent('rowClick', row));
+      const row = this.allData[index];
+      if (row && !this.isInsert({ data: row })) {
+        this.dispatchEvent(new RowClickEvent('rowClick', row));
+      }
     }
   }
 
