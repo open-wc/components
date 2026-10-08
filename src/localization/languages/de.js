@@ -88,6 +88,35 @@ export const de = {
   tableSearch: 'Suche',
   jsonFormArrayAddCard: 'Eintrag hinzufügen',
   jsonFormRenderSyncWarning: 'Wert wird nicht automatisch synchronisiert',
+  jsonFormErrorInvalid: 'Bitte diese Eingabe prüfen.',
+  jsonFormErrorRequired: 'Bitte dieses Feld ausfüllen.',
+  jsonFormErrorNumber: 'Bitte eine Zahl eingeben.',
+  jsonFormErrorInteger: 'Bitte eine ganze Zahl eingeben.',
+  jsonFormErrorSelection: 'Bitte eine verfügbare Option auswählen.',
+  jsonFormErrorEmail: 'Bitte eine gültige E-Mail-Adresse eingeben.',
+  jsonFormErrorDate: 'Bitte ein gültiges Datum eingeben.',
+  jsonFormErrorTime: 'Bitte eine gültige Uhrzeit eingeben.',
+  jsonFormErrorDateTime: 'Bitte ein gültiges Datum und eine gültige Uhrzeit eingeben.',
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorMinimum: (count, formatted) => `Bitte mindestens ${formatted} eingeben.`,
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorMaximum: (count, formatted) => `Bitte höchstens ${formatted} eingeben.`,
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorExclusiveMinimum: (count, formatted) =>
+    `Bitte einen Wert größer als ${formatted} eingeben.`,
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorExclusiveMaximum: (count, formatted) =>
+    `Bitte einen Wert kleiner als ${formatted} eingeben.`,
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorMinLength: (count, formatted) => `Bitte mindestens ${formatted} Zeichen eingeben.`,
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorMaxLength: (count, formatted) => `Bitte höchstens ${formatted} Zeichen eingeben.`,
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorMinItems: (count, formatted) =>
+    `Bitte mindestens ${formatted} ${count === 1 ? 'Eintrag' : 'Einträge'} angeben.`,
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorMaxItems: (count, formatted) =>
+    `Bitte höchstens ${formatted} ${count === 1 ? 'Eintrag' : 'Einträge'} angeben.`,
   autoCompleteSelectAll: 'Alle auswählen',
   autoCompleteDeselectAll: 'Alle abwählen',
   clickEditableHint: 'Esc zum abbrechen',

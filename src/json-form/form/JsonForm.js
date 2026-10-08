@@ -32,6 +32,8 @@ import { processLabel } from '../label/label.js';
 import { OwcTooltip } from '../../tooltip/OwcTooltip.js';
 import { OwcLocalizeController } from '@open-wc/components/localization.js';
 import { OwcInputAutofill } from '../../input-autofill/OwcInputAutofill.js';
+import { getError } from '../helpers/getError.js';
+import { formatValidationError } from '../helpers/formatValidationError.js';
 import { OwcAutocomplete } from '../../autocomplete/OwcAutocomplete.js';
 
 /**@type {import("../types/renderer.js").FullRendererRecord} */
@@ -348,6 +350,10 @@ export class JsonForm extends ScopedElementsMixin(LitElement) {
           schema,
           uiSchema: typedUiSchema,
           validatorState: this.validatorState,
+          validationMessage: formatValidationError(getError(typedUiSchema, this.validatorState), {
+            schema: this.schema,
+            localize: this.#localize,
+          }),
           renderers: this.renderers,
           required: !!required,
           forceErrors: this.forceErrors,

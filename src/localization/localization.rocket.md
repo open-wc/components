@@ -19,7 +19,34 @@ export const layout = pageData => docLayout(pageData, docsData);
 
 Owc Components use an extended localization class from Webawesome to translate the components. currently, there's only support for german and english. you can add additional languages to it by adding your own language packs ([See Webawesome Localization](https://webawesome.com/docs/localization)).
 
-if you wanna add your own language, here are the additional keys you need to map, the following is the english language pack:
+## JsonForm validation terms
+
+JsonForm uses the following terms for field validation. Register a translation and set `lang` on
+the form or an ancestor; missing terms fall back to English. The raw validator output is preserved.
+
+- `jsonFormErrorInvalid`: generic message for unsupported rules or unresolved constraints.
+- `jsonFormErrorRequired`: missing required value.
+- `jsonFormErrorNumber`, `jsonFormErrorInteger`: expected numeric type.
+- `jsonFormErrorSelection`: value outside the available options.
+- `jsonFormErrorEmail`, `jsonFormErrorDate`, `jsonFormErrorTime`, `jsonFormErrorDateTime`: invalid format.
+- `jsonFormErrorMinimum`, `jsonFormErrorMaximum`: inclusive numeric bounds.
+- `jsonFormErrorExclusiveMinimum`, `jsonFormErrorExclusiveMaximum`: exclusive numeric bounds.
+- `jsonFormErrorMinLength`, `jsonFormErrorMaxLength`: text length bounds.
+- `jsonFormErrorMinItems`, `jsonFormErrorMaxItems`: entry count bounds.
+
+Bound and count terms are functions receiving `(count, formatted)`: the numeric constraint for
+pluralization and its localized string for display. For example:
+
+```js
+const validationTerms = {
+  jsonFormErrorMinItems: (count, formatted) =>
+    `Please provide at least ${formatted} ${count === 1 ? 'entry' : 'entries'}.`,
+};
+```
+
+## Other component terms
+
+The following English language pack lists the other component terms:
 
 ```js
 export const en = {

@@ -118,7 +118,7 @@ function renderInput(
       .formatter=${ifDefined(getUnitFormatter(state, fallbackValue))}
       .validator=${() => {
         const error = getError(state.uiSchema, state.validatorState);
-        return { valid: !error, error: error?.error };
+        return { valid: !error, error: state.validationMessage ?? error?.error };
       }}
       value=${resolveDataSchema(value, state.uiSchema.scope) || ''}
       @submit=${function (/** @type {{ target: { value: unknown; }; }} */ ev) {
@@ -150,7 +150,7 @@ function renderInput(
         ${
           (state.forceErrors || userInteracted) && error
             ? html` <owc-tooltip placement="right"
-                >${error.error}
+                >${state.validationMessage ?? error.error}
                 <wa-icon
                   slot="anchor"
                   name="exclamation-triangle-fill"
@@ -214,7 +214,7 @@ function renderTextarea(
       .fallbackValue=${getFallbackValue(state, options)}
       .validator=${() => {
         const error = getError(state.uiSchema, state.validatorState);
-        return { valid: !error, error: error?.error };
+        return { valid: !error, error: state.validationMessage ?? error?.error };
       }}
       value=${resolveDataSchema(value, state.uiSchema.scope) || ''}
       @submit=${function (/** @type {{ target: { value: unknown; }; }} */ ev) {
@@ -240,7 +240,7 @@ function renderTextarea(
         ${
           (state.forceErrors || userInteracted) && error
             ? html` <owc-tooltip placement="right"
-                >${error.error}
+                >${state.validationMessage ?? error.error}
                 <wa-icon
                   slot="anchor"
                   name="exclamation-triangle-fill"
@@ -288,7 +288,7 @@ function renderAutocomplete(
       .fallbackValue=${getFallbackValue(state, options)}
       .validator=${() => {
         const error = getError(state.uiSchema, state.validatorState);
-        return { valid: !error, error: error?.error };
+        return { valid: !error, error: state.validationMessage ?? error?.error };
       }}
       .data=${_enum.map(elm => ({ value: elm.const, label: elm.title }))}
       .value=${resolveDataSchema(value, state.uiSchema.scope) || ''}
@@ -315,7 +315,7 @@ function renderAutocomplete(
         ${
           (state.forceErrors || userInteracted) && error
             ? html` <owc-tooltip placement="right"
-                >${error.error}
+                >${state.validationMessage ?? error.error}
                 <wa-icon
                   slot="anchor"
                   name="exclamation-triangle-fill"

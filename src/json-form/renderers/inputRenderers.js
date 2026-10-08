@@ -74,7 +74,7 @@ export const autofillRenderer = (state, ruleOptions, value) => {
   >
     ${when(
       (userInteracted || state.forceErrors) && error,
-      () => html`<span class="error" slot="hint">${error?.error}</span>`,
+      () => html`<span class="error" slot="hint">${state.validationMessage ?? error?.error}</span>`,
     )}
     ${
       state.schema.description
@@ -126,7 +126,7 @@ export const checkboxRenderer = (state, ruleOptions, value) => {
   </div>
   ${when(
     (userInteracted || state.forceErrors) && invalid,
-    () => html`<span class="error" slot="hint">${error?.error}</span>`,
+    () => html`<span class="error" slot="hint">${state.validationMessage ?? error?.error}</span>`,
   )}
   `;
 
@@ -255,7 +255,7 @@ function renderInput(state, ruleOptions, value, options = {}) {
     ${spread(options.attributes || {})}>
     ${when(
       (userInteracted || state.forceErrors) && invalid,
-      () => html`<span class="error" slot="hint">${error?.error}</span>`,
+      () => html`<span class="error" slot="hint">${state.validationMessage ?? error?.error}</span>`,
     )}
     ${
       state.schema.description

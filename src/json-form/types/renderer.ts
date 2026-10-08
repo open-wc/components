@@ -40,6 +40,8 @@ export interface State {
   schema: JsonSchema7; // only the part of the schema that the control sees, eg. { type: string, options: {...}, title: "Input"}
   uiSchema: ControlElement; // only the part of the schema that the control sees, eg. { type: 'Control', scope: "#/props/input"}
   validatorState: ValidationResult;
+  /** Localized field message. Raw errors remain available in validatorState. */
+  validationMessage?: string;
   required: boolean;
   renderers?: RendererRecord;
   forceErrors: boolean;

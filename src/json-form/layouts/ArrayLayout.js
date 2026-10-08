@@ -11,6 +11,7 @@ import { OwcTooltip } from '../../tooltip/OwcTooltip.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 import '@awesome.me/webawesome/dist/components/button/button.js';
 import { OwcLocalizeController } from '@open-wc/components/localization.js';
+import { formatValidationError } from '../helpers/formatValidationError.js';
 
 /**
  *
@@ -131,7 +132,7 @@ export class ArrayLayout extends ScopedElementsMixin(LitElement) {
           ${
             error?.error
               ? html`<owc-tooltip>
-                  ${error.error}
+                  ${formatValidationError(error, { schema: this.schema, localize: this.#localize })}
                   <wa-icon
                     slot="anchor"
                     name="exclamation-octagon"

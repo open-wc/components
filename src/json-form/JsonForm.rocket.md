@@ -18,6 +18,7 @@ export const layout = pageData => docLayout(pageData, docsData);
 ```js client
 import { html } from 'lit';
 import '@open-wc/components/define/json-form.js';
+import '@open-wc/components/register/de.js';
 ```
 
 # Json Form
@@ -30,7 +31,7 @@ Every form needs two schemas to function:
 - schema: this is the [Json Schema](https://json-schema.org/) that defines your data, and the schema that the form will return. It is also used to validate the form value.
 - uiSchema: defines the visuals and layout of the form
 
-All examples on this page will console-log their value every time they change.
+Most examples on this page console-log their value every time they change.
 
 ## Quick start
 
@@ -953,6 +954,120 @@ The form element also exposes:
 
 Note: empty strings, `null` and empty objects are stripped from the value before validation, so an
 empty required text field reports a "required" error instead of a type error.
+
+### Validation messages
+
+Open the examples to compare all built-in validation messages in English and German. Edit a field
+to resolve its error, or use **Reset examples** to restore the invalid values. Switching language
+preserves your edits and changes only this demo.
+
+```js demo
+export const validationMessages = () => {
+  const examples = [
+    { title: 'Required field', schema: { type: 'string' }, value: '', required: true },
+    { title: 'Number', schema: { type: 'number' }, value: 'not a number' },
+    { title: 'Whole number', schema: { type: 'integer' }, value: 1.5 },
+    { title: 'Minimum', schema: { type: 'number', minimum: 25.5 }, value: 10 },
+    { title: 'Maximum', schema: { type: 'number', maximum: 1000.5 }, value: 2000 },
+    { title: 'Exclusive minimum', schema: { type: 'number', exclusiveMinimum: 10 }, value: 10 },
+    { title: 'Exclusive maximum', schema: { type: 'number', exclusiveMaximum: 10 }, value: 10 },
+    { title: 'Minimum text length', schema: { type: 'string', minLength: 3 }, value: 'ab' },
+    { title: 'Maximum text length', schema: { type: 'string', maxLength: 5 }, value: 'abcdef' },
+    {
+      title: 'Minimum entries',
+      schema: { type: 'array', minItems: 1, items: { type: 'string', enum: ['A', 'B', 'C'] } },
+      value: [],
+    },
+    {
+      title: 'Maximum entries',
+      schema: { type: 'array', maxItems: 2, items: { type: 'string', enum: ['A', 'B', 'C'] } },
+      value: ['A', 'B', 'C'],
+    },
+    { title: 'Selection (enum)', schema: { type: 'string', enum: ['A', 'B'] }, value: 'C' },
+    {
+      title: 'Selection (oneOf)',
+      schema: {
+        type: 'string',
+        oneOf: [
+          { const: 'A', title: 'A' },
+          { const: 'B', title: 'B' },
+        ],
+      },
+      value: 'C',
+    },
+    { title: 'Email address', schema: { type: 'string', format: 'email' }, value: 'hello' },
+    { title: 'Date', schema: { type: 'string', format: 'date' }, value: '2026-13-40' },
+    { title: 'Time', schema: { type: 'string', format: 'time' }, value: '25:70:00' },
+    {
+      title: 'Date and time',
+      schema: { type: 'string', format: 'date-time' },
+      value: '2026-13-40T25:70:00Z',
+    },
+    { title: 'Pattern fallback', schema: { type: 'string', pattern: '^[A-Z]{3}$' }, value: 'abc' },
+    {
+      title: 'Unsupported rule fallback',
+      schema: { type: 'array', uniqueItems: true, items: { type: 'string', enum: ['A', 'B'] } },
+      value: ['A', 'A'],
+    },
+  ];
+
+  const formsFor = event => event.currentTarget.closest('section').querySelectorAll('json-form');
+  return html`
+    <wa-details summary="Validation messages (19 examples)">
+      <section aria-label="Localized validation examples">
+        <div
+          style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 20px"
+        >
+          <label>
+            Message language / Sprache
+            <select
+              style="font: inherit; padding: 6px 10px; margin-inline-start: 8px"
+              @change=${event => {
+                for (const form of formsFor(event)) {
+                  form.lang = event.currentTarget.value;
+                  form.requestUpdate();
+                }
+              }}
+            >
+              <option value="en">English</option>
+              <option value="de">Deutsch</option>
+            </select>
+          </label>
+          <wa-button
+            @click=${event => {
+              formsFor(event).forEach((form, index) => {
+                form.value = { example: structuredClone(examples[index].value) };
+                form.validate();
+              });
+            }}
+            >Reset examples</wa-button
+          >
+        </div>
+        <div
+          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 20px"
+        >
+          ${examples.map(
+            example => html`
+              <json-form
+                style="min-width: 0"
+                lang="en"
+                forceErrors
+                .schema=${{
+                  type: 'object',
+                  properties: { example: { ...example.schema, title: example.title } },
+                  required: example.required ? ['example'] : [],
+                }}
+                .uiSchema=${{ type: 'Control', scope: '#/properties/example' }}
+                .value=${{ example: structuredClone(example.value) }}
+              ></json-form>
+            `,
+          )}
+        </div>
+      </section>
+    </wa-details>
+  `;
+};
+```
 
 ## Readonly
 
