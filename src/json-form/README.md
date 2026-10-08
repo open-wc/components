@@ -34,6 +34,27 @@ see `validatorState`, `forceErrors`, `validate()` and `getFirstInvalid()`.
 
 The `rootForm` and `validatorState` properties are managed internally — don't set them.
 
+## Validation messages
+
+Built-in controls display readable validation messages in English by default. Register the German
+translation and set `lang="de"` on the form or an ancestor to use German messages:
+
+```js
+import '@open-wc/components/register/de.js';
+
+html`<json-form lang="de" .schema=${schema} .uiSchema=${uiSchema}></json-form>`;
+```
+
+Messages cover required fields, numeric types and bounds, text length, selection options, entry
+counts, and email/date/time formats. Numeric limits use the active locale. Unknown rules, arbitrary
+patterns, and constraints that cannot be resolved use a localized “Please check this value” message.
+English is the fallback for missing translations.
+
+Validation and error visibility are unchanged: `forceErrors` still controls whether untouched
+fields show errors, and `validatorState.errors` retains the original validator output. Custom
+renderers receive the optional `state.validationMessage` string for their field. No formatter
+property is needed on the form.
+
 TypeScript consumers can type both inputs without depending on JSON Forms:
 
 ```ts

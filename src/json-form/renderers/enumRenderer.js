@@ -50,7 +50,7 @@ export const enumRenderer = (state, ruleOptions, value) => {
   </${staticOuter}>
   ${when(
     (userInteracted || state.forceErrors) && invalid,
-    () => html`<span class="error" slot="hint">${error?.error}</span>`,
+    () => html`<span class="error" slot="hint">${state.validationMessage ?? error?.error}</span>`,
   )}
   `;
 };
@@ -87,7 +87,7 @@ function renderAutocomplete(state, ruleOptions, value, options = {}) {
       .label=${`${processLabel(state)}${state.required ? '*' : ''}`}
       .validator=${() => {
         const error = getError(state.uiSchema, state.validatorState);
-        return { valid: !error, error: error?.error };
+        return { valid: !error, error: state.validationMessage ?? error?.error };
       }}
       class=${classMap({
         hidden: ruleOptions.hidden,
@@ -104,7 +104,8 @@ function renderAutocomplete(state, ruleOptions, value, options = {}) {
     >
       ${when(
         (userInteracted || state.forceErrors) && invalid,
-        () => html`<span class="error" slot="hint">${error?.error}</span>`,
+        () =>
+          html`<span class="error" slot="hint">${state.validationMessage ?? error?.error}</span>`,
       )}
     </owc-autocomplete>
   `;
@@ -132,7 +133,7 @@ export const multiEnumRenderer = (state, ruleOptions, value) => {
   >
     >${when(
       (userInteracted || state.forceErrors) && invalid,
-      () => html`<span class="error" slot="hint">${error?.error}</span>`,
+      () => html`<span class="error" slot="hint">${state.validationMessage ?? error?.error}</span>`,
     )}</owc-autocomplete
   >`;
 };

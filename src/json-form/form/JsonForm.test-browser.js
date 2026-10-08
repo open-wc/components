@@ -1,6 +1,7 @@
 import { fixture, html, expect, oneEvent } from '@open-wc/testing';
 import { JsonForm } from './JsonForm.js';
 import { FormDataChangeEvent } from '../FormDataChangeEvent.js';
+import '@open-wc/components/register/de.js';
 
 if (!customElements.get('json-form')) {
   customElements.define('json-form', JsonForm);
@@ -355,6 +356,81 @@ describe('json-form validation', () => {
     `);
     await shadowQuery(el, 'vertical-layout', 'json-form');
     expect(el.getFirstInvalid()).to.exist;
+  });
+});
+
+describe('json-form localized validation', () => {
+  it('updates field messages when the document language changes and preserves raw errors', async () => {
+    const originalLanguage = document.documentElement.lang;
+    document.documentElement.lang = 'en';
+    try {
+      const el = await fixture(html`
+        <json-form
+          .schema=${{ properties: { amount: { type: 'number', minimum: 25.5 } } }}
+          .uiSchema=${{ type: 'Control', scope: '#/properties/amount' }}
+          .value=${{ amount: 10 }}
+          forceErrors
+        ></json-form>
+      `);
+      const rawErrors = structuredClone(el.validatorState.errors);
+      expect(el.shadowRoot.querySelector('.error').textContent).to.equal(
+        'Please enter at least 25.5.',
+      );
+      document.documentElement.lang = 'de';
+      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      expect(el.shadowRoot.querySelector('.error').textContent).to.equal(
+        'Bitte mindestens 25,5 eingeben.',
+      );
+      expect(el.validatorState.errors).to.deep.equal(rawErrors);
+    } finally {
+      document.documentElement.lang = originalLanguage;
+    }
+  });
+
+  it('uses the same message in autocomplete hints and validation callbacks', async () => {
+    const el = await fixture(html`
+      <json-form
+        lang="de"
+        .schema=${{ properties: { choice: { type: 'string', enum: ['a', 'b'] } } }}
+        .uiSchema=${{ type: 'Control', scope: '#/properties/choice' }}
+        .value=${{ choice: 'c' }}
+        forceErrors
+      ></json-form>
+    `);
+    const expected = 'Bitte eine verfügbare Option auswählen.';
+    expect(el.shadowRoot.querySelector('.error').textContent).to.equal(expected);
+    expect(el.shadowRoot.querySelector('owc-autocomplete').validator()).to.deep.equal({
+      valid: false,
+      error: expected,
+    });
+  });
+
+  it('inherits German through layouts for nested required fields', async () => {
+    const el = await fixture(html`
+      <json-form
+        lang="de"
+        .schema=${{
+          properties: {
+            person: {
+              type: 'object',
+              properties: { name: { type: 'string' } },
+              required: ['name'],
+            },
+          },
+        }}
+        .uiSchema=${{
+          type: 'VerticalLayout',
+          elements: [{ type: 'Control', scope: '#/properties/person/properties/name' }],
+        }}
+        .value=${{ person: { id: 'person' } }}
+        forceErrors
+      ></json-form>
+    `);
+    const field = await shadowQuery(el, 'vertical-layout', 'json-form');
+    expect(field.shadowRoot.querySelector('.error').textContent).to.equal(
+      'Bitte dieses Feld ausfüllen.',
+    );
   });
 });
 

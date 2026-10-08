@@ -88,6 +88,37 @@ export const en = {
   tableSearch: 'Search',
   jsonFormArrayAddCard: 'Add Entry',
   jsonFormRenderSyncWarning: 'Value is not automatically synchronized',
+  jsonFormErrorInvalid: 'Please check this value.',
+  jsonFormErrorRequired: 'Please fill in this field.',
+  jsonFormErrorNumber: 'Please enter a number.',
+  jsonFormErrorInteger: 'Please enter a whole number.',
+  jsonFormErrorSelection: 'Please select an available option.',
+  jsonFormErrorEmail: 'Please enter a valid email address.',
+  jsonFormErrorDate: 'Please enter a valid date.',
+  jsonFormErrorTime: 'Please enter a valid time.',
+  jsonFormErrorDateTime: 'Please enter a valid date and time.',
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorMinimum: (count, formatted) => `Please enter at least ${formatted}.`,
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorMaximum: (count, formatted) => `Please enter at most ${formatted}.`,
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorExclusiveMinimum: (count, formatted) =>
+    `Please enter a value greater than ${formatted}.`,
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorExclusiveMaximum: (count, formatted) =>
+    `Please enter a value less than ${formatted}.`,
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorMinLength: (count, formatted) =>
+    `Please enter at least ${formatted} ${count === 1 ? 'character' : 'characters'}.`,
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorMaxLength: (count, formatted) =>
+    `Please enter at most ${formatted} ${count === 1 ? 'character' : 'characters'}.`,
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorMinItems: (count, formatted) =>
+    `Please provide at least ${formatted} ${count === 1 ? 'entry' : 'entries'}.`,
+  /** @param {number} count @param {string} formatted */
+  jsonFormErrorMaxItems: (count, formatted) =>
+    `Please provide at most ${formatted} ${count === 1 ? 'entry' : 'entries'}.`,
   autoCompleteSelectAll: 'Select all',
   autoCompleteRemoveAll: 'Remove all',
   clickEditableHint: 'Esc to cancel',
