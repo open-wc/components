@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.9
+
+### Patch Changes
+
+- a2cf44a: Show readable English and German validation messages in JsonForm controls and array layouts using the existing localization system. Preserve raw validator errors and validation behavior. Custom renderers can read the optional `validationMessage` field from their renderer state.
+- f3481e6: Disable row navigation, detail toggles, and rowClick events for pending table inserts while keeping their editing controls available.
+
 ## 0.1.8
 
 ### Patch Changes
