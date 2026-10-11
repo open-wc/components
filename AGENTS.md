@@ -2,7 +2,7 @@
 
 ### Issue tracker
 
-Issues are tracked as local markdown files under `.scratch/<feature-slug>/`; external PRs are not a triage surface. See `docs/agents/issue-tracker.md`.
+Issues are tracked as local markdown files under `specs/<feature-slug>/`; external PRs are not a triage surface. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
@@ -10,7 +10,7 @@ Triage uses the default canonical labels: `needs-triage`, `needs-info`, `ready-f
 
 ### Domain docs
 
-Domain docs use a single-context layout: root `CONTEXT.md` plus `docs/adr/`. See `docs/agents/domain.md`.
+Domain docs use a single-context layout: root `GLOSSARY.md` plus `docs/adr/`. See `docs/agents/domain.md`.
 
 ### Commit messages
 
