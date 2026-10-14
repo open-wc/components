@@ -17,6 +17,7 @@ import { OwcLocalizeController } from '../localization/localization.js';
  * @fires files-selected - after files are added (detail.files lists the newly
  *   added files) or removed (detail.files is empty); read the current list
  *   from the files property
+ * @fires files-rejected - detail.rejections contains { file, reason: 'file-too-large', maxFileSize }
  */
 export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
   #localize = new OwcLocalizeController(this);
@@ -25,6 +26,8 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
     files: { type: Array },
     renderCardContent: { attribute: false },
     multiple: { type: Boolean },
+    maxFileSize: { type: Number, attribute: 'max-file-size' },
+    _rejectedFiles: { state: true },
   };
 
   static scopedElements = {
@@ -39,14 +42,26 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
     this.files = [];
     this.renderCardContent = this.renderCardContentDefault;
     this.multiple = true;
+    /** Maximum size of each selected file in bytes; unlimited by default. */
+    this.maxFileSize = Infinity;
+    /** @type {File[]} */
+    this._rejectedFiles = [];
   }
 
   render() {
+    const sizeErrors = this._rejectedFiles.map(file =>
+      this.#localize.term(
+        'fileUploadTooLarge',
+        file.name,
+        this.#localize.number(this.maxFileSize / 1_000_000, { maximumFractionDigits: 6 }),
+      ),
+    );
     return html`
       <div
         class="drop-area"
         tabindex="0"
         aria-label=${this.#localize.term('fileUploadLabel')}
+        aria-describedby=${this._rejectedFiles.length ? 'file-errors' : ''}
         @dragover=${this._onDragOver}
         @dragleave=${this._onDragLeave}
         @drop=${this._onDrop}
@@ -75,6 +90,13 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
             : html`<span class="upload-label">${this.#localize.term('fileUploadLabel')}</span>`
         }
       </div>
+      ${
+        sizeErrors.length
+          ? html`<div id="file-errors" role="alert">
+              ${sizeErrors.map(message => html`<p>${message}</p>`)}
+            </div>`
+          : ''
+      }
     `;
   }
 
@@ -96,6 +118,7 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
    * @param {File} file
    */
   removeFile(file) {
+    this._rejectedFiles = [];
     this.files = this.files.filter(elm => elm !== file);
     this.dispatchEvent(
       new CustomEvent('files-selected', {
@@ -177,15 +200,35 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
    * @param {File[]} incoming
    */
   _handleFiles(incoming) {
-    const { files, added } = addFiles(this.files, incoming, this.multiple);
-    this.files = files;
-    this.dispatchEvent(
-      new CustomEvent('files-selected', {
-        detail: { files: added },
-        bubbles: true,
-        composed: true,
-      }),
-    );
+    const candidates = this.multiple ? incoming : incoming.slice(0, 1);
+    this._rejectedFiles = candidates.filter(file => file.size > this.maxFileSize);
+    const accepted = candidates.filter(file => !(file.size > this.maxFileSize));
+    if (accepted.length) {
+      const { files, added } = addFiles(this.files, accepted, this.multiple);
+      this.files = files;
+      this.dispatchEvent(
+        new CustomEvent('files-selected', {
+          detail: { files: added },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+    }
+    if (this._rejectedFiles.length) {
+      this.dispatchEvent(
+        new CustomEvent('files-rejected', {
+          detail: {
+            rejections: this._rejectedFiles.map(file => ({
+              file,
+              reason: 'file-too-large',
+              maxFileSize: this.maxFileSize,
+            })),
+          },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+    }
   }
 
   static styles = css`
@@ -209,6 +252,13 @@ export class OwcFileUpload extends ScopedElementsMixin(LitElement) {
     .drop-area:focus-visible {
       outline: var(--wa-focus-ring);
       outline-offset: var(--wa-focus-ring-offset);
+    }
+
+    #file-errors {
+      color: var(--wa-color-danger-50);
+      text-align: start;
+      overflow-wrap: anywhere;
+      cursor: default;
     }
 
     input[type='file'] {

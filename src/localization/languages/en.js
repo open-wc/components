@@ -123,4 +123,6 @@ export const en = {
   autoCompleteRemoveAll: 'Remove all',
   clickEditableHint: 'Esc to cancel',
   fileUploadLabel: 'Drag files here or click to upload',
+  /** @param {string} name @param {string} maxSize */
+  fileUploadTooLarge: (name, maxSize) => `${name} is too large. Maximum file size: ${maxSize} MB.`,
 };
