@@ -2,7 +2,7 @@
 
 A private Lit controller that virtualizes vertical lists: it renders only the items in and around the visible area. The items are rendered in normal flow between two spacers, each item with the host's own markup, and the controller decides which items those are and how tall the spacers are. Because the rows stay in normal flow, the browser lays them out, so a table's rows can share CSS grid tracks.
 
-`owc-table` uses it for every list, grouped or not, and `owc-autocomplete` for its option list. [ADR-0006](../../docs/adr/0006-own-an-in-flow-vertical-virtualizer.md) explains why it's in-house.
+`owc-table` uses it for every list, grouped or not, and `owc-autocomplete` for its option list. [ADR-0006](https://github.com/open-wc/components/blob/main/docs/adr/0006-own-an-in-flow-vertical-virtualizer.md) explains why it's in-house.
 
 It's not part of the Public Surface: it has no entry in `exports/` or the `package.json` exports map, and the docs don't present it as importable. Hosts import it by relative source path.
 
