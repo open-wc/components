@@ -28,6 +28,10 @@ _Avoid_: Predicate, callback, compiled filter
 A data-adapter representation derived from a JSON Filter, consisting of a SQL clause and parameters.
 _Avoid_: SQL query, where string, SQL predicate
 
+**Data Row**:
+One record of a table's data, rendered as a single row of the table body together with that record's annotation and detail.
+_Avoid_: Entry, item, record row
+
 **Consumer-Visible Change**:
 A change that affects package users through public exports, documented behavior, migration requirements, or notable fixes.
 _Avoid_: Internal refactor, private implementation cleanup
