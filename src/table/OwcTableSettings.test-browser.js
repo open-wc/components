@@ -1,4 +1,4 @@
-import { fixture, html, expect, aTimeout } from '@open-wc/testing';
+import { fixture, html, expect } from '@open-wc/testing';
 import { OwcTableSettings } from './OwcTableSettings.js';
 
 customElements.define('owc-table-settings', OwcTableSettings);
@@ -55,9 +55,25 @@ describe('owc-table-settings', () => {
     const el = await settingsFixture(prefix);
     el.open = true;
     await el.updateComplete;
-    await aTimeout(50); // let the virtualizer render
+    // the rows render in the update that opens the dropdown
     expect(el.shadowRoot.querySelectorAll('.row').length).to.equal(2);
     expect(el.data.map(column => column.field)).to.deep.equal(['a', 'b']);
+    cleanup(prefix);
+  });
+
+  it('shows the drag grips until a search filters the columns', async () => {
+    const prefix = nextPrefix();
+    const el = await settingsFixture(prefix);
+    el.open = true;
+    await el.updateComplete;
+    const hiddenGrips = () => el.shadowRoot.querySelectorAll('.row .grip[hidden]').length;
+    expect(hiddenGrips()).to.equal(0);
+
+    el.search.value = 'b';
+    el.search.dispatchEvent(new Event('input'));
+    await el.updateComplete;
+    expect(el.shadowRoot.querySelectorAll('.row').length).to.equal(1);
+    expect(hiddenGrips()).to.equal(1);
     cleanup(prefix);
   });
 

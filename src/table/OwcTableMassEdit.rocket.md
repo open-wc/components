@@ -92,7 +92,7 @@ which renders an `owc-table-mass-edit` element with `.columns`, `.data` (selecte
 
 - `setColumn(value)`: selects the column whose `field` matches `value`. If that column is currently hidden it is temporarily forced to `visible: 'always'` on the table so the preview can be seen.
 - `resetColumn()`: reverts the temporary visibility override of the last selected column and clears the selection.
-- `executeEdit(event)`: applies `value` to every selected row by calling the table's `handleUpdate` once per row (with `field`, `data`, `config`, `value` and an `autoSetData()` helper that writes the value into the row). If no `table` is set, an optionally assigned `handleUpdateExecute` function is called instead.
+- `executeEdit(event)`: applies `value` to every selected row by calling the table's `handleUpdate` once per row (with `field`, `data`, `config`, `value` and an `autoSetData()` helper that writes the value into the row and has the table render it, so a grouped table moves the row if its group changed). If no `table` is set, an optionally assigned `handleUpdateExecute` function is called instead.
 
 ## How it works
 

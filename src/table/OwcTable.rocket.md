@@ -599,7 +599,11 @@ export const alignContent = () => {
 
 Use the `width` property to define an initial column width.
 
-Columns are resizable by default. Set `resizable` to `false` to disable resizing for an individual column.
+Columns without a `width` fit their content, at least 50px: the header label on one line, and the rows the table has rendered. In a large table, those are the rows in and around the visible area. The widths then stay the same while you scroll, even when rows with wider content come into view, so the columns never jump. Cell text doesn't wrap, so a column fits the whole text; content that can wrap, such as text in a custom formatter with `white-space: normal`, fits its widest word.
+
+The table sizes these columns again when the data, the filters, the sorters, the columns or the `overrides` change, when the window gets wider or narrower, and when you call `await table.recalculateColumnWidths()`, for example after content in a cell changed on its own. Set `grow-full-width` to stretch them to the width of the table's container.
+
+Columns are resizable by default: drag the right edge of a column's header cell. Double-click it to go back to the configured `width`, or to the width that fits the content. Set `resizable` to `false` to disable resizing for an individual column.
 
 ```js demo
 export const widthOfColumns = () => {
@@ -1511,13 +1515,21 @@ Groups are rendered according to their priority. Groups that are not listed may 
 
 ### Others Group
 
-Enable `othersGroupActive` to collect all groups that are not explicitly defined in `groupList`.
+Rows whose group is not defined in `groupList` are collected in an **Others** group after all other groups. It starts collapsed; enable `othersGroupActive` to expand it.
 
 ```js
 table.othersGroupActive = true;
 ```
 
 This is useful when only a subset of groups should receive a custom appearance while all remaining groups are still displayed.
+
+---
+
+### Large Grouped Tables
+
+A grouped table renders its group headers and rows as one list. Like an ungrouped table, it only renders the rows in and around the visible area once it has 300 Data Rows, counted across all groups (see [Large Tables](#large-tables)). Clicking a group header removes or adds the group's rows, wherever the table is scrolled, and the `rownum` formatter numbers the rows within each group.
+
+`groupList`, `groupSelector` and `othersGroupActive` can be changed at any time; the table groups its rows again. So does an edit in a cell or with the mass edit: when an edited value is in a row, the row moves to the group it belongs to now, and the row counts follow. If you change a row's group field in place yourself, assign a new array to `data`, e.g. `table.data = [...table.data]`; `requestUpdate()` alone doesn't group the rows again.
 
 ---
 
@@ -2039,6 +2051,10 @@ export const addNewRow = () => {
 ```
 
 The returned object is inserted into the table and can immediately be edited.
+The table scrolls the new row into view if it isn't fully visible, and focuses its first
+editable field. Large tables render the new row first, so this also works while the table is
+scrolled far away from the new row. In a grouped table, the new row is added at the end of its
+group, and a collapsed group expands to show it.
 While a row is in `insertData`, it has no row link or detail toggle and does not emit
 `rowClick`. Its editable fields and action controls remain available. Normal row actions
 become available after the row is removed from `insertData` and added to `data`.
@@ -2051,7 +2067,7 @@ Whenever a value changes, `handleUpdate` is called.
 
 Use this callback to synchronize changes with an external data source such as a REST API or database.
 
-here's an example of a call. use `autoSetData()` to save it locally.
+here's an example of a call. use `autoSetData()` to save it locally. The table then renders the row again, and moves it to another group if the edit changed its group.
 
 ```js demo
 export const handleDataUpdatesExample = () => {
@@ -2165,6 +2181,650 @@ export const massEdit = () => {
 
 Mass editing respects the same validation and update handling as editing individual cells.
 
+## Large Tables
+
+From 300 Data Rows on, `owc-table` only renders the rows in and around the visible part of the table, so tables with 100,000 rows stay fast. While you scroll, it renders the rows that come into view and removes the rows far outside of it.
+
+### Virtualizer Modes
+
+`virtualizer-mode` decides when the table renders only part of its rows:
+
+- `auto` (default): from 300 Data Rows on. Rows being inserted (`insertData`) and group headers don't count, and a grouped table counts the Data Rows of all its groups.
+- `always`: for any number of rows.
+- `never`: never. The table renders every row.
+
+Rows that aren't rendered aren't part of the page, so the browser's find-in-page doesn't find them, and printing leaves them out. Tables with fewer than 300 Data Rows in `auto` mode, and tables with `virtualizer-mode="never"`, keep all their rows in the page. When a row leaves the rendered range, it also loses its focus and any unsaved input in its cells. What the table keeps track of itself, such as the selection, stays.
+
+### Scroll Container
+
+The table finds the element that scrolls it on its own: the page, the content area of `owc-layout-sidebar`, or a scroll box of your own. Starting at the table, it walks up through its ancestors, including slots and shadow roots, and takes the first one that scrolls vertically: its `overflow-y` is `auto` or `scroll`, and its content is taller than the element. It passes over elements with `display: contents`, and it stops at elements with `position: fixed`, at open popovers and at modal dialogs. When none of them scrolls, the page does.
+
+Set `scrollTarget` to the element that scrolls the table when the table can't find it on its own, for example:
+
+- a scroll box inside a closed shadow root;
+- a scroll box that clips its content (`overflow: hidden`) and is scrolled by script.
+
+```js
+table.scrollTarget = scrollBox;
+```
+
+`scrollTarget` turns the detection off. Set it to `undefined` or `null` to turn the detection on again. `document.documentElement` and `document.body` stand for the page.
+
+Even with the wrong scroll container, the table doesn't stay empty: when an empty part of it becomes visible, it renders the missing rows. That takes a frame, though, while with the right scroll container, new rows appear in the same frame as the scroll.
+
+### Visible Data
+
+`visibleData` holds the Data Rows the table renders, in display order. While the table renders only part of its rows, those are the rows in the visible area and some rows above and below it. Otherwise they are all filtered Data Rows, except the rows of collapsed groups. Group headers and rows being inserted (`insertData`) aren't part of it. The table sets `visibleData` in the same update in which it renders the rows:
+
+```js
+await table.updateComplete;
+const renderedIds = table.visibleData.map(row => row.id);
+```
+
+### Row Heights and Details
+
+Rows can have different heights. Details, annotations and cells with several lines are measured as they render, and the rows you're looking at stay in place when rows above them turn out taller or shorter, or when a detail above them opens or closes. Until the table has seen most of its rows, the scrollbar shows an estimate of their total height. Rows with an open detail that haven't been shown yet count with the typical height of an open detail.
+
+Open details stay open when their rows leave the rendered range and come back, because `openDetails` keeps track of them, and opening a detail still scrolls it into view. In `render-mode="detail"`, every rendered row renders its closed detail too, so find-in-page finds detail content in the rendered rows.
+
+### Benchmark
+
+The two demos below load 100,000 generated rows with 20 columns when you click **Load 100,000 rows**. Use them to check how a large table scrolls in your browser:
+
+- **Details** renders a detail for every row (`render-mode="detail"`, closed details included) or only for opened ones (`detailDeferred`). Click a row to open its detail.
+- **Annotations** shows an annotation above about 1% of the rows.
+- **Jump** scrolls to the given row.
+- **Run scripted scroll** scrolls down slowly, flings down and up, jumps around like a dragged scrollbar, and scrolls up from the end through rows that haven't been measured yet. Per phase, it reports the painted frames in which part of the visible table area had no rows, the frames in which the rows moved by more or less than the scrolled distance (jumps), and the tasks that took longer than 50ms (Chromium only).
+- **Monitor manual scrolling** counts frames without rows and long tasks while you scroll with the mouse wheel, the trackpad, the keyboard or the scrollbar.
+- **Group by department** groups the rows into one group per department, all expanded, and reports how long the table took to paint them. Grouped rows are virtualized as one list, with the group headers among the rows, so a grouped table scrolls like an ungrouped one. With grouping on, **Jump** counts the group headers as rows.
+
+```js client
+import { LitElement, css } from 'lit';
+import '@open-wc/components/define/owc-layout-sidebar.js';
+
+const benchmarkRowCount = 100_000;
+
+const departments = ['Sales', 'Finance', 'Support', 'Research', 'Marketing', 'Operations'];
+const cities = ['Vienna', 'Graz', 'Linz', 'Salzburg', 'Munich', 'Zurich', 'Berlin', 'Prague'];
+const countries = ['Austria', 'Germany', 'Switzerland', 'Czechia'];
+const statuses = ['Active', 'Pending', 'On leave', 'Inactive'];
+
+/** A tiny seeded random generator, so every run renders the same data. */
+function seededRandom(seed) {
+  return () => {
+    seed = (seed * 1_103_515_245 + 12_345) % 2_147_483_648;
+    return seed / 2_147_483_648;
+  };
+}
+
+function generateBenchmarkRows(count) {
+  const random = seededRandom(1);
+  const pick = list => list[Math.floor(random() * list.length)];
+  const rows = new Array(count);
+  for (let index = 0; index < count; index++) {
+    const firstName = pick(firstNames);
+    const lastName = pick(lastNames);
+    rows[index] = {
+      id: `row-${index}`,
+      firstName,
+      lastName,
+      email: `${firstName}.${lastName}.${index}@example.com`.toLowerCase(),
+      profession: pick(professions) || 'Engineer',
+      department: pick(departments),
+      city: pick(cities),
+      country: pick(countries),
+      age: 20 + Math.floor(random() * 50),
+      monthlyPay: 2000 + Math.round(random() * 600_000) / 100,
+      bonus: random() * 0.2,
+      score: Math.round(random() * 1000) / 10,
+      birthDate: `${1950 + Math.floor(random() * 55)}-0${1 + Math.floor(random() * 9)}-1${Math.floor(random() * 9)}`,
+      lastLogin: new Date(Date.UTC(2026, 0, 1) + Math.floor(random() * 2.5e10)).toISOString(),
+      premium: random() > 0.7,
+      active: random() > 0.2,
+      status: pick(statuses),
+      hobbies: [pick(hobbies), pick(hobbies)],
+      projects: Math.floor(random() * 40),
+    };
+  }
+  return rows;
+}
+
+let benchmarkRows;
+
+const benchmarkColumns = [
+  { label: 'Nr.', formatter: 'rownum' },
+  { label: 'ID', field: 'id' },
+  { label: 'First Name', field: 'firstName' },
+  { label: 'Last Name', field: 'lastName' },
+  { label: 'Email', field: 'email', formatter: 'email' },
+  { label: 'Profession', field: 'profession' },
+  { label: 'Department', field: 'department' },
+  { label: 'City', field: 'city' },
+  { label: 'Country', field: 'country' },
+  { label: 'Age', field: 'age', formatter: 'number' },
+  { label: 'Monthly Pay', field: 'monthlyPay', formatter: 'currency' },
+  { label: 'Bonus', field: 'bonus', formatter: 'percent' },
+  { label: 'Score', field: 'score', formatter: 'number' },
+  { label: 'Birthdate', field: 'birthDate', formatter: 'date' },
+  { label: 'Last Login', field: 'lastLogin', formatter: 'datetime' },
+  { label: 'Premium', field: 'premium', formatter: 'tickCross' },
+  { label: 'Active', field: 'active', formatter: 'checkbox' },
+  {
+    label: 'Status',
+    field: 'status',
+    formatter: row => html`<span class="status-badge">${row.status}</span>`,
+  },
+  { label: 'Hobbies', field: 'hobbies', formatter: row => row.hobbies.join(', ') },
+  { label: 'Projects', field: 'projects', formatter: 'number' },
+];
+
+const renderBenchmarkDetail = row => html`
+  <div style="padding: 16px">
+    <h4>${row.firstName} ${row.lastName}</h4>
+    <p>${row.profession} in ${row.department}, ${row.city}, ${row.country}</p>
+    <p>${row.projects} projects, ${row.status.toLowerCase()}</p>
+  </div>
+`;
+
+/** Annotates about 1% of the rows: those with a score below 1. */
+const renderBenchmarkAnnotation = row =>
+  row.score < 1 ? html`<span>Needs a review: the score is ${row.score}</span>` : nothing;
+
+const renderNoAnnotation = () => nothing;
+
+/** Resolves after the browser has painted the next frame. */
+function afterNextPaint(action = () => {}) {
+  return new Promise(resolve =>
+    requestAnimationFrame(() => {
+      action();
+      // a task queued in an animation frame callback runs once that frame is painted
+      const channel = new MessageChannel();
+      channel.port1.onmessage = () => resolve();
+      channel.port2.postMessage(undefined);
+    }),
+  );
+}
+
+/** The element that scrolls the table vertically, through slots and shadow roots. */
+function scrollParent(element) {
+  let node = element;
+  while (node) {
+    node = node.assignedSlot ?? node.parentNode;
+    if (node instanceof ShadowRoot) {
+      node = node.host;
+    }
+    // the body's overflow belongs to the page
+    if (!(node instanceof Element) || node === document.documentElement || node === document.body) {
+      break;
+    }
+    const { overflowY } = getComputedStyle(node);
+    if (/auto|scroll/.test(overflowY) && node.scrollHeight > node.clientHeight) {
+      return node;
+    }
+  }
+  return document.scrollingElement;
+}
+
+/** The visible area of a scroll container within the viewport, in viewport coordinates. */
+function clipRect(scroller) {
+  if (scroller === document.scrollingElement) {
+    return { top: 0, bottom: window.innerHeight, left: 0 };
+  }
+  const rect = scroller.getBoundingClientRect();
+  return {
+    top: Math.max(rect.top, 0),
+    bottom: Math.min(rect.bottom, window.innerHeight),
+    left: Math.max(rect.left, 0),
+  };
+}
+
+/** Scrolls without the smooth scrolling a page may have turned on. */
+function scrollInstantly(scroller, top) {
+  scroller.scrollTo({ top, behavior: 'instant' });
+}
+
+/** The scroll positions at which the table body starts and ends in view. */
+function bodyScrollRange(table, scroller) {
+  const body = table.shadowRoot.querySelector('.table-body').getBoundingClientRect();
+  const clip = clipRect(scroller);
+  return {
+    start: scroller.scrollTop + body.top - clip.top,
+    end: scroller.scrollTop + body.bottom - clip.bottom,
+    rowHeight: body.height / table.allData.length,
+  };
+}
+
+/** The first row in the visible area, and where it is. */
+function firstVisibleRow(table, scroller) {
+  const clip = clipRect(scroller);
+  for (const row of table.shadowRoot.querySelectorAll('.row-container')) {
+    const rect = row.getBoundingClientRect();
+    if (rect.bottom > clip.top) {
+      return rect.top < clip.bottom ? { row, top: rect.top } : undefined;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Whether the visible part of the table body shows space without rows, by
+ * looking at what the browser hit-tests at a few points.
+ */
+function hasVisibleGap(table, scroller) {
+  const root = table.shadowRoot;
+  const body = root.querySelector('.table-body').getBoundingClientRect();
+  const clip = clipRect(scroller);
+  const top = Math.max(body.top, clip.top);
+  const bottom = Math.min(body.bottom, clip.bottom);
+  const x = Math.max(body.left, clip.left) + 30;
+  for (let y = top + 1; y < bottom; y += Math.max((bottom - top) / 8, 1)) {
+    const hit = root.elementFromPoint(x, y);
+    if (!hit || !root.contains(hit) || hit.closest('.table-header')) {
+      // clipped by a scroll container, or covered by the sticky header
+      continue;
+    }
+    if (!hit.closest('.row-container, .group-label-container')) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Counts painted frames with gaps or jumps, and long tasks, phase by phase. */
+class ScrollMonitor {
+  #longTasks = [];
+  #observer;
+
+  constructor(table) {
+    this.table = table;
+    this.scroller = scrollParent(table);
+    if (PerformanceObserver.supportedEntryTypes?.includes('longtask')) {
+      this.#observer = new PerformanceObserver(list => this.#longTasks.push(...list.getEntries()));
+      this.#observer.observe({ type: 'longtask' });
+    }
+    this.start('');
+  }
+
+  start(name) {
+    this.current = {
+      name,
+      frames: 0,
+      gaps: 0,
+      gapRun: 0,
+      longestGapRun: 0,
+      scrolledFrames: 0,
+      jumps: 0,
+      largestJump: 0,
+      since: performance.now(),
+    };
+    this.reference = firstVisibleRow(this.table, this.scroller);
+  }
+
+  /**
+   * Samples a painted frame. When the frame scrolled by a known distance, the
+   * rows that stay visible must move by exactly that distance.
+   */
+  sample(scrolled) {
+    const phase = this.current;
+    phase.frames++;
+    if (hasVisibleGap(this.table, this.scroller)) {
+      phase.gaps++;
+      phase.gapRun++;
+      phase.longestGapRun = Math.max(phase.longestGapRun, phase.gapRun);
+    } else {
+      phase.gapRun = 0;
+    }
+    const { reference } = this;
+    if (scrolled !== undefined && reference?.row.isConnected) {
+      phase.scrolledFrames++;
+      const jump = Math.abs(reference.row.getBoundingClientRect().top - reference.top + scrolled);
+      if (jump > 1) {
+        phase.jumps++;
+        phase.largestJump = Math.max(phase.largestJump, jump);
+      }
+    }
+    this.reference = firstVisibleRow(this.table, this.scroller);
+  }
+
+  /** Long tasks are reported a little late, so read them after the phase. */
+  async finish() {
+    await afterNextPaint();
+    const phase = this.current;
+    const tasks = this.#longTasks.filter(task => task.startTime >= phase.since);
+    const longest = Math.max(0, ...tasks.map(task => task.duration));
+    return (
+      `${phase.name}: ${phase.gaps} of ${phase.frames} frames with gaps` +
+      ` (at most ${phase.longestGapRun} in a row), ` +
+      (phase.scrolledFrames
+        ? `${phase.jumps} frames with jumps` +
+          (phase.jumps ? ` (largest ${Math.round(phase.largestJump)}px), ` : ', ')
+        : '') +
+      (this.#observer
+        ? `${tasks.length} tasks over 50ms (longest ${Math.round(longest)}ms)`
+        : 'long tasks not measurable in this browser')
+    );
+  }
+
+  stop() {
+    this.#observer?.disconnect();
+  }
+}
+
+/** One expanded group per department. Operations has no group, so it lands under Others. */
+function benchmarkGroups() {
+  return [
+    { key: 'Sales', label: 'Sales', priority: 1, active: true },
+    { key: 'Finance', label: 'Finance', active: true },
+    { key: 'Support', label: 'Support', active: true },
+    { key: 'Research', label: 'Research', active: true },
+    { key: 'Marketing', label: 'Marketing', active: true },
+  ];
+}
+
+const byDepartment = row => row.department;
+
+const noGroups = [];
+
+class TableBenchmark extends LitElement {
+  static properties = {
+    layout: { type: String },
+    renderMode: { state: true },
+    annotations: { state: true },
+    rows: { state: true },
+    results: { state: true },
+    busy: { state: true },
+    monitor: { state: true },
+    grouped: { state: true },
+  };
+
+  static styles = css`
+    :host {
+      display: block;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    input[type='number'] {
+      width: 7em;
+    }
+    .results {
+      font-size: 0.875rem;
+    }
+    .sidebar-frame {
+      height: 100vh;
+    }
+  `;
+
+  constructor() {
+    super();
+    this.layout = 'page';
+    this.renderMode = 'simple';
+    this.annotations = false;
+    this.rows = undefined;
+    this.results = [];
+    this.busy = false;
+    this.monitor = undefined;
+    this.grouped = false;
+    this.groups = benchmarkGroups();
+  }
+
+  get table() {
+    return this.renderRoot.querySelector('owc-table');
+  }
+
+  report(...lines) {
+    this.results = [...this.results, ...lines];
+  }
+
+  /** Lets the layout fill the viewport, as it would in an application. */
+  showLayout() {
+    this.renderRoot
+      .querySelector('.sidebar-frame')
+      ?.scrollIntoView({ block: 'start', behavior: 'instant' });
+  }
+
+  async load() {
+    this.busy = true;
+    benchmarkRows ??= generateBenchmarkRows(benchmarkRowCount);
+    const start = performance.now();
+    this.rows = benchmarkRows;
+    await this.updateComplete;
+    this.showLayout();
+    await this.table.updateComplete;
+    await afterNextPaint();
+    this.report(
+      `First rows painted ${Math.round(performance.now() - start)}ms after setting the data`,
+    );
+    this.busy = false;
+  }
+
+  async toggleGrouping(event) {
+    this.grouped = event.target.checked;
+    if (!this.rows) {
+      return;
+    }
+    this.busy = true;
+    const start = performance.now();
+    await this.updateComplete;
+    await this.table.updateComplete;
+    await afterNextPaint();
+    this.report(
+      `Rows painted ${Math.round(performance.now() - start)}ms after turning grouping ${this.grouped ? 'on' : 'off'}`,
+    );
+    this.busy = false;
+  }
+
+  async jump() {
+    const input = this.renderRoot.querySelector('input[type="number"]');
+    const index = Math.min(Math.max(Number(input.value) - 1, 0), this.rows.length - 1);
+    const table = this.table;
+    const scroller = scrollParent(table);
+    this.showLayout();
+    const start = performance.now();
+    for (let attempt = 0; attempt < 5; attempt++) {
+      // a row, or with grouping on a group header, by its index in the rendered list
+      const item = table.shadowRoot.querySelector(`[data-index="${index}"]`);
+      if (item) {
+        (item.closest('.row-container') ?? item).scrollIntoView({
+          block: 'start',
+          behavior: 'instant',
+        });
+        await afterNextPaint();
+        this.report(`Row ${index + 1} shown after ${Math.round(performance.now() - start)}ms`);
+        return;
+      }
+      // jump close to the row by the average row height, then let the table render it
+      const range = bodyScrollRange(table, scroller);
+      scrollInstantly(scroller, range.start + index * range.rowHeight);
+      await afterNextPaint();
+      await afterNextPaint();
+    }
+    this.report(`Row ${index + 1} was not rendered`);
+  }
+
+  async runScript() {
+    this.busy = true;
+    const table = this.table;
+    const scroller = scrollParent(table);
+    this.showLayout();
+    const monitor = new ScrollMonitor(table);
+    // An action returns the distance it scrolled, or nothing for jumps.
+    const phase = async (name, frames, action) => {
+      monitor.start(name);
+      for (let frame = 0; frame < frames; frame++) {
+        let scrolled;
+        await afterNextPaint(() => {
+          scrolled = action(frame);
+        });
+        monitor.sample(scrolled);
+      }
+      this.report(await monitor.finish());
+    };
+    const scrollBy = delta => {
+      const top = scroller.scrollTop;
+      scrollInstantly(scroller, top + delta);
+      return scroller.scrollTop - top;
+    };
+    const random = seededRandom(3);
+
+    scrollInstantly(scroller, bodyScrollRange(table, scroller).start);
+    await afterNextPaint();
+    await phase('Scroll down at 60px per frame', 150, () => scrollBy(60));
+    await phase('Fling down at 250px per frame', 80, () => scrollBy(250));
+    await phase('Fling up at 250px per frame', 60, () => scrollBy(-250));
+    await phase('10 jumps, like dragging the scrollbar', 50, frame => {
+      if (frame % 5 === 0) {
+        const { start, end } = bodyScrollRange(table, scroller);
+        scrollInstantly(scroller, start + random() * (end - start));
+      }
+    });
+    await phase('Jump to the end of the table', 10, () =>
+      scrollInstantly(scroller, bodyScrollRange(table, scroller).end),
+    );
+    // the last item of the table ends where the table body ends
+    const root = table.shadowRoot;
+    const last = [...root.querySelectorAll('.row-container, .group-label-container')]
+      .at(-1)
+      ?.getBoundingClientRect();
+    const body = root.querySelector('.table-body').getBoundingClientRect();
+    const clip = clipRect(scroller);
+    this.report(
+      last &&
+        Math.abs(body.bottom - last.bottom) < 1 &&
+        last.top >= clip.top &&
+        last.bottom <= clip.bottom + 1
+        ? 'The last row is visible at the end'
+        : 'The last row is not visible at the end',
+    );
+    await phase('Scroll up from the end at 60px per frame', 100, () => scrollBy(-60));
+    monitor.stop();
+    this.busy = false;
+  }
+
+  toggleMonitor() {
+    if (this.monitor) {
+      const { monitor } = this;
+      this.monitor = undefined;
+      monitor.finish().then(line => {
+        monitor.stop();
+        this.report(line);
+      });
+      return;
+    }
+    const monitor = new ScrollMonitor(this.table);
+    monitor.start('Manual scrolling');
+    this.monitor = monitor;
+    const sampleEachFrame = () =>
+      afterNextPaint().then(() => {
+        if (this.monitor === monitor) {
+          monitor.sample();
+          sampleEachFrame();
+        }
+      });
+    sampleEachFrame();
+  }
+
+  render() {
+    const table = this.rows
+      ? html`<owc-table
+          sticky-header
+          render-mode=${this.renderMode}
+          .columns=${benchmarkColumns}
+          .renderDetail=${renderBenchmarkDetail}
+          .renderAnnotation=${this.annotations ? renderBenchmarkAnnotation : renderNoAnnotation}
+          .data=${this.rows}
+          .groupList=${this.grouped ? this.groups : noGroups}
+          .groupSelector=${this.grouped ? byDepartment : undefined}
+          .othersGroupActive=${true}
+        ></owc-table>`
+      : nothing;
+    return html`
+      <div class="controls">
+        <label
+          >Details
+          <select @change=${event => (this.renderMode = event.target.value)} ?disabled=${this.busy}>
+            <option value="simple">None</option>
+            <option value="detail">detail</option>
+            <option value="detailDeferred">detailDeferred</option>
+          </select></label
+        >
+        <label
+          ><input
+            type="checkbox"
+            @change=${event => (this.annotations = event.target.checked)}
+            ?disabled=${this.busy}
+          />
+          Annotations</label
+        >
+        <label>
+          <input
+            type="checkbox"
+            .checked=${this.grouped}
+            ?disabled=${this.busy}
+            @change=${this.toggleGrouping}
+          />
+          Group by department
+        </label>
+      </div>
+      <div class="controls">
+        <button @click=${this.load} ?disabled=${this.busy || this.rows}>Load 100,000 rows</button>
+        <label>Row <input type="number" min="1" max=${benchmarkRowCount} value="50000" /></label>
+        <button @click=${this.jump} ?disabled=${this.busy || !this.rows}>Jump</button>
+        <button @click=${this.runScript} ?disabled=${this.busy || !this.rows || this.monitor}>
+          Run scripted scroll
+        </button>
+        <button @click=${this.toggleMonitor} ?disabled=${this.busy || !this.rows}>
+          ${this.monitor ? 'Stop monitoring' : 'Monitor manual scrolling'}
+        </button>
+      </div>
+      <ul class="results">
+        ${this.results.map(line => html`<li>${line}</li>`)}
+      </ul>
+      ${
+        this.layout === 'sidebar'
+          ? html`<div class="sidebar-frame">
+              <owc-layout-sidebar
+                .menuItemList=${[
+                  { icon: 'house', label: 'Overview', href: '#overview' },
+                  { icon: 'table', label: 'Reports', href: '#reports' },
+                  { icon: 'gear', label: 'Settings', href: '#settings' },
+                ]}
+                >${table}</owc-layout-sidebar
+              >
+            </div>`
+          : table
+      }
+    `;
+  }
+}
+
+customElements.define('table-benchmark-demo', TableBenchmark);
+```
+
+### Benchmark with Page Scrolling
+
+The table is part of the page, and the page scrolls.
+
+```js demo
+export const benchmarkPageScrolling = () => {
+  return html`<table-benchmark-demo layout="page"></table-benchmark-demo>`;
+};
+```
+
+### Benchmark inside owc-layout-sidebar
+
+The table sits in the content area of `owc-layout-sidebar`, which scrolls instead of the page.
+
+```js demo
+export const benchmarkLayoutSidebar = () => {
+  return html`<table-benchmark-demo layout="sidebar"></table-benchmark-demo>`;
+};
+```
+
 ## Localization
 
 owc-table comes with the option to localize on top of the formatter overwrites. it does so by using `webawesome localization`. Currently, it supports german and english. to change it, add a lang tag.
@@ -2236,7 +2896,7 @@ Unless stated otherwise, properties can be configured declaratively as HTML attr
 | Property            | Type                                                              | Description                                                                                                       |
 | ------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `data`              | `Array<T>`                                                        | is the access point to initialize the data ([see Passing Data](#passing-data))                                    |
-| `visibleData`       | `Array<T>`                                                        | contains all the visible data                                                                                     |
+| `visibleData`       | `Array<T>`                                                        | the Data Rows the table renders, in display order ([see Visible Data](#visible-data))                             |
 | `processedData`     | `Array<T>`                                                        | the data after it has been processed by a filter                                                                  |
 | `allData`           | `Array<T>`                                                        | contains every entry                                                                                              |
 | `insertData`        | `Array<T>`                                                        | used to insert data                                                                                               |
@@ -2248,12 +2908,13 @@ Unless stated otherwise, properties can be configured declaratively as HTML attr
 
 ### Columns API
 
-| Property              | Type                           | Description                                             |
-| --------------------- | ------------------------------ | ------------------------------------------------------- |
-| `columns`             | `Column<T>[]`                  | the definition of the columns ([see Columns](#columns)) |
-| `overrides`           | `Overrides`                    | overrides certain column options like visibility        |
-| `selectable`          | `boolean`                      | defines if rows can be selected                         |
-| `getSelectorSettings` | `(row: T) => SelectorSettings` | gets the selector settings for that row                 |
+| Property              | Type                           | Description                                                                                                       |
+| --------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `columns`             | `Column<T>[]`                  | the definition of the columns ([see Columns](#columns))                                                           |
+| `overrides`           | `Overrides`                    | overrides certain column options like visibility                                                                  |
+| `grow-full-width`     | `boolean`                      | stretches the columns without a `width` to the width of the table's container ([see Column Width](#column-width)) |
+| `selectable`          | `boolean`                      | defines if rows can be selected                                                                                   |
+| `getSelectorSettings` | `(row: T) => SelectorSettings` | gets the selector settings for that row                                                                           |
 
 ### Filtering and Sorting API
 
@@ -2286,7 +2947,7 @@ Unless stated otherwise, properties can be configured declaratively as HTML attr
 | ------------------- | -------------------- | -------------------------------------------------------------------------------------------- |
 | `groupSelector`     | `(row: T) => string` | determines the selector to be used to assign the group ([see Grouping Rows](#grouping-rows)) |
 | `groupList`         | `Group[]`            | the available groups ([see Grouping Rows](#grouping-rows))                                   |
-| `othersGroupActive` | `boolean`            | determines if other entities should be displayed in an `other` group                         |
+| `othersGroupActive` | `boolean`            | whether the group of rows that match no group in `groupList` (**Others**) is expanded        |
 
 ### Editing API
 
@@ -2295,6 +2956,13 @@ Unless stated otherwise, properties can be configured declaratively as HTML attr
 | `handleInsert`     | `() => T`                    | is called to handle inserts of data ([see Adding Rows](#adding-rows))        |
 | `handleUpdate`     | `handleUpdate<T>`            | is called for every update ([Handling Data Updates](#handling-data-updates)) |
 | `compareOverrides` | `Record<string, Partial<T>>` | makes the override comparison for mass edit                                  |
+
+### Large Tables API
+
+| Property           | Type                            | Description                                                                                                                                               |
+| ------------------ | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `virtualizer-mode` | `"auto" \| "always" \| "never"` | when the table renders only the rows in and around the visible area: `auto` (default) from 300 Data Rows on ([see Virtualizer Modes](#virtualizer-modes)) |
+| `scrollTarget`     | `Element \| null \| undefined`  | the element that scrolls the table; overrides the automatic detection, which is on while it's unset ([see Scroll Container](#scroll-container))           |
 
 ### Actions & Toolbar API
 
@@ -2318,10 +2986,9 @@ to overwrite the formats, see [Override Built-in Formatters](#override-built-in-
 
 ### Styling API
 
-| Property          | Type                            | Description                                                                                                                                                                  |
-| ----------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `customStyles`    | `CSSResult \| TemplateResult`   | styles for the shadow doms. (i.e.: if you need custom styles for the action tab)                                                                                             |
-| `virtualizerMode` | `"auto" \| "always" \| "never"` | sets the mode of how the rows are rendered. if set to auto(on large tables) or always, row that are outside out of field of view will be unrendered and deleted from the DOM |
+| Property       | Type                          | Description                                                                      |
+| -------------- | ----------------------------- | -------------------------------------------------------------------------------- |
+| `customStyles` | `CSSResult \| TemplateResult` | styles for the shadow doms. (i.e.: if you need custom styles for the action tab) |
 
 ### Events
 

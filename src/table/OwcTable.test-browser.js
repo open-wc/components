@@ -1,11 +1,8 @@
-import { aTimeout, fixture, html, expect, oneEvent } from '@open-wc/testing';
-import { setupIgnoreWindowResizeObserverLoopErrors } from '@lit-labs/virtualizer/support/resize-observer-errors.js';
+import { aTimeout, fixture, html, expect, oneEvent, waitUntil } from '@open-wc/testing';
 import { OwcTable } from './OwcTable.js';
 import '@awesome.me/webawesome/dist/components/details/details.js';
 
 customElements.define('owc-table', OwcTable);
-
-setupIgnoreWindowResizeObserverLoopErrors(beforeEach, afterEach);
 
 let originalConsoleError;
 beforeEach(() => {
@@ -200,24 +197,23 @@ describe('owc-table', () => {
     const el = await tableFixture(
       html`<owc-table .columns=${columns} .data=${rows(301)}></owc-table>`,
     );
-    await aTimeout(100);
-    await el.updateComplete;
 
-    const virtualizedHost = el.virtualizerHost;
-    const virtualizedHeight = virtualizedHost.getBoundingClientRect().height;
-    expect(virtualizedHost.style.minHeight).to.not.equal('');
+    const body = el.shadowRoot.querySelector('#data-table .table-body');
+    const virtualizedHeight = body.getBoundingClientRect().height;
+    expect(dataRows(el).length).to.be.below(301);
 
     el.jsonFilters = [{ field: 'age', operator: 'lessThan', value: 3 }];
     await el.updateComplete;
-    await aTimeout(100);
-    await el.updateComplete;
 
-    const filteredHost = el.virtualizerHost;
     expect(el.processedData).to.have.length(3);
     expect(dataRows(el)).to.have.length(3);
-    expect(filteredHost).to.not.equal(virtualizedHost);
-    expect(filteredHost.style.minHeight).to.equal('');
-    expect(filteredHost.getBoundingClientRect().height).to.be.lessThan(virtualizedHeight);
+    // no stale sizing: the body is exactly as tall as its three rows
+    const rowsHeight = [...body.querySelectorAll('.row-container')].reduce(
+      (sum, container) => sum + container.getBoundingClientRect().height,
+      0,
+    );
+    expect(body.getBoundingClientRect().height).to.be.closeTo(rowsHeight, 1);
+    expect(body.getBoundingClientRect().height).to.be.lessThan(virtualizedHeight);
   });
 
   it('updates rendered rows when a boxless slot sits inside the scroll container', async () => {
@@ -227,19 +223,76 @@ describe('owc-table', () => {
       </table-display-contents-host>
     `);
     const el = host.querySelector('owc-table');
-    await aTimeout(100);
     await el.updateComplete;
 
     const initialIndexes = dataRows(el).map(row => Number(row.dataset.index));
     expect(initialIndexes).to.include(0);
 
+    const scrolled = oneEvent(host.scroller, 'scrollend');
     host.scroller.scrollTop = 2_000;
-    host.scroller.dispatchEvent(new Event('scroll'));
-    await aTimeout(100);
+    await scrolled;
     await el.updateComplete;
 
     const scrolledIndexes = dataRows(el).map(row => Number(row.dataset.index));
     expect(Math.min(...scrolledIndexes)).to.be.greaterThan(0);
+  });
+
+  for (const mode of ['never', 'always']) {
+    it(`lays out the header and every body row as subgrid rows of one grid (virtualizer: ${mode})`, async () => {
+      const el = await tableFixture(html`
+        <owc-table
+          virtualizer-mode=${mode}
+          .columns=${[
+            { label: 'First Name', field: 'firstName', width: 160 },
+            { label: 'Age', field: 'age' },
+          ]}
+          .data=${data}
+        ></owc-table>
+      `);
+      await waitUntil(() => dataRows(el).length === data.length, 'body rows rendered');
+      await el.recalculateColumnWidths();
+
+      const ageWidth = el.visibleColumns[1]._calculatedWidth;
+      expect(ageWidth).to.be.at.least(50);
+      const grid = getComputedStyle(el.shadowRoot.querySelector('#data-table'));
+      expect(grid.display).to.equal('grid');
+      expect(grid.gridTemplateColumns).to.equal(`160px ${ageWidth}px`);
+      const header = el.shadowRoot.querySelector('#data-table .table-header .row');
+      for (const row of [header, ...dataRows(el)]) {
+        const style = getComputedStyle(row);
+        expect(style.display).to.equal('grid');
+        expect(style.gridTemplateColumns.split(' ')[0], 'columns of the row').to.equal('subgrid');
+      }
+
+      const cellBoxes = row =>
+        [...row.querySelectorAll(':scope > .cell')].map(cell => {
+          const { left, width } = cell.getBoundingClientRect();
+          return { left, width };
+        });
+      for (const row of dataRows(el)) {
+        expect(cellBoxes(row)).to.deep.equal(cellBoxes(header));
+      }
+    });
+  }
+
+  it('sizes columns to their header labels when the header is wider than the table', async () => {
+    const el = await tableFixture(html`
+      <owc-table
+        style="width: 200px"
+        virtualizer-mode="never"
+        .columns=${[
+          { label: 'A rather long first name label', field: 'firstName' },
+          { label: 'A rather long age label', field: 'age' },
+        ]}
+        .data=${data}
+      ></owc-table>
+    `);
+    await el.recalculateColumnWidths();
+
+    for (const headerCell of el.shadowRoot.querySelectorAll('owc-table-header-cell')) {
+      const label = headerCell.shadowRoot.querySelector('#slot-wrapper');
+      expect(label.scrollWidth).to.be.at.most(label.clientWidth);
+    }
   });
 
   it('measures formatted content after virtualized rows become available', async () => {
@@ -256,8 +309,7 @@ describe('owc-table', () => {
       <owc-table .columns=${measuredColumns} .data=${rows(301)}></owc-table>
     `);
 
-    await aTimeout(100);
-    await el.updateComplete;
+    await el.recalculateColumnWidths();
 
     expect(el.visibleData).to.not.be.empty;
     expect(el.visibleColumns[0]._calculatedWidth).to.be.at.least(216);
@@ -369,12 +421,13 @@ describe('owc-table', () => {
       `);
       await aTimeout(100);
       await el.recalculateColumnWidths();
-      expect(dataRows(el)[0].getBoundingClientRect().width).to.equal(116);
+      // the content, the cell's padding (2 × 18px) and its left and right border
+      expect(dataRows(el)[0].getBoundingClientRect().width).to.equal(80 + 36 + 2);
 
       changeDataOnRender = true;
       await el.recalculateColumnWidths();
       expect(dataRows(el)[0].textContent).to.include('Updated');
-      expect(dataRows(el)[0].getBoundingClientRect().width).to.equal(336);
+      expect(dataRows(el)[0].getBoundingClientRect().width).to.equal(300 + 36 + 2);
     });
   }
 
@@ -590,6 +643,29 @@ describe('owc-table', () => {
     const checkbox = dataRows(el)[0].querySelector('wa-checkbox, input[type="checkbox"]');
     expect(checkbox).to.exist;
     expect(el.selectedData).to.deep.equal([]);
+  });
+
+  it('does not select rows that are being inserted', async () => {
+    const insertedRow = { id: 'new', firstName: 'New', age: 20 };
+    const el = await tableFixture(
+      html`<owc-table
+        selectable
+        .columns=${columns}
+        .data=${data}
+        .insertData=${[insertedRow]}
+      ></owc-table>`,
+    );
+    const selectAll = el.shadowRoot.querySelector('.table-header wa-checkbox');
+
+    dataRows(el).at(-1).querySelector('.cell-selector').click();
+    await el.updateComplete;
+    expect(dataRows(el).at(-1).querySelector('wa-checkbox').checked).to.equal(false);
+    expect(selectAll.indeterminate, 'select-all checkbox indeterminate').to.equal(false);
+
+    dataRows(el)[1].querySelector('.cell-selector').click();
+    await el.updateComplete;
+    expect(el.selectedData).to.deep.equal([data[1]]);
+    expect(selectAll.indeterminate, 'select-all checkbox indeterminate').to.equal(true);
   });
 
   it('renders the filter builder when filter-mode is not hidden', async () => {

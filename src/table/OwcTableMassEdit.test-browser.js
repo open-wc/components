@@ -19,6 +19,10 @@ function makeTableStub() {
     _renderType: 'html',
     /** @type {any[]} */
     updates: [],
+    rowsEdited: 0,
+    _rowEdited() {
+      stub.rowsEdited++;
+    },
   };
   stub.handleUpdate = (/** @type {any} */ update) => stub.updates.push(update);
   return stub;
@@ -123,6 +127,7 @@ describe('owc-table-mass-edit', () => {
     // already-reset live value)
     table.updates[0].autoSetData();
     expect(rows[0].name).to.equal('bulk');
+    expect(table.rowsEdited, 'edits the table was told about').to.equal(1);
 
     // the edit round is reset afterwards
     expect(el.preview).to.equal(false);

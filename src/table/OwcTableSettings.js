@@ -130,7 +130,7 @@ export class OwcTableSettings extends OwcAutocomplete {
     const row = createRef();
     return html`<div ${ref(row)} class="row option" data-index=${index}>
       <wa-icon
-        ?hidden=${this.search.value !== ''}
+        ?hidden=${Boolean(this.search?.value)}
         name="grip-horizontal"
         label=${this.#localize.term('tableMoveColumn')}
         class="grip"

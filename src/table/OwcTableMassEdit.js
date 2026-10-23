@@ -187,7 +187,11 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
           value,
           allRequiredFieldsAreFilled: () => true,
           isNewInsert: false,
-          autoSetData: (data = selectedData) => setFieldPath(data, field, value),
+          autoSetData: (data = selectedData) => {
+            setFieldPath(data, field, value);
+            // the table renders the edit, and moves the row if its group changed
+            this.table?._rowEdited();
+          },
         });
       }
     }
