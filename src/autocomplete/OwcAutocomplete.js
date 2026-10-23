@@ -1,11 +1,17 @@
 import { css, html, LitElement, nothing } from 'lit';
 import { classMap } from 'lit/directives/class-map.js';
+import { ref } from 'lit/directives/ref.js';
+import { repeat } from 'lit/directives/repeat.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { HasSlotController } from './HasSlotController.js';
 import { LocalizeController } from '@awesome.me/webawesome/dist/utilities/localize.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { OwcIconButton } from '../icon-button/OwcIconButton.js';
-import { virtualize, virtualizerRef } from '@lit-labs/virtualizer/virtualize.js';
+import {
+  VirtualizerController,
+  spacerStyles,
+  virtualizes,
+} from '../virtualizer/VirtualizerController.js';
 import { OwcLocalizeController } from '@open-wc/components/localization.js';
 
 import '@awesome.me/webawesome/dist/components/input/input.js';
@@ -20,6 +26,49 @@ import { sizeStyles } from './size.styles.js';
 import { optionStyles } from './option.style.js';
 import { filterOptionsByLabel } from './filterOptionsByLabel.js';
 import { matchFillInput } from './fillInput.js';
+import { widestLabelWidth } from './widestLabelWidth.js';
+
+/**
+ * The part of a list that shows its content, in viewport coordinates.
+ *
+ * @param {Element} list
+ */
+function visiblePart(list) {
+  const top = list.getBoundingClientRect().top + list.clientTop;
+  return { top, bottom: top + list.clientHeight };
+}
+
+/**
+ * Scrolls `list` as little as possible to show all of `option`, without
+ * scrolling anything around the list.
+ *
+ * @param {Element} list
+ * @param {Element} option
+ */
+function scrollIntoList(list, option) {
+  const { top, bottom } = visiblePart(list);
+  const rect = option.getBoundingClientRect();
+  if (rect.top < top) {
+    list.scrollTop -= top - rect.top;
+  } else if (rect.bottom > bottom) {
+    list.scrollTop += rect.bottom - bottom;
+  }
+}
+
+/**
+ * Whether all of `option` shows in `list`. An option taller than the list
+ * counts as shown while it fills the list, since nothing shows more of it.
+ *
+ * @param {Element} list
+ * @param {Element} option
+ */
+function isShownInList(list, option) {
+  const { top, bottom } = visiblePart(list);
+  const rect = option.getBoundingClientRect();
+  const inside = rect.top >= top - 1 && rect.bottom <= bottom + 1;
+  const fills = rect.top <= top + 1 && rect.bottom >= bottom - 1;
+  return inside || fills;
+}
 
 /**
  * @template {Record<string, unknown>} T
@@ -50,7 +99,7 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
     syncWidth: { type: Boolean },
     size: { type: String },
     hideSelectAll: { type: Boolean, attribute: 'hide-select-all' },
-    maxDropdownOptionsVisible: { type: Number },
+    virtualizerMode: { type: String, attribute: 'virtualizer-mode' },
     currentValue: { type: String },
     fillMode: { type: Boolean, attribute: 'fill-mode' },
     fixedTrigger: { type: Boolean, attribute: 'fixed-trigger' },
@@ -97,7 +146,12 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
     this.hint = '';
 
     this.maxOptionsVisible = 3;
-    this.maxDropdownOptionsVisible = 200;
+    /**
+     * Whether the dropdown renders only the options in and around its visible part:
+     * `auto` from 300 options on, `always`, or `never`.
+     * @type {'always' | 'never' | 'auto'}
+     */
+    this.virtualizerMode = 'auto';
     /**@type {"small" | "medium" | "large"}*/
     this.size = 'medium';
     this.pill = false;
@@ -149,6 +203,19 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
   hasSlotController = new HasSlotController(this, 'help-text', 'label');
   localize = new LocalizeController(this);
 
+  /**
+   * Renders the options from the `virtualizer-mode` threshold on. Its scroll
+   * container is the option list, so nothing around the dropdown is detected.
+   */
+  #virtualizer = new VirtualizerController(this, { estimateSize: 36 });
+
+  /** @param {Element | undefined} list */
+  #setOptionList = list => {
+    if (list) {
+      this.#virtualizer.scrollContainer = list;
+    }
+  };
+
   get popup() {
     return /**@type {import('@awesome.me/webawesome/dist/components/popup/popup.js').default} */ (
       this.shadowRoot?.querySelector('.select')
@@ -179,10 +246,13 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
     if (this.multiple) {
       return undefined;
     }
-    return /** @type {T | undefined} */ (
-      this.data.find(opt => this.getOptionValue(opt) === this.value)
-    );
+    // read once: the getter builds a new array, and there may be 50,000 options
+    const value = this.value;
+    return /** @type {T | undefined} */ (this.data.find(opt => this.getOptionValue(opt) === value));
   }
+
+  /** The width of the widest label, kept until the data or the font changes. */
+  #labelWidth = { data: /** @type {T[] | undefined} */ (undefined), count: 0, font: '', width: 0 };
 
   /**
    * Measures the max label width in the full option list, independent of the search.
@@ -193,37 +263,32 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
     }
     const anchorWidth = this.combobox?.getBoundingClientRect().width || 0;
 
-    const items = this.data;
+    const items = this.data || [];
 
     const optionLabelEl = /** @type {HTMLElement | null} */ (
       this.shadowRoot.querySelector('.option-label')
     );
     const computed = optionLabelEl ? window.getComputedStyle(optionLabelEl) : null;
 
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      return;
-    }
-
     // Fallback
-    ctx.font =
+    const font =
       computed?.font || `${computed?.fontSize || '16px'} ${computed?.fontFamily || 'sans-serif'}`;
 
-    // Compute max label width in px.
-    let maxLabelWidth = 0;
-    for (const row of items || []) {
-      if (!row) {
-        continue;
+    const cached = this.#labelWidth;
+    if (cached.data !== items || cached.count !== items.length || cached.font !== font) {
+      const ctx = document.createElement('canvas').getContext('2d');
+      if (!ctx) {
+        return;
       }
-      const label = typeof row.label === 'string' ? row.label : String(row.label || '');
-      const metrics = ctx.measureText(label);
-      if (metrics.width > maxLabelWidth) {
-        maxLabelWidth = metrics.width;
-      }
+      ctx.font = font;
+      const labels = items
+        .filter(Boolean)
+        .map(row => (typeof row.label === 'string' ? row.label : String(row.label || '')));
+      const width = widestLabelWidth(labels, text => ctx.measureText(text).width);
+      this.#labelWidth = { data: items, count: items.length, font, width };
     }
 
-    const contentWidth = Math.ceil(maxLabelWidth + 100); // + padding and such
+    const contentWidth = Math.ceil(this.#labelWidth.width + 100); // + padding and such
 
     const minWidth = Math.ceil(anchorWidth);
     const maxWidth = 720;
@@ -293,9 +358,7 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
         if (this.processedData.length === 0) {
           return;
         }
-        const index = this.processedData.findIndex(
-          option => this.getOptionValue(option) === this.currentValue,
-        );
+        const index = this.#activeIndex();
         let newIndex = index;
         if (ev.key === 'ArrowDown') {
           newIndex = index < this.processedData.length - 1 ? index + 1 : 0;
@@ -315,11 +378,18 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
         if (this.processedData.length === 1) {
           this.currentValue = this.getOptionValue(this.processedData[0]);
         }
-        if (
-          this.currentValue &&
-          this.processedData.find(opt => this.getOptionValue(opt) === this.currentValue)
-        ) {
+        const index = this.#activeIndex();
+        if (!this.currentValue || index < 0) {
+          return;
+        }
+        // Enter only selects an option the user sees. One scrolled out of view,
+        // e.g. with the mouse wheel, is shown first.
+        const list = this.#optionList();
+        const option = this.#optionElement(index);
+        if (list && option && isShownInList(list, option)) {
           this.handleOptionAction(this.currentValue);
+        } else {
+          this.#revealOption(index);
         }
       }
       return;
@@ -354,6 +424,19 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
       }
       this.dispatchEvent(new Event('change'));
       this.requestUpdate();
+    }
+  }
+
+  /**
+   * Filters while the user types, and shows the first match, or the active
+   * option if it still matches.
+   *
+   * @param {InputEvent} ev
+   */
+  #handleSearchInput(ev) {
+    this.#handleSearch(ev);
+    if (this.fillMode === false) {
+      this.updateComplete.then(() => this.#revealActiveOption(true));
     }
   }
 
@@ -536,10 +619,6 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
     return this.multiple ? value : value[0];
   }
 
-  get limitedProcessedData() {
-    return this.processedData.slice(0, this.maxDropdownOptionsVisible);
-  }
-
   /**
    * @param {unknown[] | unknown} newValue
    */
@@ -553,9 +632,9 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
   }
 
   get valueLabel() {
-    const option = /** @type {T} */ (
-      this.data.find(opt => this.getOptionValue(opt) === this.value)
-    );
+    // read once: the getter builds a new array, and there may be 50,000 options
+    const value = this.value;
+    const option = /** @type {T} */ (this.data.find(opt => this.getOptionValue(opt) === value));
     return option ? option.label : '';
   }
 
@@ -565,6 +644,8 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
   update(changedProperties) {
     if (changedProperties.has('data')) {
       this.processedData = this.data ? [...this.data] : [];
+      // measured again on the next opening; don't hold on to the old options until then
+      this.#labelWidth = { data: undefined, count: 0, font: '', width: 0 };
     }
     super.update(changedProperties);
   }
@@ -578,8 +659,66 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
       this.handleOpenChange();
     }
     if (changedProperties.has('currentValue')) {
-      const el = this.shadowRoot?.querySelector('.option--current');
-      el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      // Once this update is done: rendering the option is an update of its own.
+      this.updateComplete.then(() => this.#revealActiveOption());
+    }
+  }
+
+  /**
+   * Scrolls the option list just enough to show the active option, so Enter
+   * selects an option the user can see.
+   *
+   * @param {boolean} [orFirst] shows the first option when no option is active
+   */
+  #revealActiveOption(orFirst = false) {
+    const index = this.#activeIndex();
+    if (index >= 0 || orFirst) {
+      this.#revealOption(Math.max(index, 0));
+    }
+  }
+
+  /** The index of the active option in `processedData`, or -1. */
+  #activeIndex() {
+    return this.processedData.findIndex(
+      option => this.getOptionValue(option) === this.currentValue,
+    );
+  }
+
+  /** The element that lists, and scrolls, the options. */
+  #optionList() {
+    return this.shadowRoot?.querySelector('#rows') ?? undefined;
+  }
+
+  /**
+   * The rendered element of an option, if it is rendered.
+   *
+   * @param {number} index the option's index in `processedData`
+   */
+  #optionElement(index) {
+    return this.#optionList()?.querySelector(`:scope > [data-index="${index}"]`) ?? undefined;
+  }
+
+  /**
+   * Scrolls the option list just enough to show an option, after rendering it
+   * if the list is virtualized.
+   *
+   * @param {number} index
+   */
+  #revealOption(index) {
+    // Until the popup has sized itself, the option list is as tall as all of
+    // its options, so showing one would scroll the page instead. Opening shows
+    // the active option once the popup has sized itself.
+    if (!this.open || !this.popup?.style.getPropertyValue('--auto-size-available-height')) {
+      return;
+    }
+    if (this.#virtualizes()) {
+      void this.#virtualizer.scrollToIndex(index, { block: 'nearest' });
+      return;
+    }
+    const list = this.#optionList();
+    const option = this.#optionElement(index);
+    if (list && option) {
+      scrollIntoList(list, option);
     }
   }
 
@@ -626,6 +765,10 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
       // @ts-ignore
       this.#handleSearch({ target: this.search });
       this.#updatePopoverWidth();
+      // The popup positions and sizes itself in microtasks, so the option list
+      // fits the available height from the next animation frame on, which is
+      // still before the dropdown is painted.
+      requestAnimationFrame(() => this.#revealActiveOption(true));
 
       setTimeout(() => this.search.focus(), 100);
     } else {
@@ -844,7 +987,7 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
             >
               <wa-input
                 id="search"
-                @input=${this.#handleSearch}
+                @input=${this.#handleSearchInput}
                 @change=${(/** @type {Event} */ ev) => ev.stopPropagation()}
               >
                 ${
@@ -862,17 +1005,8 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
                       ></owc-icon-button>`
                 }
               </wa-input>
-              <div
-                no-clipping
-                @click=${this.handleOptionClick}
-                style="min-height: 300px;"
-                id="rows"
-              >
-                ${virtualize({
-                  scroller: true,
-                  items: this.limitedProcessedData,
-                  renderItem: this.renderItem,
-                })}
+              <div id="rows" ${ref(this.#setOptionList)} @click=${this.handleOptionClick}>
+                ${this.open ? this.#renderOptions() : nothing}
               </div>
               ${
                 this.hideSelectAll === false
@@ -907,15 +1041,26 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
     `;
   }
 
-  get virtualizer() {
-    const el = this.shadowRoot?.querySelector('#rows');
-    // @ts-ignore
-    return el ? el[virtualizerRef] : undefined;
+  /** Whether the dropdown renders only the options in and around its visible part. */
+  #virtualizes() {
+    return virtualizes(this.virtualizerMode, this.processedData.length);
   }
 
-  get virtualizerHost() {
-    const el = this.shadowRoot?.querySelector('#rows');
-    return el || undefined;
+  /**
+   * Every option, or the options in range between two spacers, in normal flow.
+   * Options are keyed by their object, so a new range or a new search only
+   * adds and removes options at the edges.
+   */
+  #renderOptions() {
+    const options = this.processedData;
+    if (!this.#virtualizes()) {
+      return repeat(
+        options,
+        option => option,
+        (option, index) => this.renderItem(option, index),
+      );
+    }
+    return this.#virtualizer.renderSlice(this.#virtualizer.slice(options), this.renderItem);
   }
 
   /**
@@ -961,6 +1106,7 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
     formControlStyles,
     sizeStyles,
     optionStyles,
+    spacerStyles,
     css`
       /* overrides */
       .select--standard:not(.select--disabled).select--open .select__combobox,
@@ -1009,6 +1155,20 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
         padding-bottom: 0;
         margin-top: 5px;
         overflow: hidden;
+        /* the option list takes what the search field and the footer leave of the available height */
+        display: flex;
+        flex-direction: column;
+      }
+
+      .listbox > * {
+        flex: none;
+      }
+
+      /* The option list sizes to its options and scrolls once they don't fit. */
+      .listbox > #rows {
+        flex: 0 1 auto;
+        min-height: 0;
+        overflow-y: auto;
       }
 
       #placeholder {
