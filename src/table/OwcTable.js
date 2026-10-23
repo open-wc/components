@@ -1,13 +1,18 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
-import { keyed } from 'lit/directives/keyed.js';
+import { repeat } from 'lit/directives/repeat.js';
 import { until } from 'lit/directives/until.js';
-import { virtualize, virtualizerRef } from '@lit-labs/virtualizer/virtualize.js';
+import {
+  VirtualizerController,
+  spacerStyles,
+  virtualizes,
+} from '../virtualizer/VirtualizerController.js';
 
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { OwcTableHeaderCell } from './OwcTableHeaderCell.js';
 import { jsonToFilter } from './jsonToFilter.js';
 import { fitColumnWidths } from './fitColumnWidths.js';
+import { GroupHeader, OthersGroupHeader, groupedList } from './groupedList.js';
 
 import '@awesome.me/webawesome/dist/components/spinner/spinner.js';
 import '@awesome.me/webawesome/dist/components/checkbox/checkbox.js';
@@ -60,19 +65,13 @@ function throttle(func, delay = 300) {
 }
 
 /**
- * Method to scroll into view port, if it's outside the viewport
+ * A track list for the table's grid: each column's width in px, or
+ * `min-content` for a column without a width, which then fits its content.
  *
- * @param {Element} target - DOM Element
- * @returns {undefined}
+ * @param {Array<number | null | undefined>} widths
  */
-function scrollIntoViewIfNeeded(target) {
-  if (target.getBoundingClientRect().bottom > window.innerHeight) {
-    target.scrollIntoView({ block: 'end', inline: 'nearest' });
-  }
-
-  if (target.getBoundingClientRect().top < 0) {
-    target.scrollIntoView({ block: 'start', inline: 'nearest' });
-  }
+function gridTracks(widths) {
+  return widths.map(width => (width != null ? `${width}px` : 'min-content')).join(' ');
 }
 
 /**
@@ -132,14 +131,29 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     renderAnnotation: { type: Function },
     renderHeaderContent: { type: Function },
     virtualizerMode: { type: String, attribute: 'virtualizer-mode' },
+    scrollTarget: { attribute: false },
     growFullWidth: { type: Boolean, attribute: 'grow-full-width', reflect: true },
+    groupList: { attribute: false },
+    groupSelector: { attribute: false },
+    othersGroupActive: { attribute: false },
   };
 
   #initialSetFilterFields = new Set();
 
+  /**
+   * Sizes the columns again when the window gets wider or narrower, and
+   * measures the rows again, whose heights can depend on the window. A change
+   * of the window's height alone, like a mobile browser's toolbar hiding while
+   * scrolling, changes neither.
+   */
   #handleWindowResize = () => {
-    void this.#scheduleColumnWidths(true);
+    if (window.innerWidth !== this.#windowWidth) {
+      this.#windowWidth = window.innerWidth;
+      void this.#scheduleColumnWidths(true);
+    }
   };
+
+  #windowWidth = 0;
 
   /**
    * @param {import('./OwcTable.types.js').HandleDataOptions} value
@@ -303,6 +317,14 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     /** @type {'always' | 'never' | 'auto'} */
     this.virtualizerMode = 'auto';
 
+    /**
+     * The element that scrolls the table. It overrides the automatic detection
+     * of the scroll container; leave it unset, or set `undefined` or `null`,
+     * to detect it.
+     * @type {Element | null | undefined}
+     */
+    this.scrollTarget = undefined;
+
     this.growFullWidth = false;
   }
 
@@ -324,7 +346,21 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   #columnSizingPending = false;
 
-  #resetVirtualizerAfterSizing = false;
+  #remeasureRowsAfterSizing = false;
+
+  /**
+   * Whether the table wasn't laid out when its columns were last sized (e.g.
+   * inside `display: none`). Its columns then fit their content without being
+   * frozen, and are sized once the table has a width.
+   */
+  #columnWidthsUnsized = false;
+
+  /**
+   * The column tracks the rows' heights were measured at, so the virtualizer
+   * can measure them again when the widths change.
+   * @type {string | undefined}
+   */
+  #rowsMeasuredAt;
 
   get visibleColumns() {
     return [...this.#visibleColumns];
@@ -334,15 +370,55 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   #infoResizeObserver;
 
   /** @type {ResizeObserver | undefined} */
-  #growFullWidthResizeObserver;
+  #hostResizeObserver;
 
-  #lastGrowFullWidth = 0;
+  #hostWidth = 0;
 
-  #virtualizerReady = false;
+  /**
+   * Renders the list from the `virtualizer-mode` threshold on. Until a detail
+   * has been measured, an open detail is estimated at 200px, about the minimum
+   * height of a detail (25dvh) in a typical window.
+   */
+  #virtualizer = new VirtualizerController(this, { estimateSize: 47, estimateExpansion: 200 });
 
-  #virtualizerReadyFrame = 0;
+  /**
+   * The list the table body renders, one item per element: the rows of an
+   * ungrouped table, or every group's header followed by its rows while the
+   * group is expanded. `positionOf` gives the index of the row at a list index
+   * among the rows of its group, or of the table. `dataRows` are the Data Rows
+   * among the items, which a grouped list only finds once a render shows all
+   * of them.
+   *
+   * @type {{ items: Array<T | GroupHeader>, positionOf: (index: number) => number, dataRows?: T[], groupedFrom?: unknown[] }}
+   */
+  #list = { items: [], positionOf: index => index, dataRows: [] };
 
-  #measureColumnsOnNextVirtualizerRange = true;
+  /** @type {WeakMap<import('./groupedList.js').Group, GroupHeader>} */
+  #groupHeaders = new WeakMap();
+
+  /**
+   * The header of the group of rows that belong to no group in `groupList`:
+   * named in the table's language, and expanded through `othersGroupActive`.
+   */
+  #othersHeader = new OthersGroupHeader({
+    label: () => this.#localize.term('tableOthers'),
+    isActive: () => this.othersGroupActive,
+    setActive: active => {
+      this.othersGroupActive = active;
+    },
+  });
+
+  /**
+   * Whether a row changed in place since the list was laid out, e.g. through a
+   * cell edit, which can move it to another group.
+   */
+  #rowsChangedInPlace = false;
+
+  /**
+   * The items the next render shows when the list is virtualized.
+   * @type {import('../virtualizer/VirtualizerController.js').VirtualSlice<T | GroupHeader> | undefined}
+   */
+  #slice;
 
   #initialSortersApplied = false;
 
@@ -402,12 +478,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   /** @param {import('lit').PropertyValues} changedProperties */
   updated(changedProperties) {
     if (changedProperties.has('growFullWidth')) {
-      if (this.growFullWidth) {
-        this.#observeGrowFullWidth();
-      } else {
-        this.#growFullWidthResizeObserver?.disconnect();
-        this.#lastGrowFullWidth = 0;
-      }
       void this.recalculateColumnWidths();
     }
     super.updated(changedProperties);
@@ -417,6 +487,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
    * @param {import('lit').PropertyValues} changedProperties
    */
   update(changedProperties) {
+    if (changedProperties.has('scrollTarget')) {
+      this.#virtualizer.scrollContainer = this.scrollTarget ?? undefined;
+    }
     if (changedProperties.has('data')) {
       this.processedData = [...this.data];
       if (this.#hasDetailRows()) {
@@ -460,6 +533,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     if (changedProperties.has('openDetails')) {
       this.#markOpenDetailsAsLoaded();
     }
+    if (changedProperties.has('openDetails') || changedProperties.has('renderMode')) {
+      this.#virtualizer.expanded = this.#openDetailPredicate();
+    }
     if (
       changedProperties.has('filter') ||
       changedProperties.has('data') ||
@@ -470,11 +546,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     ) {
       this.#applyFilters();
       this.#applySorters();
-      if (this.#shouldUseVirtualizer(this.allData)) {
-        this.#measureColumnsOnNextVirtualizerRange = true;
-      } else {
-        this.recalculateColumnWidths();
-      }
+      void this.recalculateColumnWidths();
     }
     if (changedProperties.has('actionTabActive')) {
       this.#saveStateToUrl();
@@ -550,11 +622,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
     }
     if (changedProperties.has('overrides')) {
-      if (this.#shouldUseVirtualizer(this.allData)) {
-        this.#measureColumnsOnNextVirtualizerRange = true;
-      } else {
-        this.recalculateColumnWidths();
-      }
+      void this.recalculateColumnWidths();
     }
     if (changedProperties.has('filter')) {
       if (this.filterMode === 'global-search-with-builder' || this.filterMode === 'global-search') {
@@ -584,6 +652,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         (this.handleData !== undefined && this.handleDataOptions.refreshButton),
       );
     }
+    this.#updateRenderedRows();
     super.update(changedProperties);
 
     this.updateComplete.then(() => this.#updateInfoHeight());
@@ -676,27 +745,17 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   connectedCallback() {
     super.connectedCallback();
+    this.#windowWidth = window.innerWidth;
     window.addEventListener('resize', this.#handleWindowResize);
-    this.#growFullWidthResizeObserver?.observe(this);
+    this.#observeHostWidth();
     void this.recalculateColumnWidths();
-    if (!this.#virtualizerReady) {
-      this.#virtualizerReadyFrame = requestAnimationFrame(() => {
-        this.#virtualizerReadyFrame = 0;
-        if (this.isConnected) {
-          this.#virtualizerReady = true;
-          this.requestUpdate();
-        }
-      });
-    }
     this.handleInitialData();
     this.loadStateFromUrl();
   }
 
   disconnectedCallback() {
     window.removeEventListener('resize', this.#handleWindowResize);
-    this.#growFullWidthResizeObserver?.disconnect();
-    cancelAnimationFrame(this.#virtualizerReadyFrame);
-    this.#virtualizerReadyFrame = 0;
+    this.#hostResizeObserver?.disconnect();
     super.disconnectedCallback();
   }
 
@@ -875,20 +934,13 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     this.requestUpdate();
   }
 
-  renderSizeTableColumnStyles() {
-    return html`
-      ${this.#visibleColumns.map((column, index) => {
-        const width = column.width ?? column._calculatedWidth;
-
-        return width != null
-          ? html`
-              .table-header > .header-cell:nth-child(${index + 2}), .row >
-              .cell:nth-child(${index + 2}) { width: ${width}px; min-width: ${width}px; max-width:
-              ${width}px; flex: 0 0 ${width}px; box-sizing: border-box; }
-            `
-          : nothing;
-      })}
-    `;
+  /**
+   * The column tracks of the table's grid, which the header row and every body
+   * row lay out on. A column without a width fits its content until its width
+   * is sized and frozen.
+   */
+  #columnTracks() {
+    return gridTracks(this.#visibleColumns.map(column => column.width ?? column._calculatedWidth));
   }
 
   #addGlobalSearchJsonFilter() {
@@ -915,7 +967,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   render() {
     return html`
       <style>
-        ${this.renderSizeTableColumnStyles()}
         ${this.customStyles}
       </style>
       <div id="header">
@@ -956,32 +1007,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
                 <div id="info-wrapper">
                   ${
                     this.handleInsert
-                      ? html`<wa-button
-                          size="s"
-                          variant="brand"
-                          @click=${async () => {
-                            if (this.handleInsert) {
-                              this.insertData = [...this.insertData, this.handleInsert()];
-                              setTimeout(async () => {
-                                await this.updateComplete;
-                                const editableElement = /** @type {HTMLInputElement} */ (
-                                  this.shadowRoot?.querySelector('[editable]')
-                                );
-                                if (editableElement) {
-                                  scrollIntoViewIfNeeded(editableElement);
-                                  // @ts-ignore
-                                  if (
-                                    editableElement.focus &&
-                                    typeof editableElement.focus === 'function'
-                                  ) {
-                                    // @ts-ignore
-                                    editableElement.focus();
-                                  }
-                                }
-                              }, 100);
-                            }
-                          }}
-                        >
+                      ? html`<wa-button size="s" variant="brand" @click=${this.#handleInsertClick}>
                           <wa-icon
                             id="add-new-row-icon"
                             slot="start"
@@ -1030,6 +1056,74 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     `;
   }
 
+  /**
+   * Adds a row from `handleInsert`, brings it into view and focuses its first
+   * editable field.
+   */
+  async #handleInsertClick() {
+    if (!this.handleInsert) {
+      return;
+    }
+    const row = this.handleInsert();
+    this.insertData = [...this.insertData, row];
+    this.#expandGroupOf(row);
+    await this.updateComplete;
+    // Insert rows come last, in their group if the table is grouped, so in a
+    // virtualized table the new row usually isn't rendered yet.
+    const index = this.#list.items.lastIndexOf(row);
+    if (index < 0) {
+      return;
+    }
+    if (this.#slice) {
+      await this.#virtualizer.scrollToIndex(index, { block: 'nearest' });
+    } else {
+      // instant like `scrollToIndex`, so focusing doesn't interrupt a smooth scroll
+      this.#rowContainerAt(index)?.scrollIntoView({
+        block: 'nearest',
+        inline: 'nearest',
+        behavior: 'instant',
+      });
+    }
+    const field = /** @type {HTMLElement | null | undefined} */ (
+      this.#rowContainerAt(index)?.querySelector('[editable]')
+    );
+    field?.focus();
+  }
+
+  /**
+   * Expands the group a row belongs to in a grouped table, so the row is part
+   * of the list.
+   *
+   * @param {T} row
+   */
+  #expandGroupOf(row) {
+    if (!this.groupSelector || !this.#isGrouped()) {
+      return;
+    }
+    const key = this.groupSelector(row);
+    const groups = this.groupList.filter(group => group.key === key);
+    const headers =
+      groups.length > 0 ? groups.map(group => this.#groupHeaderFor(group)) : [this.#othersHeader];
+    for (const header of headers) {
+      header.active = true;
+    }
+    this.requestUpdate('groupList');
+  }
+
+  /**
+   * The rendered row container of the row at an index of the list the body
+   * renders, which is its index in `allData` in an ungrouped table.
+   *
+   * @param {number} index
+   */
+  #rowContainerAt(index) {
+    return (
+      this.shadowRoot?.querySelector(
+        `#virtualize-container > .row-container > .row[data-index="${index}"]`,
+      )?.parentElement ?? undefined
+    );
+  }
+
   async #handleRefreshButtonClick() {
     this.handleDataUseCache = false;
     await this.#executeHandleData();
@@ -1066,164 +1160,194 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     this.#applySorters();
   }
 
+  #isGrouped() {
+    return this.groupList?.length > 0 && Boolean(this.groupSelector);
+  }
+
   /**
-   * @param {{items: T[], renderItem: (item: T, index: number) => import('lit').TemplateResult}} options
-   * @returns
+   * Decides which rows the next render shows, and sets `visibleData` to the
+   * Data Rows among them in the same update, so a new range costs one update.
    */
-  #renderList({ items, renderItem }) {
-    if (this.#shouldUseVirtualizer(items)) {
-      if (!this.#virtualizerReady) {
-        return nothing;
-      }
-      return html`${virtualize({ items, renderItem })}`;
+  #updateRenderedRows() {
+    this.#updateList();
+    const list = this.#list;
+    // Only Data Rows count toward the threshold, across all groups; group
+    // headers and insert rows don't.
+    this.#slice = virtualizes(this.virtualizerMode, this.processedData.length)
+      ? this.#virtualizer.slice(list.items)
+      : undefined;
+    const visibleData = this.#slice
+      ? this.#dataRowsOf(this.#slice.items)
+      : (list.dataRows ??= this.#dataRowsOf(list.items));
+    const unchanged =
+      visibleData === this.visibleData ||
+      (visibleData.length === this.visibleData.length &&
+        visibleData.every((row, index) => row === this.visibleData[index]));
+    if (!unchanged) {
+      this.visibleData = visibleData;
     }
-
-    return html`${items.map((item, index) => {
-      const result = renderItem(item, index);
-      return result;
-    })}`;
   }
 
-  /** @param {T[]} items */
-  #shouldUseVirtualizer(items) {
-    return (
-      this.virtualizerMode === 'always' || (this.virtualizerMode === 'auto' && items.length >= 300)
+  /**
+   * Lays the rows out as the list the body renders. A grouped table is laid
+   * out again only when its rows or its groups change, or a row changed in
+   * place, so updates for scrolling don't group the rows again.
+   */
+  #updateList() {
+    const rowsChangedInPlace = this.#rowsChangedInPlace;
+    this.#rowsChangedInPlace = false;
+    if (!this.#isGrouped()) {
+      if (this.#list.items !== this.allData || this.#list.dataRows !== this.processedData) {
+        this.#list = {
+          items: this.allData,
+          positionOf: index => index,
+          dataRows: this.processedData,
+        };
+      }
+      return;
+    }
+    const groupOf = /** @type {(row: T) => string} */ (this.groupSelector);
+    const groupedFrom = [
+      this.allData,
+      groupOf,
+      this.groupList,
+      this.othersGroupActive,
+      ...this.groupList.flatMap(group => [group.key, group.priority, Boolean(group.active)]),
+    ];
+    const previous = this.#list.groupedFrom;
+    if (
+      !rowsChangedInPlace &&
+      previous?.length === groupedFrom.length &&
+      groupedFrom.every((value, index) => value === previous[index])
+    ) {
+      return;
+    }
+    const { items, positions } = groupedList(this.allData, {
+      groups: this.groupList,
+      groupOf,
+      headerFor: group => this.#groupHeaderFor(group),
+      others: this.#othersHeader,
+    });
+    this.#list = { items, positionOf: index => positions[index], groupedFrom };
+  }
+
+  /** @param {import('./groupedList.js').Group} group */
+  #groupHeaderFor(group) {
+    let header = this.#groupHeaders.get(group);
+    if (!header) {
+      header = new GroupHeader(group);
+      this.#groupHeaders.set(group, header);
+    }
+    return header;
+  }
+
+  /** @param {T | GroupHeader} item */
+  #isDataRow(item) {
+    return !(item instanceof GroupHeader) && !this.isInsert({ data: item });
+  }
+
+  /**
+   * The Data Rows among items of the list, without group headers and insert rows.
+   *
+   * @param {Array<T | GroupHeader>} items
+   */
+  #dataRowsOf(items) {
+    return /** @type {T[]} */ (items.filter(item => this.#isDataRow(item)));
+  }
+
+  #renderListHost() {
+    return html`<div id="virtualize-container">
+      ${
+        this.#slice
+          ? this.#virtualizer.renderSlice(this.#slice, (item, index) =>
+              this.#renderListItem(item, index),
+            )
+          : this.#renderAllRows()
+      }
+    </div>`;
+  }
+
+  /** Every item of the list, for tables that aren't virtualized. */
+  #renderAllRows() {
+    const { items } = this.#list;
+    if (!this.#isGrouped()) {
+      return items.map((item, index) => this.#renderListItem(item, index));
+    }
+    // Keyed, so expanding or collapsing a group only adds or removes its rows.
+    return repeat(
+      items,
+      item => item,
+      (item, index) => this.#renderListItem(item, index),
     );
   }
 
-  /** @param {T[]} items */
-  #renderListHost(items) {
-    // The virtualizer leaves sizing and containment styles on its host when
-    // disconnected. Replace the host when crossing the threshold so a short,
-    // non-virtual list does not inherit the previous virtual scroll height.
-    return keyed(
-      this.#shouldUseVirtualizer(items),
-      html`<div id="virtualize-container" @rangeChanged=${this.#handleVirtualizerRangeChanged}>
-        ${this.#renderList({ items, renderItem: this.#renderItem })}
-      </div>`,
-    );
+  /**
+   * @param {T | GroupHeader} item
+   * @param {number} index the item's index in the list
+   */
+  #renderListItem(item, index) {
+    if (item instanceof GroupHeader) {
+      return this.#renderGroupHeader(item, index);
+    }
+    const { items, positionOf } = this.#list;
+    return this.#renderItem(item, index, {
+      position: positionOf(index),
+      last: index === items.length - 1,
+    });
   }
 
-  #handleVirtualizerRangeChanged = (/** @type {Event & { first: number; last: number }} */ ev) => {
-    this.visibleData = this.allData.slice(ev.first, ev.last + 1);
-    if (this.#measureColumnsOnNextVirtualizerRange) {
-      this.#measureColumnsOnNextVirtualizerRange = false;
-      const measure = () => {
-        if (this.isConnected) {
-          void this.recalculateColumnWidths();
-        }
-      };
-      const layoutComplete = this.virtualizer?.layoutComplete;
-      if (layoutComplete) {
-        void layoutComplete.then(measure, () => undefined);
-      } else {
-        requestAnimationFrame(measure);
-      }
-    }
-  };
+  /**
+   * @param {GroupHeader} header
+   * @param {number} index the header's index in the list (`data-index`)
+   */
+  #renderGroupHeader(header, index) {
+    const { active } = header;
+    return html`
+      <div
+        data-index=${index}
+        style=${styleMap({ backgroundColor: header.backgroundColor })}
+        class="group-label-container ${active ? 'active' : ''} data-container  ${
+          !active && header.last ? 'last-row' : ''
+        }"
+      >
+        <div class="row-click" @click=${() => this.#toggleGroup(header)}></div>
+        <span class="group-label" style=${styleMap({ color: header.textColor })}
+          >${header.label}
+          <wa-badge variant="neutral" pill>${header.count}</wa-badge>
+          <wa-icon name=${active ? 'chevron-down' : 'chevron-right'}></wa-icon
+        ></span>
+      </div>
+    `;
+  }
+
+  /** @param {GroupHeader} header */
+  #toggleGroup(header) {
+    header.toggle();
+    this.requestUpdate('groupList');
+  }
 
   #renderDataTable() {
     return html`
       <div
         class="table"
         id="data-table"
-        @click=${this.#handleTableClick}
+        style=${styleMap({ '--owc-table-columns': this.#columnTracks() })}
         @mousedown=${this.#handleTableMouseDown}
       >
         <div class="table-header">${this.#renderHeader()}</div>
         <div class="table-body">
           ${
             this.allData && this.allData.length > 0
-              ? this.groupList?.length > 0 && this.groupSelector
-                ? html`${this.#renderGroups()}`
-                : this.#renderListHost(this.allData)
+              ? this.#renderListHost()
               : html`<div id="empty-message-wrapper">
                   <p>${this.#localize.term('tableEmptyMessage')}</p>
                 </div>`
           }
-          <div id="loading-indicator">
-            <wa-spinner></wa-spinner>
-          </div>
+        </div>
+        <div id="loading-indicator">
+          <wa-spinner></wa-spinner>
         </div>
       </div>
-    `;
-  }
-
-  #renderGroups() {
-    if (!this.groupSelector) {
-      return ``;
-    }
-    /**@type {Set<string>} */
-    const groupKeyRecord = new Set(this.groupList.map(elm => elm.key));
-    /**@type {Record<string, T[]>} */
-    const groupRecord = { others: [] };
-    for (const item of this.allData) {
-      const groupName = this.groupSelector(item);
-      if (!groupKeyRecord.has(groupName)) {
-        groupRecord['others'].push(item);
-        continue;
-      }
-      if (!groupRecord[groupName]) {
-        groupRecord[groupName] = [item];
-      } else {
-        groupRecord[groupName].push(item);
-      }
-    }
-
-    const groupListSorted = [
-      ...[...this.groupList].sort((a, b) => (b?.priority || 0) - (a?.priority || 0)),
-    ];
-    if (groupRecord['others'].length > 0) {
-      groupListSorted.push({
-        key: 'others',
-        label: this.#localize.term('tableOthers'),
-        active: this.othersGroupActive,
-      });
-    }
-
-    // TODO: This does not work due to the hacky nature of row styling
-    return html`
-      ${groupListSorted.map(
-        (group, groupIndex) => html`
-          <div
-            style=${styleMap({ backgroundColor: group.backgroundColor })}
-            class="group-label-container ${group.active ? 'active' : ''} data-container  ${
-              !group.active && groupIndex === groupListSorted.length - 1 ? 'last-row' : ''
-            }"
-          >
-            <div
-              class="row-click"
-              @click=${() => {
-                if (group.key === 'others') {
-                  this.othersGroupActive = !this.othersGroupActive;
-                } else {
-                  group.active = !group.active;
-                }
-                this.requestUpdate('groupList');
-              }}
-            ></div>
-            <span class="group-label" style=${styleMap({ color: group.textColor })}
-              >${group.label}
-              <wa-badge variant="neutral" pill>${(groupRecord[group.key] || []).length}</wa-badge>
-              <wa-icon name=${group.active ? 'chevron-down' : 'chevron-right'}></wa-icon
-            ></span>
-          </div>
-          ${
-            group.active
-              ? html`<div class="group-rows-container data-container">
-                  ${this.#renderList({
-                    items: groupRecord[group.key] || [],
-                    renderItem: (item, index) =>
-                      this.#renderItem(item, index, {
-                        setLast: groupIndex === groupListSorted.length - 1,
-                        lastIndex: (groupRecord[group.key] || []).length - 1,
-                      }),
-                  })}
-                </div>`
-              : html`<div class="group-rows-container"></div>`
-          }
-        `,
-      )}
     `;
   }
 
@@ -1371,6 +1495,28 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     }
   }
 
+  /**
+   * Tells the virtualizer which rows have an open detail, so it estimates the
+   * ones it hasn't measured with the typical detail height added.
+   *
+   * @returns {((item: T | GroupHeader) => boolean) | undefined}
+   */
+  #openDetailPredicate() {
+    if (!this.#hasDetailRows() || !this.openDetails?.length) {
+      return undefined;
+    }
+    const openDetails = new Set(this.openDetails);
+    // The rows that render an open detail: Data Rows with an id in `openDetails`.
+    // Group headers have no detail, nor an id to ask `getRowId` for.
+    return item => {
+      if (!this.#isDataRow(item)) {
+        return false;
+      }
+      const rowId = this.getRowId(/** @type {T} */ (item));
+      return rowId ? openDetails.has(rowId) : false;
+    };
+  }
+
   #hasDetailRows() {
     return (
       this.renderMode === 'detail' ||
@@ -1392,14 +1538,16 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   /**
    * @param {T} row
-   * @param {number} index
-   * @param {{mode?: "size-table" | "data-table", setLast?: boolean, lastIndex?: number}} [options]
+   * @param {number} index the row's index in the list the body renders (`data-index`), which counts group headers too
+   * @param {{mode?: "size-table" | "data-table", position?: number, last?: boolean}} [options]
+   *   `position`: the row's index for formatters such as `rownum`, which counts within its group in grouped tables;
+   *   `last`: whether the row is the last item of the list
    * @returns {import('lit').TemplateResult}
    */
   #renderItem = (
     row,
     index,
-    { mode = 'data-table', setLast = true, lastIndex = this.allData.length - 1 } = {},
+    { mode = 'data-table', position = index, last = index === this.allData.length - 1 } = {},
   ) => {
     const hasAnnotation = this.renderAnnotation(row) !== nothing;
     const annotationContent = hasAnnotation
@@ -1409,9 +1557,10 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     const rawRowContent = html` <div
       class=${this.#shouldBeHighlighted(row) ? 'row highlighted' : 'row'}
       data-index=${index}
+      @click=${(/** @type {MouseEvent} */ ev) => this.#handleRowClick(ev, row)}
     >
       ${this.renderRowMode(row)}
-      ${this.#visibleColumns.map(column => this.#renderCell(row, column, index))}
+      ${this.#visibleColumns.map(column => this.#renderCell(row, column, position))}
     </div>`;
 
     const rowId = this.getRowId(row);
@@ -1454,7 +1603,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         `
       : nothing;
     return mode === 'data-table'
-      ? html`<div class="row-container ${setLast && index === lastIndex ? 'last-row' : ''}">
+      ? html`<div class="row-container ${last ? 'last-row' : ''}">
           ${annotationContent}${rawRowContent}${rowDetail}
         </div>`
       : rawRowContent;
@@ -1493,7 +1642,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         `;
       },
       isInsert: this.isInsert.bind(this),
-      handleUpdate: this.handleUpdate,
+      handleUpdate: this.#handleCellUpdate,
       renderInitiallyAsEditableCondition: ({ data }) => this.isInsert({ data }),
       additionalFormatterOptions: ({ data, config }) => ({
         fieldValueFiltered: config.field
@@ -1521,6 +1670,36 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       numberFormatter: this.numberFormatter,
       percentFormatter: this.percentFormatter,
     });
+  }
+
+  /**
+   * Hands a cell's edit to `handleUpdate`, or writes it into the row when
+   * there's no `handleUpdate`. Once the value is in the row, the table renders
+   * again, and a grouped table moves the row to the group it belongs to now.
+   *
+   * @type {import('../field-path-helper/getFieldPathContent.types.js').handleUpdate<T>}
+   */
+  #handleCellUpdate = async options => {
+    const autoSetData = (/** @type {T | undefined} */ data) => {
+      options.autoSetData(data);
+      this._rowEdited();
+    };
+    if (this.handleUpdate) {
+      await this.handleUpdate({ ...options, autoSetData });
+    } else {
+      autoSetData();
+    }
+  };
+
+  /**
+   * For the table's own editors, editable cells and the mass edit: call it once
+   * an edit is in a row. The table renders again, and a grouped table lays its
+   * groups out again in that update, since the edit can move the row to another
+   * group. Edits of several rows in the same task cost one update.
+   */
+  _rowEdited() {
+    this.#rowsChangedInPlace = true;
+    this.requestUpdate();
   }
 
   /**
@@ -1571,20 +1750,23 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     });
   }
 
-  #observeGrowFullWidth() {
-    if (!this.#growFullWidthResizeObserver) {
-      this.#growFullWidthResizeObserver = new ResizeObserver(entries => {
-        const width = Math.round(entries.at(-1)?.contentRect.width ?? 0);
-        if (!this.growFullWidth || width === this.#lastGrowFullWidth) {
-          return;
-        }
-        this.#lastGrowFullWidth = width;
-        if (width > 0) {
-          void this.recalculateColumnWidths();
-        }
-      });
-    }
-    this.#growFullWidthResizeObserver.observe(this);
+  /**
+   * Sizes the columns again when the host's width changes, if they depend on
+   * it: full-width columns follow it, and a table that wasn't laid out when it
+   * was last sized is sized once it has a width.
+   */
+  #observeHostWidth() {
+    this.#hostResizeObserver ??= new ResizeObserver(entries => {
+      const width = Math.round(entries.at(-1)?.contentRect.width ?? 0);
+      if (width === this.#hostWidth) {
+        return;
+      }
+      this.#hostWidth = width;
+      if (width > 0 && (this.growFullWidth || this.#columnWidthsUnsized)) {
+        void this.recalculateColumnWidths();
+      }
+    });
+    this.#hostResizeObserver.observe(this);
   }
 
   /** @param {number[]} naturalWidths */
@@ -1611,50 +1793,75 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
     });
     this.#updateColumnCssVariables();
+    this.#remeasureRowsIfWidthsChanged();
   }
 
   /**
-   * @param {MouseEvent} ev
+   * Rows can wrap differently at new column widths, so the virtualizer
+   * measures their heights again, including the cached heights of rows that
+   * aren't rendered.
    */
-  #handleTableClick(ev) {
-    let index;
+  #remeasureRowsIfWidthsChanged() {
+    const tracks = this.#columnTracks();
+    if (this.#rowsMeasuredAt !== undefined && tracks !== this.#rowsMeasuredAt) {
+      this.#virtualizer.remeasure();
+    }
+    this.#rowsMeasuredAt = tracks;
+  }
+
+  /**
+   * A click in a row toggles the row's selection when it hit the selector
+   * cell, and dispatches `rowClick` otherwise. The row comes from the clicked
+   * element's own render, never from a position, so grouped and sorted rows
+   * can't be mixed up.
+   *
+   * @param {MouseEvent} ev
+   * @param {T} row
+   */
+  #handleRowClick(ev, row) {
+    /** @type {HTMLElement | undefined} */
+    let selectorCell;
+    /** @type {HTMLElement | undefined} */
     let checkbox;
-    let cell;
-    let clickArea = 'row';
     for (const el of ev.composedPath()) {
+      if (el === ev.currentTarget) {
+        break;
+      }
       const typedEl = /** @type {HTMLElement} */ (el);
       if (typedEl.classList?.contains('cell-selector')) {
-        clickArea = 'cell-selector';
-        cell = typedEl;
+        selectorCell = typedEl;
       }
       if (typedEl.classList?.contains('owc-selectable-checkbox')) {
         checkbox = typedEl;
       }
-      if (typedEl.dataset?.index) {
-        index = parseInt(typedEl.dataset.index);
-      }
     }
-    if (clickArea === 'cell-selector' && index !== undefined) {
-      const useCheckbox = checkbox || cell?.querySelector('.owc-selectable-checkbox');
+    if (this.isInsert({ data: row })) {
+      return;
+    }
+    if (selectorCell) {
+      const useCheckbox = /** @type {HTMLInputElement | null} */ (
+        checkbox ?? selectorCell.querySelector('.owc-selectable-checkbox')
+      );
       if (useCheckbox) {
-        let typeCheckbox = /** @type {HTMLInputElement} */ (useCheckbox);
-        typeCheckbox.checked = !typeCheckbox.checked;
-        if (typeCheckbox.checked) {
-          this.#selectedSet.add(this.#rowKey(this.processedData[index]));
+        const key = this.#rowKey(row);
+        const selected = !this.#selectedSet.has(key);
+        if (selected) {
+          this.#selectedSet.add(key);
         } else {
-          this.#selectedSet.delete(this.#rowKey(this.processedData[index]));
+          this.#selectedSet.delete(key);
         }
+        useCheckbox.checked = selected;
         this.#saveStateToUrl();
         this.requestUpdate();
       }
+      return;
     }
+    this.dispatchEvent(new RowClickEvent('rowClick', row));
+  }
 
-    if (clickArea === 'row' && index !== undefined) {
-      const row = this.allData[index];
-      if (row && !this.isInsert({ data: row })) {
-        this.dispatchEvent(new RowClickEvent('rowClick', row));
-      }
-    }
+  /** @param {T} row */
+  #isSelected(row) {
+    return !this.isInsert({ data: row }) && this.#selectedSet.has(this.#rowKey(row));
   }
 
   /**
@@ -1710,6 +1917,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
           onResizeMouseMove(event);
           if (this.growFullWidth) {
             void this.recalculateColumnWidths();
+          } else {
+            this.#remeasureRowsIfWidthsChanged();
           }
         }
         this.removeEventListener('mousemove', onResizeMouseMoveAndTrack);
@@ -1725,10 +1934,10 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     return this.#scheduleColumnWidths();
   }
 
-  /** @param {boolean} resetVirtualizer */
-  #scheduleColumnWidths(resetVirtualizer = false) {
+  /** @param {boolean} remeasureRows whether row heights are measured again after the widths changed */
+  #scheduleColumnWidths(remeasureRows = false) {
     this.#columnSizingPending = true;
-    this.#resetVirtualizerAfterSizing ||= resetVirtualizer;
+    this.#remeasureRowsAfterSizing ||= remeasureRows;
     if (!this.#columnSizingPromise) {
       this.#columnSizingPromise = this.#flushColumnWidths();
     }
@@ -1747,63 +1956,73 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         await this.#measureColumnWidths();
         await this.updateComplete;
 
-        if (!this.#columnSizingPending && this.#resetVirtualizerAfterSizing && this.isConnected) {
-          this.#resetVirtualizerAfterSizing = false;
-          this.resetVirtualizer();
+        if (!this.#columnSizingPending && this.#remeasureRowsAfterSizing && this.isConnected) {
+          this.#remeasureRowsAfterSizing = false;
+          this.#virtualizer.remeasure();
           await this.updateComplete;
         }
       } while (this.#columnSizingPending);
     } finally {
       this.#columnSizingPromise = undefined;
       this.#columnSizingPending = false;
-      this.#resetVirtualizerAfterSizing = false;
+      this.#remeasureRowsAfterSizing = false;
     }
   }
 
+  /**
+   * Sizes the columns without a configured width to their content, as the
+   * browser lays out the header and the rendered rows, and freezes the widths
+   * in px, so they don't change while scrolling.
+   */
   async #measureColumnWidths() {
-    for (const column of this.#visibleColumns) {
-      if (column.width == null) {
-        delete column._calculatedWidth;
-      }
-    }
-    this.#updateColumnCssVariables();
-
     await this.updateComplete;
-    if (!this.isConnected) {
-      return;
-    }
-
-    const headerCells = this.shadowRoot?.querySelectorAll('#data-table .table-header .row > .cell');
-    if (!headerCells || headerCells.length === 0) {
-      return;
-    }
-
-    /** @type {number[]} */
-    const measuredWidths = Array.from(headerCells).map(cell =>
-      Math.ceil(cell.getBoundingClientRect().width),
+    const grid = /** @type {HTMLElement | null | undefined} */ (
+      this.shadowRoot?.querySelector('#data-table')
     );
-
-    const bodyRows = this.shadowRoot?.querySelectorAll('#data-table .table-body .row') || [];
-    for (const row of Array.from(bodyRows)) {
-      const cells = row.querySelectorAll(':scope > .cell');
-      cells.forEach((cell, index) => {
-        const content = cell.querySelector(':scope > .cell-content');
-        const contentValue = content?.querySelector(':scope > .cell-text, :scope > .cell-full');
-        const contentStyle = content ? getComputedStyle(content) : undefined;
-        const horizontalPadding = contentStyle
-          ? parseFloat(contentStyle.paddingLeft) + parseFloat(contentStyle.paddingRight)
-          : 0;
-        const naturalContentWidth = contentValue
-          ? Math.max(contentValue.scrollWidth, contentValue.getBoundingClientRect().width)
-          : (content?.scrollWidth ?? cell.scrollWidth);
-        const width = Math.ceil(naturalContentWidth + horizontalPadding);
-        if (width > (measuredWidths[index] ?? 0)) {
-          measuredWidths[index] = width;
-        }
-      });
+    if (!this.isConnected || !grid || this.#visibleColumns.length === 0) {
+      return;
     }
+    const contentWidths = this.#contentWidths(grid);
+    this.#columnWidthsUnsized = !contentWidths;
+    if (!contentWidths) {
+      // Not laid out, e.g. inside `display: none`. Until the table has a width,
+      // the columns fit their content as the browser lays it out.
+      for (const column of this.#visibleColumns) {
+        if (column.width == null) {
+          delete column._calculatedWidth;
+        }
+      }
+      this.#updateColumnCssVariables();
+      return;
+    }
+    this.#applyColumnWidths(contentWidths);
+  }
 
-    this.#applyColumnWidths(measuredWidths);
+  /**
+   * The width of every column when the columns without a configured width
+   * fit their content: the header and the rendered rows, at their widest
+   * unbreakable part. `undefined` while the table isn't laid out.
+   *
+   * @param {HTMLElement} grid the table's grid
+   */
+  #contentWidths(grid) {
+    grid.style.gridTemplateColumns = gridTracks(this.#visibleColumns.map(column => column.width));
+    // header labels count with their single-line width (see the styles)
+    grid.setAttribute('sizing-columns', '');
+    try {
+      // the used track sizes, in px, once the grid is laid out
+      const tracks = getComputedStyle(grid).gridTemplateColumns.split(' ');
+      if (
+        tracks.length !== this.#visibleColumns.length ||
+        !tracks.every(track => /^\d+(\.\d+)?px$/.test(track))
+      ) {
+        return undefined;
+      }
+      return tracks.map(track => Math.ceil(parseFloat(track)));
+    } finally {
+      grid.style.removeProperty('grid-template-columns');
+      grid.removeAttribute('sizing-columns');
+    }
   }
 
   /**
@@ -1843,7 +2062,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         return html`<wa-checkbox
           class="owc-selectable-checkbox"
           value=${typedIndex}
-          .checked=${this.#selectedSet.has(this.#rowKey(this.processedData[typedIndex]))}
+          .checked=${this.#isSelected(row)}
           aria-label=${ifDefined(selectorSettings['aria-label'])}
         ></wa-checkbox>`;
       },
@@ -1979,26 +2198,9 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     return addedFields;
   }
 
-  get virtualizer() {
-    const el = this.shadowRoot?.querySelector('#data-table .table-body #virtualize-container');
-    // @ts-ignore
-    return el ? el[virtualizerRef] : undefined;
-  }
-
-  get virtualizerHost() {
-    const el = this.shadowRoot?.querySelector('#data-table .table-body #virtualize-container');
-    return el || undefined;
-  }
-
-  resetVirtualizer() {
-    if (this.virtualizer) {
-      this.virtualizer.disconnected();
-      this.virtualizer.connected();
-    }
-  }
-
   static styles = [
     contentFormatterStyles,
+    spacerStyles,
     css`
       :host {
         width: 100%;
@@ -2029,7 +2231,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         position: absolute;
         top: 0;
         left: 0;
-        width: var(--owc-table-width);
         height: 100%;
         inset: 0;
         cursor: pointer;
@@ -2051,13 +2252,39 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         pointer-events: none;
       }
 
-      .row {
-        display: flex;
+      /*
+       * One grid holds the whole table: the header row and every body row are
+       * subgrid rows of it, so they share its column tracks. The containers in
+       * between are subgrids across all columns too.
+       */
+      #data-table {
+        display: grid;
+        grid-template-columns: var(--owc-table-columns);
         position: relative;
       }
 
-      #virtualize-container {
-        display: block;
+      .table-header,
+      .table-body,
+      #virtualize-container,
+      .row-container,
+      .row {
+        display: grid;
+        grid-template-columns: subgrid;
+        grid-column: 1 / -1;
+      }
+
+      .row {
+        position: relative;
+      }
+
+      /* Full-width parts of the body span all columns, and their content doesn't size them. */
+      .virtualizer-spacer,
+      .group-label-container,
+      .row-annotation,
+      wa-details,
+      #empty-message-wrapper {
+        grid-column: 1 / -1;
+        contain: inline-size;
       }
 
       .row:has(.row-click):hover > .cell {
@@ -2082,6 +2309,15 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       #data-table .cell {
         min-width: 0;
         overflow: hidden;
+      }
+
+      /*
+       * While the columns are sized, a header label counts with its single-line
+       * width, even if it can wrap; content in the body counts with its widest
+       * part that can't wrap.
+       */
+      #data-table[sizing-columns] .table-header .cell {
+        min-width: max-content;
       }
 
       .cell-content {
@@ -2115,7 +2351,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         display: flex;
         align-items: center;
         border-width: 0 1px 1px 1px;
-        width: var(--owc-table-width);
       }
 
       .group-label {
@@ -2130,11 +2365,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         display: flex;
         align-items: center;
         gap: 1ch;
-      }
-
-      .group-rows-container {
-        min-height: 0;
-        position: relative;
       }
 
       .cell-resize {
@@ -2180,7 +2410,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
       .table-body {
         position: relative;
-        display: block;
       }
 
       .last-row .cell:nth-child(2) {
@@ -2258,10 +2487,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         margin-bottom: 1em;
       }
 
-      .table-header {
-        display: flex;
-      }
-
       .align-start {
         align-items: start;
       }
@@ -2283,7 +2508,6 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
 
       #empty-message-wrapper {
-        width: var(--owc-table-width);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -2324,13 +2548,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         left: 1em;
         display: inline-flex;
       }
-      .row-container {
-        width: var(--owc-table-width);
-        display: block;
-      }
-
       .row-annotation {
-        width: var(--owc-table-width);
         border: 1px solid var(--owc-table-borderColor);
         border-width: 0 1px 0px 1px;
         padding-top: 0.5rem;
@@ -2353,6 +2571,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
 
       #loading-indicator {
+        /* covers the body's row of the grid, as wide as the host, however wide the columns are */
+        grid-row: 2 / 3;
         top: 0;
         left: 0;
         position: absolute;
@@ -2378,10 +2598,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
 
       wa-details {
-        /* grid-column: 1 / -1; */
         display: block;
-        width: var(--owc-table-width);
-        max-width: var(--owc-table-width);
       }
       /* wa-detail overrides */
       wa-details::part(base) {

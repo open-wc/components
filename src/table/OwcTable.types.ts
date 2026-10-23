@@ -184,6 +184,11 @@ export interface OwcTableOptions<T> {
   currencyFormatter?: Intl.NumberFormat;
   percentFormatter?: Intl.NumberFormat;
   virtualizerMode?: 'always' | 'never' | 'auto';
+  /**
+   * The element that scrolls the table. It overrides the automatic detection of the scroll
+   * container. Unset, `undefined` or `null`: the table detects it.
+   */
+  scrollTarget?: Element | null;
 }
 
 /**

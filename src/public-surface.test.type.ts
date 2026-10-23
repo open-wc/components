@@ -6,6 +6,7 @@ import '@open-wc/components/OwcLayoutSidebar.types.js';
 import { OwcDataDetailColumns } from '@open-wc/components/OwcDataDetail.types.js';
 import { OwcTableFilter } from '@open-wc/components/OwcTableFilterBuilder.js';
 import { OwcLayoutSidebar } from '@open-wc/components/OwcLayoutSidebar.js';
+import { OwcTable } from '@open-wc/components/OwcTable.js';
 import '@open-wc/components/OwcCardList.types.js';
 import '@open-wc/components/OwcLayoutSidebar.types.js';
 import '@open-wc/components/OwcTable.types.js';
@@ -20,6 +21,17 @@ export const column: Column<Row> = {
 export const tableOptions: OwcTableOptions<Row> = {
   columns: [column],
 };
+
+export function useScrollTarget(table: OwcTable<Row>, root: ShadowRoot) {
+  table.scrollTarget = root.querySelector('.scroll-area');
+  table.scrollTarget = undefined;
+  // @ts-expect-error removed with the in-house virtualizer
+  void table.virtualizer;
+  // @ts-expect-error removed with the in-house virtualizer
+  void table.virtualizerHost;
+  // @ts-expect-error removed with the in-house virtualizer
+  table.resetVirtualizer();
+}
 
 export const filter: JsonFilter = {
   field: 'name',
