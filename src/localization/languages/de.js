@@ -121,4 +121,6 @@ export const de = {
   autoCompleteDeselectAll: 'Alle abwählen',
   clickEditableHint: 'Esc zum abbrechen',
   fileUploadLabel: 'Dateien hierher ziehen oder klicken, um hochzuladen',
+  /** @param {string} name @param {string} maxSize */
+  fileUploadTooLarge: (name, maxSize) => `${name} ist zu groß. Maximal erlaubt sind ${maxSize} MB.`,
 };

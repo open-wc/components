@@ -144,6 +144,79 @@ describe('owc-file-upload', () => {
     expect(dialogOpens).to.equal(2);
   });
 
+  it('accepts the exact size limit and rejects oversized picker selections with a localized alert', async () => {
+    const el = await fixture(html`<owc-file-upload lang="de" max-file-size="4"></owc-file-upload>`);
+    const accepted = makeFile('accepted.txt');
+    const rejected = makeFile('large.txt', '12345');
+    const events = [];
+    el.addEventListener('files-selected', event => events.push(event));
+    el.addEventListener('files-rejected', event => events.push(event));
+    selectFiles(el, [accepted, rejected]);
+    await el.updateComplete;
+
+    expect(el.files).to.deep.equal([accepted]);
+    expect(events.map(event => event.type)).to.deep.equal(['files-selected', 'files-rejected']);
+    expect(events[0].detail.files).to.deep.equal([accepted]);
+    expect(events[1].detail.rejections).to.deep.equal([
+      { file: rejected, reason: 'file-too-large', maxFileSize: 4 },
+    ]);
+    expect(events[1].bubbles && events[1].composed).to.equal(true);
+    expect(el.shadowRoot.querySelector('[role="alert"]').textContent).to.include(
+      'large.txt ist zu groß. Maximal erlaubt sind 0,000004 MB.',
+    );
+    expect(el.shadowRoot.querySelector('.drop-area').getAttribute('aria-describedby')).to.equal(
+      'file-errors',
+    );
+    expect(input(el).value).to.equal('');
+
+    selectFiles(el, [makeFile('next.txt')]);
+    await el.updateComplete;
+    expect(el.shadowRoot.querySelector('[role="alert"]')).not.to.exist;
+  });
+
+  it('preserves an existing single selection when an oversized replacement is dropped', async () => {
+    const previous = makeFile('previous.txt');
+    const el = await fixture(
+      html`<owc-file-upload
+        .multiple=${false}
+        .maxFileSize=${4}
+        .files=${[previous]}
+      ></owc-file-upload>`,
+    );
+    let selectedEvents = 0;
+    let rejectedEvents = 0;
+    el.addEventListener('files-selected', () => selectedEvents++);
+    el.addEventListener('files-rejected', () => rejectedEvents++);
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(makeFile('large.txt', '12345'));
+    el.shadowRoot
+      .querySelector('.drop-area')
+      .dispatchEvent(new DragEvent('drop', { cancelable: true, dataTransfer }));
+    await el.updateComplete;
+
+    expect(el.files).to.deep.equal([previous]);
+    expect(selectedEvents).to.equal(0);
+    expect(rejectedEvents).to.equal(1);
+    expect(el.shadowRoot.querySelector('[role="alert"]').textContent).to.include(
+      'large.txt is too large.',
+    );
+    el.removeFile(previous);
+    await el.updateComplete;
+    expect(el.shadowRoot.querySelector('[role="alert"]')).not.to.exist;
+  });
+
+  it('has no size limit by default and does not validate direct assignments', async () => {
+    const el = await fixture(html`<owc-file-upload></owc-file-upload>`);
+    const large = new File([new Uint8Array(4_000_001)], 'large.pdf');
+    selectFiles(el, [large]);
+    expect(el.files).to.deep.equal([large]);
+    el.maxFileSize = 4;
+    el.files = [large];
+    await el.updateComplete;
+    expect(el.files).to.deep.equal([large]);
+    expect(el.shadowRoot.querySelector('[role="alert"]')).not.to.exist;
+  });
+
   it('uses a custom renderCardContent when provided', async () => {
     const el = await fixture(
       html`<owc-file-upload
