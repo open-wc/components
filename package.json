@@ -1,6 +1,6 @@
 {
   "name": "@open-wc/components",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "description": "Reusable web components and helpers for data, forms, and workflow interfaces.",
   "keywords": [
     "web components",
