@@ -140,6 +140,16 @@ rows again. Group fields changed in place outside those editors need a new `data
   [overrideHelpers.js](./overrideHelpers.js) (column visibility/order
   overrides), [RowClickEvent.js](./RowClickEvent.js)
 
+### SQL selection values
+
+`jsonToSqlFilter` from `@open-wc/components/filter/jsonToSqlFilter.js` accepts an
+array of search values for scalar comparisons, matching the Filter Function's
+any-choice semantics. For example, `{ field: 'name', operator: 'equal',
+value: ['Anna', 'Ben'] }` produces `("name" = ? OR "name" = ?)` with separate
+parameters. Negation applies to the complete selection. An empty selection
+matches nothing; its negation matches everything. Existing nested AND/OR groups
+are preserved, and `some`/`every` retain their native SQL array operands.
+
 ## Docs & demos
 
 - [/table/](./OwcTable.rocket.md) - main docs with the full feature tour and API

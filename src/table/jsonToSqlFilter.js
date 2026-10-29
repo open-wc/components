@@ -68,6 +68,15 @@ function buildLeaf(filter, params, allowedFields) {
     throw new Error(`Unsupported operator: ${filter.operator}`);
   }
 
+  if (Array.isArray(filter.value) && !['some', 'every'].includes(filter.operator)) {
+    const choices = /** @type {(string | number | boolean)[]} */ (filter.value);
+    const clauses = choices.map(value =>
+      buildLeaf({ ...filter, value, negated: false }, params, allowedFields),
+    );
+    const clause = clauses.length === 0 ? '1=0' : `(${clauses.join(' OR ')})`;
+    return filter.negated ? `NOT (${clause})` : clause;
+  }
+
   const value = normalizeValue(filter.value);
 
   let clause = handler(filter.field, value, params);
