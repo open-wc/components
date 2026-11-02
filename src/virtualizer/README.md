@@ -2,7 +2,7 @@
 
 A private Lit controller that virtualizes vertical lists: it renders only the items in and around the visible area. The items are rendered in normal flow between two spacers, each item with the host's own markup, and the controller decides which items those are and how tall the spacers are. Because the rows stay in normal flow, the browser lays them out, so a table's rows can share CSS grid tracks.
 
-`owc-table` uses it for every list, grouped or not, and `owc-autocomplete` for its option list. [ADR-0006](https://github.com/open-wc/components/blob/main/docs/adr/0006-own-an-in-flow-vertical-virtualizer.md) explains why it's in-house.
+`owc-table` uses it for every list, grouped or not, `owc-autocomplete` for its option list, and `owc-pinboard` for each column. [ADR-0006](https://github.com/open-wc/components/blob/main/docs/adr/0006-own-an-in-flow-vertical-virtualizer.md) explains why it's in-house.
 
 It's not part of the Public Surface: it has no entry in `exports/` or the `package.json` exports map, and the docs don't present it as importable. Hosts import it by relative source path.
 
@@ -104,6 +104,10 @@ The less obvious choices, and the alternatives they were weighed against.
 - **`owc-autocomplete`:** its option list (`#rows`) is the explicit scroll container, so popups and table cells (`overflow: hidden`) around it don't matter. It sets it from a `ref` callback, which Lit calls while committing the render, so even the first `hostUpdated` attaches to it and nothing is detected. It renders options only while the dropdown is open, so the controller is idle while it's closed, and it keys options by their object. It keeps the active option in view with `scrollToIndex(index, { block: 'nearest' })`. Two things that any host in a popup runs into:
   - Chromium resets the scroll position of a hidden popover, while the controller still has the range of the last scroll position. Without help, the first frame after reopening shows a spacer. The autocomplete calls `scrollToIndex` in the first animation frame after opening, before that frame is painted.
   - `scrollToIndex` uses `scrollIntoView`, which scrolls every scrollable ancestor. Until the popup has positioned and sized itself (in microtasks after it opens), the option list is as tall as all its options, so the page would scroll instead. The autocomplete reveals options only once the popup has set `--auto-size-available-height`.
+
+- **`owc-pinboard`:** one controller per list that renders from the `virtualizer-mode` threshold on: each column, and each dropzone list. A host may own several controllers; each one renders its own spacers and only requests updates of the shared host. The pinboard creates a list's controller on its first virtualized render and removes it in `updated()` once the list is gone or renders every card, after it went idle in its `hostUpdated`. Scroll containers are detected: usually the page or a box around the board, and for a dropzone list its `wa-details`, which scrolls from 400px on.
+  - **Cards:** each card is wrapped in a `display: flow-root` element, so the wrapper's height includes the card's margins and the items don't need gaps.
+  - **Sorting:** the pinboard sorts a copy of each column, and keeps it until the column's cards or the `sorter` change. A new array in every render would make the controller treat every render as new items.
 
 ## Limits
 

@@ -4,7 +4,14 @@ import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { repeat } from 'lit/directives/repeat.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 import '@awesome.me/webawesome/dist/components/details/details.js';
-import { virtualize } from '@lit-labs/virtualizer/virtualize.js';
+import {
+  VirtualizerController,
+  spacerStyles,
+  virtualizes,
+} from '../virtualizer/VirtualizerController.js';
+
+/** Height of a card in px until the cards of a list have been measured. */
+const ESTIMATED_CARD_HEIGHT = 80;
 
 /**
  * @template {Record<string, any>} T
@@ -21,9 +28,9 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
     columns: { type: Array },
     dropZones: { type: Object },
     sorter: { type: Function },
-    keyFunction: { type: Function },
     fieldMapper: { type: Object },
     canDrop: { type: Function },
+    virtualizerMode: { type: String, attribute: 'virtualizer-mode' },
   };
 
   constructor() {
@@ -39,10 +46,73 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
     this.fieldMapper = { body: () => '' };
     /**@type {(a: T, b: T) => number} */
     this.sorter = () => 0;
-    /**@type {(data: T) => string} */
-    this.keyFunction = this.#defaultKeyFunction;
     /**@type {(data: T, column: string) => boolean} */
     this.canDrop = () => true;
+    /**@type {import('../virtualizer/VirtualizerController.js').VirtualizerMode} */
+    this.virtualizerMode = 'auto';
+  }
+
+  /**
+   * One virtualizer per list (column or dropzone list) that renders through
+   * one, created on its first virtualized render.
+   *
+   * @type {Map<string, VirtualizerController<T>>}
+   */
+  #virtualizers = new Map();
+
+  /** @type {Set<string>} the lists the current render virtualizes */
+  #virtualizedLists = new Set();
+
+  /** @type {WeakMap<T[], {sorter: (a: T, b: T) => number, source: T[], sorted: T[]}>} */
+  #sortedLists = new WeakMap();
+
+  willUpdate() {
+    this.#virtualizedLists = new Set();
+  }
+
+  updated() {
+    // Lists that are gone, or render every card now, don't need their
+    // virtualizer anymore. It went idle in its `hostUpdated`, as its spacers
+    // are no longer rendered.
+    for (const [key, virtualizer] of this.#virtualizers) {
+      if (!this.#virtualizedLists.has(key)) {
+        this.removeController(virtualizer);
+        this.#virtualizers.delete(key);
+      }
+    }
+  }
+
+  /** @param {string} key */
+  #virtualizerFor(key) {
+    this.#virtualizedLists.add(key);
+    let virtualizer = this.#virtualizers.get(key);
+    if (!virtualizer) {
+      virtualizer = new VirtualizerController(this, { estimateSize: ESTIMATED_CARD_HEIGHT });
+      this.#virtualizers.set(key, virtualizer);
+    }
+    return virtualizer;
+  }
+
+  /**
+   * A sorted copy of a list. It is sorted again only when the list's cards or
+   * the sorter change, so the virtualizer keeps its state across renders.
+   *
+   * @param {T[] | undefined} data
+   * @returns {T[]}
+   */
+  #sorted(data = []) {
+    const cached = this.#sortedLists.get(data);
+    if (
+      cached &&
+      cached.sorter === this.sorter &&
+      cached.source.length === data.length &&
+      cached.source.every((item, index) => item === data[index])
+    ) {
+      return cached.sorted;
+    }
+    const sorted = [...data].sort(this.sorter);
+    this.#sortedLists.set(data, { sorter: this.sorter, source: [...data], sorted });
+    return sorted;
   }
 
   render() {
@@ -51,7 +121,13 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
         ${repeat(
           this.columns,
           col => col.value,
-          (col, index) => this.#renderColumn(this.#wrapCallbacks(col), this.data[index]),
+          (col, index) =>
+            this.#renderColumn(
+              this.#wrapCallbacks(col),
+              this.data[index],
+              true,
+              `column:${col.value}`,
+            ),
         )}
       </div>
       <div class="dropzone-container-container">
@@ -96,7 +172,12 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
       ${
         config.data !== undefined
           ? html`<wa-details class="dropzone-details">
-              ${this.#renderColumn(wrapped, config.data, config.liftable || false)}
+              ${this.#renderColumn(
+                wrapped,
+                config.data,
+                config.liftable || false,
+                `dropzone:${dropzone}`,
+              )}
             </wa-details>`
           : nothing
       }
@@ -119,10 +200,11 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
   /**
    *
    * @param {Columns[number]} column
-   * @param {T[]} data
-   * @param {boolean} [liftable]
+   * @param {T[] | undefined} data
+   * @param {boolean} liftable
+   * @param {string} listKey identifies the list across renders
    */
-  #renderColumn(column, data, liftable = true) {
+  #renderColumn(column, data, liftable, listKey) {
     return html`
       <div
         class="column ${liftable ? 'liftable' : ''}"
@@ -136,26 +218,50 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
         @dragend=${liftable ? this.#onDragEnd : undefined}
       >
         ${column.label ? html`<div class="column-header-cell">${column.label}</div>` : nothing}
-        <div>
-          ${virtualize({
-            items: [...data].sort(this.sorter),
-            keyFunction: this.keyFunction,
-            renderItem: elm => html`
-              <div>
-                <owc-card
-                  class="column-card"
-                  .data=${elm}
-                  draggable=${liftable}
-                  small-padding
-                  style="${this.#renderStyles(elm)}"
-                >
-                  ${this.#renderCardImage(elm)} ${this.#renderCardHeader(elm)}
-                  ${this.#renderCardBody(elm)} ${this.#renderCardFooter(elm)}
-                </owc-card>
-              </div>
-            `,
-          })}
-        </div>
+        <div>${this.#renderCards(this.#sorted(data), liftable, listKey)}</div>
+      </div>
+    `;
+  }
+
+  /**
+   * Every card, or the cards in and around the visible area between two
+   * spacers, from the `virtualizer-mode` threshold on. Cards are keyed by
+   * their object.
+   *
+   * @param {T[]} cards
+   * @param {boolean} liftable
+   * @param {string} listKey
+   */
+  #renderCards(cards, liftable, listKey) {
+    /** @param {T} card */
+    const renderCard = card => this.#renderCard(card, liftable);
+    if (!virtualizes(this.virtualizerMode, cards.length)) {
+      return repeat(cards, card => card, renderCard);
+    }
+    const virtualizer = this.#virtualizerFor(listKey);
+    return virtualizer.renderSlice(virtualizer.slice(cards), renderCard);
+  }
+
+  /**
+   * One element per card, which contains the card's margins, so the
+   * virtualizer measures the whole space a card takes.
+   *
+   * @param {T} card
+   * @param {boolean} liftable
+   */
+  #renderCard(card, liftable) {
+    return html`
+      <div class="column-item">
+        <owc-card
+          class="column-card"
+          .data=${card}
+          draggable=${liftable}
+          small-padding
+          style="${this.#renderStyles(card)}"
+        >
+          ${this.#renderCardImage(card)} ${this.#renderCardHeader(card)}
+          ${this.#renderCardBody(card)} ${this.#renderCardFooter(card)}
+        </owc-card>
       </div>
     `;
   }
@@ -216,24 +322,6 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
       onLift: (data, column) => this.#runHook(col.onLift, data, column, this.#defaultOnLift),
     };
   }
-
-  /** @type {WeakMap<object, string>} */
-  #itemKeys = new WeakMap();
-  #itemKeyCounter = 0;
-
-  /**
-   *
-   * @param {T} data
-   * @return {string}
-   */
-  #defaultKeyFunction = data => {
-    let key = this.#itemKeys.get(data);
-    if (key === undefined) {
-      key = `pinboard-item-${this.#itemKeyCounter++}`;
-      this.#itemKeys.set(data, key);
-    }
-    return key;
-  };
 
   /**
    *
@@ -419,6 +507,7 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
   }
 
   static styles = [
+    spacerStyles,
     css`
       .main-container {
         display: flex;
@@ -475,6 +564,10 @@ export class OwcPinboard extends ScopedElementsMixin(LitElement) {
       .column:last-child {
         border-start-end-radius: var(--wa-border-radius-m);
         border-end-end-radius: var(--wa-border-radius-m);
+      }
+
+      .column-item {
+        display: flow-root;
       }
 
       .column-card {

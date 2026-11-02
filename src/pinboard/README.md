@@ -3,7 +3,9 @@
 `<owc-pinboard>` is a kanban-style board: cards in columns, drag & drop
 between columns with per-column `onDrop`/`onLift` callbacks, optional
 delete/success drop zones, and a `canDrop` gate that grays out invalid
-targets while dragging. Columns are virtualized for large card counts.
+targets while dragging. Columns with 300 cards or more render only the
+cards in and around their visible part, through the in-house
+[virtualizer](../virtualizer/README.md).
 
 ## Usage
 
@@ -18,7 +20,6 @@ html`<owc-pinboard
     { label: 'Done', value: 'done', onDrop: moveTo('done'), onLift: liftFrom('done') },
   ]}
   .data=${[todoCards, doneCards]}
-  .keyFunction=${card => card.id}
   .fieldMapper=${{ header: c => c.title, body: c => c.summary }}
   .canDrop=${(card, column) => column !== 'done' || card.reviewed}
   .dropZones=${{ delete: { onDrop: removeCard } }}
