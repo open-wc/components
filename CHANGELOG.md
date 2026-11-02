@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1
+
+### Patch Changes
+
+- 834e36d: Add an optional `maxFileSize` byte limit to `OwcFileUpload`. Oversized selections show localized inline errors and emit `files-rejected`, while accepted files and existing selections are preserved.
+- c8474e6: Fix SQL conversion of multi-select filter values to match the in-memory filter's any-choice behavior. Preserve negation, empty selections, nested groups, and native array operands for `some` and `every`.
+
 ## 0.2.0
 
 ### Minor Changes
