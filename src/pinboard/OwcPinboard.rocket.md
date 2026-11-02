@@ -334,16 +334,53 @@ export const kitchenSinkPinboard = () => {
 };
 ```
 
+## Large boards
+
+A column with 300 cards or more renders only the cards in and around its visible part, so boards with thousands of cards per column stay fast. The same applies to a dropzone list. Columns are virtualized one by one: a short column next to a long one still renders every card. `virtualizer-mode="always"` does this for any number of cards, and `virtualizer-mode="never"` always renders every card.
+
+Cards that aren't rendered aren't part of the page, so the browser's find-in-page doesn't find them, and printing leaves them out.
+
+The board below has 2,000 cards in its first column and 300 in its second. The third column has 20 cards and renders all of them.
+
+```js demo
+export const largePinboard = () => {
+  /** @param {string} label @param {number} count */
+  const tasks = (label, count) =>
+    Array.from({ length: count }, (_, index) => ({
+      title: `${label} #${index + 1}`,
+      lines: (index % 4) + 1,
+    }));
+  return html`
+    <div style="height: 500px; overflow: auto">
+      <owc-pinboard
+        .columns=${[
+          { label: 'Backlog', value: 'backlog' },
+          { label: 'In progress', value: 'progress' },
+          { label: 'Done', value: 'done' },
+        ]}
+        .data=${[tasks('Backlog', 2000), tasks('In progress', 300), tasks('Done', 20)]}
+        .fieldMapper=${{
+          header: data => data.title,
+          body: data => 'A card with some text. '.repeat(data.lines * 2),
+        }}
+      ></owc-pinboard>
+    </div>
+  `;
+};
+```
+
+Cards are keyed by their object, and a column is sorted again only when its array or the `sorter` changes. When a change to a card affects its sort position, assign a new array for its column.
+
 ## API
 
 ### Attributes & properties
 
-| Property      | Type                                    | Default      | Description                                                                                                                                                                                                                                                                                    |
-| ------------- | --------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `columns`     | `{ label?, value, onDrop?, onLift? }[]` | `[]`         | The board columns. `onDrop`/`onLift` are optional — by default a card is moved into/out of the column automatically. Supplying one receives `(data, column, defaultAction)` and can call `defaultAction` itself to opt into, delay, or skip the default move.                                  |
-| `data`        | `T[][]`                                 | `[]`         | Card data per column, index-aligned with `columns`.                                                                                                                                                                                                                                            |
-| `fieldMapper` | `Fields<T>`                             | `{ body }`   | Maps a card to content: `body`, `header?`, `footer?`, `image?` (`{src, alt}`), `style?`.                                                                                                                                                                                                       |
-| `dropZones`   | `{ delete?, success? }`                 | `{}`         | Extra drop targets. Adding a key (even `{}`) opts cards into that target with default remove-from-board behavior; add `data: []` to also keep a reopenable, `liftable`-configurable list. `onDrop`/`onLift` are optional overrides, same `(data, column, defaultAction)` signature as columns. |
-| `canDrop`     | `(data, column) => boolean`             | `() => true` | Columns that reject the dragged card are grayed out and refuse the drop.                                                                                                                                                                                                                       |
-| `sorter`      | `(a, b) => number`                      | keep order   | Sort within each column (applied to a copy).                                                                                                                                                                                                                                                   |
-| `keyFunction` | `(data) => string`                      | `() => ''`   | Stable card key for the virtualizer.                                                                                                                                                                                                                                                           |
+| Property                               | Type                                    | Default      | Description                                                                                                                                                                                                                                                                                    |
+| -------------------------------------- | --------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `columns`                              | `{ label?, value, onDrop?, onLift? }[]` | `[]`         | The board columns. `onDrop`/`onLift` are optional — by default a card is moved into/out of the column automatically. Supplying one receives `(data, column, defaultAction)` and can call `defaultAction` itself to opt into, delay, or skip the default move.                                  |
+| `data`                                 | `T[][]`                                 | `[]`         | Card data per column, index-aligned with `columns`.                                                                                                                                                                                                                                            |
+| `fieldMapper`                          | `Fields<T>`                             | `{ body }`   | Maps a card to content: `body`, `header?`, `footer?`, `image?` (`{src, alt}`), `style?`.                                                                                                                                                                                                       |
+| `dropZones`                            | `{ delete?, success? }`                 | `{}`         | Extra drop targets. Adding a key (even `{}`) opts cards into that target with default remove-from-board behavior; add `data: []` to also keep a reopenable, `liftable`-configurable list. `onDrop`/`onLift` are optional overrides, same `(data, column, defaultAction)` signature as columns. |
+| `canDrop`                              | `(data, column) => boolean`             | `() => true` | Columns that reject the dragged card are grayed out and refuse the drop.                                                                                                                                                                                                                       |
+| `sorter`                               | `(a, b) => number`                      | keep order   | Sort within each column (applied to a copy). A column is sorted again when its array or the sorter changes.                                                                                                                                                                                    |
+| `virtualizerMode` (`virtualizer-mode`) | `'auto' \| 'always' \| 'never'`         | `'auto'`     | Render only the cards in and around the visible part of a column: from 300 cards on (`auto`), always, or never. See [Large boards](#large-boards).                                                                                                                                             |
