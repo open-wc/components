@@ -75,7 +75,7 @@ Small helpers, feedback elements, and controllers.
 - [Localization](/utilities/localization): Simple localization for owc components.
 - [Tooltip](/utilities/tooltip): contextual hover or focus help.
 - [Icon Button](/utilities/icon-button): compact icon-only actions.
-- [File Upload](/workflow/file-upload): upload controls.
+- [File Upload](/utilities/file-upload): upload controls.
 - [Count Up](/utilities/count-up): animated numeric display.
 - [Wave Controller](/utilities/wave-controller): reactive controller documentation for wave-style state flows.
 
@@ -86,4 +86,4 @@ those components are not key features but rather components used inside of other
 - [Table Info](/internal/table-info): summary metadata around table state or results.
 - [Table Mass Edit](/internal/table-mass-edit): bulk edits applied to selected table rows.
 - [Filter Builder](/internal/filter-builder): standalone table-style query rules.
-- [Card](/data/card): generic card shell.
+- [Card](/internal/card): generic card shell.
