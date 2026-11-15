@@ -27,6 +27,7 @@ import { optionStyles } from './option.style.js';
 import { filterOptionsByLabel } from './filterOptionsByLabel.js';
 import { matchFillInput } from './fillInput.js';
 import { widestLabelWidth } from './widestLabelWidth.js';
+import { visuallyHidden } from '../a11y/visuallyHidden.js';
 
 /**
  * The part of a list that shows its content, in viewport coordinates.
@@ -103,6 +104,7 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
     currentValue: { type: String },
     fillMode: { type: Boolean, attribute: 'fill-mode' },
     fixedTrigger: { type: Boolean, attribute: 'fixed-trigger' },
+    listRole: { type: String, attribute: false },
     value: {
       type: Array,
       converter: {
@@ -156,6 +158,15 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
     this.size = 'medium';
     this.pill = false;
     this.fillMode = false;
+    /**
+     * What the dropdown's items are for assistive technology: `listbox`, a
+     * listbox of options to pick from; or `list`, a list of items with
+     * controls of their own, in a group named by the label or the
+     * placeholder (the table's column settings). For subclasses whose
+     * `renderItem` renders such items, with `role="listitem"`.
+     * @type {'listbox' | 'list'}
+     */
+    this.listRole = 'listbox';
     this.syncWidth = true;
     /** @type {() => import('lit').TemplateResult} */
     this.footer = () => html``;
@@ -705,6 +716,18 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
    * @param {number} index
    */
   #revealOption(index) {
+    void this.revealOption(index);
+  }
+
+  /**
+   * Scrolls the option list of the open dropdown just enough to show an
+   * option, after rendering it if the list is virtualized. Does nothing while
+   * the dropdown is closed.
+   *
+   * @param {number} index the option's index in `processedData`
+   * @returns {Promise<void>} resolves once the option is rendered and in view
+   */
+  async revealOption(index) {
     // Until the popup has sized itself, the option list is as tall as all of
     // its options, so showing one would scroll the page instead. Opening shows
     // the active option once the popup has sized itself.
@@ -712,7 +735,7 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
       return;
     }
     if (this.#virtualizes()) {
-      void this.#virtualizer.scrollToIndex(index, { block: 'nearest' });
+      await this.#virtualizer.scrollToIndex(index, { block: 'nearest' });
       return;
     }
     const list = this.#optionList();
@@ -841,6 +864,7 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
       !this.disabled &&
       this.value &&
       (!Array.isArray(this.value) || this.value.length > 0);
+    const isList = this.listRole === 'list';
     const isPlaceholderVisible = Boolean(
       this.placeholder && (!this.value || (Array.isArray(this.value) && this.value.length === 0)),
     );
@@ -977,16 +1001,18 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
 
             <div
               id="listbox"
-              role="listbox"
-              aria-expanded=${this.open ? 'true' : 'false'}
-              aria-multiselectable=${this.multiple ? 'true' : 'false'}
-              aria-labelledby="label"
+              role=${isList ? 'group' : 'listbox'}
+              aria-expanded=${isList ? nothing : this.open ? 'true' : 'false'}
+              aria-multiselectable=${isList ? nothing : this.multiple ? 'true' : 'false'}
+              aria-labelledby=${isList && !hasLabel ? nothing : 'label'}
+              aria-label=${isList && !hasLabel ? this.placeholder : nothing}
               part="listbox"
               class="listbox"
               tabindex="-1"
             >
               <wa-input
                 id="search"
+                label=${this.#localize.term('autoCompleteSearch')}
                 @input=${this.#handleSearchInput}
                 @change=${(/** @type {Event} */ ev) => ev.stopPropagation()}
               >
@@ -995,17 +1021,24 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
                     ? html`<owc-icon-button
                         slot="start"
                         name="search"
+                        label=${this.#localize.term('autoCompleteUseFillMode')}
                         @click=${this.toggleFillMode}
                       ></owc-icon-button>`
                     : html` <owc-icon-button
                         slot="start"
                         library="bootstrap"
                         name="box-arrow-in-right"
+                        label=${this.#localize.term('autoCompleteUseSearch')}
                         @click=${this.toggleFillMode}
                       ></owc-icon-button>`
                 }
               </wa-input>
-              <div id="rows" ${ref(this.#setOptionList)} @click=${this.handleOptionClick}>
+              <div
+                id="rows"
+                role=${isList ? 'list' : nothing}
+                ${ref(this.#setOptionList)}
+                @click=${this.handleOptionClick}
+              >
                 ${this.open ? this.#renderOptions() : nothing}
               </div>
               ${
@@ -1162,6 +1195,11 @@ export class OwcAutocomplete extends ScopedElementsMixin(LitElement) {
 
       .listbox > * {
         flex: none;
+      }
+
+      /* the search field is named by its label without showing it */
+      #search::part(form-control-label) {
+        ${visuallyHidden}
       }
 
       /* The option list sizes to its options and scrolls once they don't fit. */

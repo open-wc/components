@@ -84,6 +84,34 @@ export class OwcClickEditableAutocomplete extends ScopedElementsMixin(OwcClickEd
     return labelForValue(this.data, value) || '';
   }
 
+  /**
+   * While the dropdown is open, Enter is the autocomplete's: it picks the
+   * active option, and the pick commits (`change`). Submitting here first
+   * would end the edit before the pick.
+   *
+   * @param {KeyboardEvent} ev
+   */
+  _handleKeyDown(ev) {
+    if (this.editable && ev.key === 'Enter' && this.open) {
+      return;
+    }
+    super._handleKeyDown(ev);
+  }
+
+  /**
+   * Commits a picked option. Picking closes the dropdown, which takes the
+   * focus with it, so the read view gets it back, unless the focus went
+   * somewhere else meanwhile.
+   */
+  #submitPick() {
+    this._submit();
+    const active = document.activeElement;
+    const focusLost = !active || active === document.body || this.matches(':focus-within');
+    if (!this.editable && focusLost) {
+      this.focus();
+    }
+  }
+
   render() {
     const classes = { display: true, 'empty-display-muted': this.isEditPlaceholder() };
     return html`
@@ -129,7 +157,7 @@ export class OwcClickEditableAutocomplete extends ScopedElementsMixin(OwcClickEd
                 @change=${() => {
                   if (this.editable) {
                     if (!this.multiple) {
-                      this._submit();
+                      this.#submitPick();
                     } else {
                       this._change();
                     }

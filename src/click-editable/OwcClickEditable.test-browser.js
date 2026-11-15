@@ -1,4 +1,5 @@
-import { fixture, html, expect, oneEvent, aTimeout } from '@open-wc/testing';
+import { fixture, html, expect, oneEvent, aTimeout, waitUntil } from '@open-wc/testing';
+import { sendKeys } from '@web/test-runner-commands';
 import { OwcClickEditableInput } from './OwcClickEditableInput.js';
 import { OwcClickEditableTextarea } from './OwcClickEditableTextarea.js';
 import { OwcClickEditableAutocomplete } from './OwcClickEditableAutocomplete.js';
@@ -32,6 +33,35 @@ async function startEditing(el) {
 function pressKey(el, key) {
   el.inputElement.dispatchEvent(new KeyboardEvent('keydown', { key }));
 }
+
+describe('the label of the form control', () => {
+  for (const name of ['owc-click-editable-input', 'owc-click-editable-textarea']) {
+    it(`names the form control of ${name} while editing, without showing it`, async () => {
+      const wrapper = await fixture(
+        name === 'owc-click-editable-input'
+          ? html`<div>
+              <owc-click-editable-input label="First Name" editable></owc-click-editable-input>
+            </div>`
+          : html`<div>
+              <owc-click-editable-textarea
+                label="First Name"
+                editable
+              ></owc-click-editable-textarea>
+            </div>`,
+      );
+      const el = /** @type {import('./OwcClickEditable.js').OwcClickEditable} */ (
+        wrapper.firstElementChild
+      );
+      await el.updateComplete;
+      await el.inputElement.updateComplete;
+      await expect(el).to.be.accessible();
+      const label = el.inputElement.shadowRoot.querySelector('label');
+      expect(label.textContent.trim()).to.equal('First Name');
+      const { width, height } = label.getBoundingClientRect();
+      expect(width <= 1 && height <= 1, `${width}x${height}`).to.be.true;
+    });
+  }
+});
 
 describe('owc-click-editable-input', () => {
   it('renders the value and is not editable initially', async () => {
@@ -360,6 +390,26 @@ describe('owc-click-editable-autocomplete', () => {
     await oneEvent(el, 'submit');
     expect(el.value).to.deep.equal(['100', '101']);
     expect(el.editable).to.equal(false);
+  });
+
+  it('submits the option Enter picks and returns the focus to its read view', async () => {
+    const el = await fixture(
+      html`<owc-click-editable-autocomplete
+        value="100"
+        .data=${data}
+      ></owc-click-editable-autocomplete>`,
+    );
+    display(el).focus();
+    await sendKeys({ press: 'Enter' });
+    await waitUntil(() => el._autocomplete.open, 'the dropdown is open');
+    await waitUntil(() => el._autocomplete.search.matches(':focus-within'), 'search has focus');
+    await sendKeys({ type: 'Ban' });
+    const submitted = oneEvent(el, 'submit');
+    await sendKeys({ press: 'Enter' });
+    await submitted;
+    expect(el.value).to.equal('101');
+    expect(el.editable).to.equal(false);
+    expect(el.shadowRoot.activeElement === display(el)).to.be.true;
   });
 
   it('skips selected values without a matching option in the display (regression)', async () => {

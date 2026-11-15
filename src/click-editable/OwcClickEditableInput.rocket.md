@@ -282,17 +282,18 @@ This API is shared by the whole click-editable family:
 
 ### Attributes & properties
 
-| Attribute          | Property         | Type                                                  | Default   | Description                                                                          |
-| ------------------ | ---------------- | ----------------------------------------------------- | --------- | ------------------------------------------------------------------------------------ |
-| `value`            | `value`          | `string \| number \| Date \| Array`                   | `''`      | The current value. For `date`/`datetime-local` a `Date` instance works best.         |
-| `type`             | `type`           | input types like `text`, `number`, `date`, ...        | `'text'`  | Type of the inner input; also controls parsing (`parsedValue`) and formatting.       |
-| `editable`         | `editable`       | `boolean`                                             | `false`   | Whether the field is currently in edit mode. Reflected.                              |
-| `read-only`        | `readOnly`       | `boolean`                                             | `false`   | Prevents entering edit mode via click/keyboard. Reflected.                           |
-| `fallbackValue`    | `fallbackValue`  | `string`                                              | `'-'`     | Shown (muted) when there is no value.                                                |
-| `show-copy-button` | `showCopyButton` | `boolean`                                             | `false`   | Adds a copy button next to the value. Reflected.                                     |
-| `form-align`       | `formAlign`      | `'start' \| 'center' \| 'end'`                        | `'start'` | Text alignment of the input while editing.                                           |
-| -                  | `formatter`      | `(parsedValue) => TemplateResult`                     | built-in  | Renders the display value. Return `undefined`/`null`/`nothing` to show the fallback. |
-| -                  | `validator`      | `(parsedValue) => { valid: boolean, error?: string }` | -         | Blocks submitting while invalid; `error` is shown as validation message.             |
+| Attribute          | Property         | Type                                                  | Default   | Description                                                                                                                                 |
+| ------------------ | ---------------- | ----------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `value`            | `value`          | `string \| number \| Date \| Array`                   | `''`      | The current value. For `date`/`datetime-local` a `Date` instance works best.                                                                |
+| `type`             | `type`           | input types like `text`, `number`, `date`, ...        | `'text'`  | Type of the inner input; also controls parsing (`parsedValue`) and formatting.                                                              |
+| `editable`         | `editable`       | `boolean`                                             | `false`   | Whether the field is currently in edit mode. Reflected.                                                                                     |
+| `read-only`        | `readOnly`       | `boolean`                                             | `false`   | Prevents entering edit mode via click/keyboard. Reflected.                                                                                  |
+| `fallbackValue`    | `fallbackValue`  | `string`                                              | `'-'`     | Shown (muted) when there is no value.                                                                                                       |
+| `show-copy-button` | `showCopyButton` | `boolean`                                             | `false`   | Adds a copy button next to the value. Reflected.                                                                                            |
+| `form-align`       | `formAlign`      | `'start' \| 'center' \| 'end'`                        | `'start'` | Text alignment of the input while editing.                                                                                                  |
+| `label`            | `label`          | `string`                                              | -         | Accessible name of the input or textarea while editing (`owc-click-editable-input`, `-textarea`). Not shown; `owc-table` sets the column's. |
+| -                  | `formatter`      | `(parsedValue) => TemplateResult`                     | built-in  | Renders the display value. Return `undefined`/`null`/`nothing` to show the fallback.                                                        |
+| -                  | `validator`      | `(parsedValue) => { valid: boolean, error?: string }` | -         | Blocks submitting while invalid; `error` is shown as validation message.                                                                    |
 
 ### Events & methods
 

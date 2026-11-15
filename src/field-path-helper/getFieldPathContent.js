@@ -4,6 +4,8 @@ import { getFieldPath } from './getFieldPath.js';
 import { spreadProps } from '@open-wc/lit-helpers';
 import { setFieldPath } from './setFieldPath.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
+import { visuallyHidden } from '../a11y/visuallyHidden.js';
+import { columnName } from './columnName.js';
 
 const dateFormatterDefault = new Intl.DateTimeFormat('de', {
   day: '2-digit',
@@ -75,12 +77,16 @@ export function getFieldPathContent(row, column, options = {}) {
       editable: true,
       ...column.editableOptions?.insertInputOptions,
     };
+    // the name of the form control while editing: the column's
+    const label = columnName(column);
     const inputOptions = renderInitiallyAsEditableCondition({ data: row, config: column })
       ? {
+          label,
           ...column.editableOptions?.inputOptions,
           ...insertInputOptions,
         }
       : {
+          label,
           fallbackValue:
             column.editableOptions?.inputOptions?.fallbackValue || options.fallbackValue,
           ...column.editableOptions?.inputOptions,
@@ -160,7 +166,12 @@ export function getFieldPathContent(row, column, options = {}) {
       `;
     } else if (editableType === 'checkbox') {
       clickEditableContent = html`
-        <wa-checkbox ?checked=${!!getFieldPath(row, field)} @change=${handleUpdate}> </wa-checkbox>
+        <wa-checkbox
+          class="checkbox-named-by-column"
+          ?checked=${!!getFieldPath(row, field)}
+          @change=${handleUpdate}
+          >${label ?? ''}</wa-checkbox
+        >
       `;
     }
 
@@ -256,10 +267,11 @@ function getContent(row, column, options = {}, override) {
   }
   if (column.formatter === 'checkbox') {
     content = html`<wa-checkbox
-      class="checkbox-non-editable"
+      class="checkbox-non-editable checkbox-named-by-column"
       ?checked=${!!content}
       @click=${(/** @type {{ preventDefault: () => any; }} */ ev) => ev.preventDefault()}
-    ></wa-checkbox>`;
+      >${columnName(column) ?? ''}</wa-checkbox
+    >`;
   }
   // if (column.formatter === 'rownum') {
   //   content = index + 1;
@@ -332,6 +344,10 @@ function getContent(row, column, options = {}, override) {
 }
 
 export const contentFormatterStyles = css`
+  /* A checkbox in a cell is named by its column, which the header shows already. */
+  .checkbox-named-by-column::part(label) {
+    ${visuallyHidden}
+  }
   .checkbox-non-editable::part(base) {
     cursor: default;
   }

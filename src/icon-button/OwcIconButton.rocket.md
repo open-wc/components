@@ -105,15 +105,16 @@ export const disabled = () => {
 
 ### Attributes & properties
 
-| Property   | Type      | Default | Description                                                                          |
-| ---------- | --------- | ------- | ------------------------------------------------------------------------------------ |
-| `name`     | `string`  | `''`    | Icon name, forwarded to `wa-icon`.                                                   |
-| `label`    | `string`  | `''`    | Accessible name (`aria-label`); omitted from the DOM when empty.                     |
-| `href`     | `string`  | `''`    | Renders the icon button as an anchor pointing here.                                  |
-| `target`   | `string`  | `''`    | Link target (e.g. `_blank`); adds `rel="noreferrer noopener"` when set.              |
-| `download` | `string`  | `''`    | Download filename for links; only rendered when non-empty.                           |
-| `variant`  | `string`  | `''`    | Icon variant, forwarded to `wa-icon` (e.g. `regular`).                               |
-| `disabled` | `boolean` | `false` | Blocks clicks and removes the control from the tab order; reflected as an attribute. |
+| Property   | Type                   | Default     | Description                                                                                                                                                                        |
+| ---------- | ---------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`     | `string`               | `''`        | Icon name, forwarded to `wa-icon`.                                                                                                                                                 |
+| `label`    | `string`               | `''`        | Accessible name (`aria-label`); omitted from the DOM when empty.                                                                                                                   |
+| `href`     | `string`               | `''`        | Renders the icon button as an anchor pointing here.                                                                                                                                |
+| `target`   | `string`               | `''`        | Link target (e.g. `_blank`); adds `rel="noreferrer noopener"` when set.                                                                                                            |
+| `download` | `string`               | `''`        | Download filename for links; only rendered when non-empty.                                                                                                                         |
+| `variant`  | `string`               | `''`        | Icon variant, forwarded to `wa-icon` (e.g. `regular`).                                                                                                                             |
+| `disabled` | `boolean`              | `false`     | Blocks clicks and removes the control from the tab order; reflected as an attribute.                                                                                               |
+| `expanded` | `boolean \| undefined` | `undefined` | For a button that shows and hides something: whether it is shown (`aria-expanded`). As an attribute, `expanded="false"` means collapsed. Unset on other buttons; ignored on links. |
 
 ### Methods
 

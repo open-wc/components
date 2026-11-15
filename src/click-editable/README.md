@@ -40,6 +40,11 @@ fires while editing. `parsedValue` exposes the value parsed per `type`
 - Custom `formatter` (return `nothing` to show the muted `fallbackValue`) and
   `validator` (blocks submit, shows the error as validation message)
 - `read-only`, `show-copy-button`, `form-align`, `label`/`help-text` slots
+- `label` property: the accessible name of the input or textarea while editing,
+  visually hidden (`owc-table` sets it to the column's label)
+- Keyboard: Enter or Space on the focused text starts editing; Enter commits
+  (in the autocomplete, Enter picks the active option, which commits) and
+  Escape cancels, both returning the focus to the text
 - Autocomplete variant: `multiple`, `clearable`, `hide-select-all`, reactive
   options via `.data`; labels match loosely and skip missing values (pure
   logic in [labelHelpers.js](./labelHelpers.js))

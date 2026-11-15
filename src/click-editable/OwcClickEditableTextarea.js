@@ -56,6 +56,7 @@ export class OwcClickEditableTextarea extends OwcClickEditable {
               @keydown=${this._handleKeyDown}
               class="form"
               id="form-element"
+              label=${this.label ?? ''}
               rows="1"
               @blur=${() => {
                 if (this.editable) {
