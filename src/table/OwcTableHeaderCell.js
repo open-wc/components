@@ -4,9 +4,15 @@ import { OwcLocalizeController } from '@open-wc/components/localization.js';
 /**
  * Sortable column header used by `OwcTable`.
  *
- * Clicking the cell toggles `order` between 'asc' and 'desc', writes the
- * resulting `sorters` array, and fires a bubbling `sort-changed` event that
- * the table listens for.
+ * Clicking the cell cycles `order` through 'asc', 'desc' and not sorted,
+ * writes the resulting `sorters` array, and fires a bubbling `sort-changed`
+ * event that the table listens for. `cycleSort()` does the same without a
+ * click, which is how the table sorts from the keyboard.
+ *
+ * The sort button is a pointer target only: it is out of the Tab order and
+ * hidden from assistive technology. The table's `columnheader` around this
+ * element takes the focus and says how its column is sorted (`aria-sort`).
+ * The table sets `order` from its sort state whenever it renders.
  */
 export class OwcTableHeaderCell extends LitElement {
   #localize = new OwcLocalizeController(this);
@@ -32,7 +38,12 @@ export class OwcTableHeaderCell extends LitElement {
     this.sorters = undefined;
   }
 
-  #clickHandler() {
+  /**
+   * Sorts by the cell's column in the next order, as a click on the cell
+   * does: ascending, descending, not sorted. It sets `sorters` and fires
+   * `sort-changed`. A cell that isn't sortable does nothing.
+   */
+  cycleSort() {
     if (this.sortable === false) {
       return;
     }
@@ -59,11 +70,23 @@ export class OwcTableHeaderCell extends LitElement {
     this.dispatchEvent(new Event('sort-changed', { bubbles: true }));
   }
 
+  #handleClick() {
+    this.cycleSort();
+  }
+
   render() {
     return html`
-      <div @click=${this.#clickHandler} id="wrapper">
+      <div @click=${this.#handleClick} id="wrapper">
         <div id="slot-wrapper" title=${this.textContent ?? ''}><slot></slot></div>
-        ${this.sortable ? html`<button aria-label=${this.#localize.term('tableSort')}></button>` : nothing}
+        ${
+          this.sortable
+            ? html`<button
+                aria-hidden="true"
+                tabindex="-1"
+                aria-label=${this.#localize.term('tableSort')}
+              ></button>`
+            : nothing
+        }
       </div>
     `;
   }

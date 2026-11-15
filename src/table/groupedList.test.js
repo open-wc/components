@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { GroupHeader, OthersGroupHeader, groupedList } from './groupedList.js';
+import { GroupHeader, OthersGroupHeader, OTHERS_GROUP_KEY, groupedList } from './groupedList.js';
 
 /** @typedef {{ name: string, team: string }} Row */
 /** @typedef {import('./groupedList.js').Group} Group */
@@ -181,6 +181,13 @@ describe('GroupHeader', () => {
     );
   });
 
+  it('is identified by the key of its group, also after the definition is replaced', () => {
+    const header = new GroupHeader({ key: 'red', label: 'Red' });
+    assert.equal(header.key, 'red');
+    assert.equal(new GroupHeader({ key: 'red', label: 'Rot' }).key, header.key);
+    assert.notEqual(new GroupHeader({ key: 'blue', label: 'Blue' }).key, header.key);
+  });
+
   it('expands and collapses its group through the group definition', () => {
     /** @type {Group} */
     const group = { key: 'red', label: 'Red' };
@@ -216,6 +223,23 @@ describe('OthersGroupHeader', () => {
     language = 'de';
     active = true;
     assert.deepEqual([header.label, header.active], ['Andere', true], 'follows the callbacks');
+  });
+
+  it('is identified by OTHERS_GROUP_KEY, a symbol no group definition can have', () => {
+    const { items } = layOut(rows('red 1', 'green 1'), [{ key: 'red', label: 'Red' }], {
+      othersActive: true,
+    });
+    const headers = items.filter(item => item instanceof GroupHeader);
+    assert.deepEqual(
+      headers.map(header => header.key),
+      ['red', OTHERS_GROUP_KEY],
+    );
+    assert.equal(typeof OTHERS_GROUP_KEY, 'symbol');
+    // not even a definition whose key is its description
+    assert.notEqual(
+      new GroupHeader({ key: 'others group', label: 'Others' }).key,
+      OTHERS_GROUP_KEY,
+    );
   });
 
   it('expands and collapses through its callback', () => {

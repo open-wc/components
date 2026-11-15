@@ -432,14 +432,15 @@ Columns can format their displayed values using the `formatter` property.
 
 Several built-in formatters are available:
 
-| Formatter  | Description                                             |
-| ---------- | ------------------------------------------------------- |
-| `rownum`   | Displays the row number.                                |
-| `number`   | Formats numeric values.                                 |
-| `currency` | Formats values using the configured currency formatter. |
-| `percent`  | Formats percentages.                                    |
-| `date`     | Formats dates using the configured date formatter.      |
-| `datetime` | Formats date and time values.                           |
+| Formatter  | Description                                                                                                                                                      |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rownum`   | Displays the row number.                                                                                                                                         |
+| `number`   | Formats numeric values.                                                                                                                                          |
+| `currency` | Formats values using the configured currency formatter.                                                                                                          |
+| `percent`  | Formats percentages.                                                                                                                                             |
+| `date`     | Formats dates using the configured date formatter.                                                                                                               |
+| `datetime` | Formats date and time values.                                                                                                                                    |
+| `checkbox` | Shows boolean values as a checkbox that can't be changed. It is named for screen readers by the column's `labelString` or string `label`, which it doesn't show. |
 
 In addition to the built-in formatters, a custom formatter function can be supplied. The function receives the current row and additional rendering information and may return plain text or HTML.
 
@@ -1920,7 +1921,7 @@ Users can click a cell to edit its value directly.
 
 ### Editing with Checkbox
 
-Boolean values can be edited using a checkbox.
+Boolean values can be edited using a checkbox. Its name for screen readers is the column's `labelString` or string `label`, which it doesn't show, like the checkboxes of `formatter: 'checkbox'`.
 
 Configure the column with an appropriate editor.
 
@@ -2193,7 +2194,7 @@ From 300 Data Rows on, `owc-table` only renders the rows in and around the visib
 - `always`: for any number of rows.
 - `never`: never. The table renders every row.
 
-Rows that aren't rendered aren't part of the page, so the browser's find-in-page doesn't find them, and printing leaves them out. Tables with fewer than 300 Data Rows in `auto` mode, and tables with `virtualizer-mode="never"`, keep all their rows in the page. When a row leaves the rendered range, it also loses its focus and any unsaved input in its cells. What the table keeps track of itself, such as the selection, stays.
+Rows that aren't rendered aren't part of the page, so the browser's find-in-page doesn't find them, and printing leaves them out. Tables with fewer than 300 Data Rows in `auto` mode, and tables with `virtualizer-mode="never"`, keep all their rows in the page. When a row leaves the rendered range, it also loses any unsaved input in its cells. What the table keeps track of itself stays, such as the selection and the cell that has the keyboard focus: the next arrow key moves on from that cell and scrolls it back into view.
 
 ### Scroll Container
 
@@ -2825,6 +2826,83 @@ export const benchmarkLayoutSidebar = () => {
 };
 ```
 
+## Keyboard
+
+The table is a data grid: the whole table is one stop in the page's Tab order, and the arrow keys move the focus from cell to cell. Screen readers announce it as a grid with its rows and columns, and the cell with its column header. Name the grid with the `label` attribute, e.g. `label="Employees"`; without it, it is called "Table".
+
+On macOS, Cmd works wherever this section says Ctrl.
+
+### Moving around
+
+| Key                 | What it does                                                                                                                                                                             |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tab, Shift+Tab      | Moves into the table, to the cell that had the focus last (the first cell of the first row the first time), and out of the table again. Controls in cells are no Tab stops of their own. |
+| ←, →                | The previous or the next cell of the row.                                                                                                                                                |
+| ↑, ↓                | The cell above or below, in the same column. ↑ from the first row reaches the header row; group headers and open details are rows on the way.                                            |
+| Home, End           | The first or the last cell of the row.                                                                                                                                                   |
+| Ctrl+Home, Ctrl+End | The first cell of the first row, or the last cell of the last row.                                                                                                                       |
+| PageUp, PageDown    | Moves by as many rows as fit into the visible part of the table.                                                                                                                         |
+
+The focus doesn't wrap around at the edges. In a large table, a key that goes to a row that isn't rendered brings it in first. The focus stays on its row when the rows are sorted or filtered, or when the row scrolls out of the rendered range and back.
+
+### Rows
+
+| Key                     | What it does                                                                                                                                                                             |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Enter                   | On a cell without a control of its own: the row's action, what a click on the row does. Rows as links follow their link, rows with details open or close it, other rows fire `rowClick`. |
+| Ctrl+Enter, Shift+Enter | In rows as links: opens the link in a new tab or window, as on a link.                                                                                                                   |
+| Shift+Space             | In a `selectable` table: selects the row, or unselects it, from any of its cells.                                                                                                        |
+| Space                   | On the row's checkbox: selects or unselects the row.                                                                                                                                     |
+
+A row's link is a real link in its first data cell, named by the `aria-label` of `getRowLinkSettings`, else by the content of that cell, else "Open row". In `detail` and `detailDeferred` rows, the first data cell says whether the detail is open, and opening or closing it is announced. In `linkWithDetail` rows, the toggle button says it.
+
+### Headers
+
+| Key              | What it does                                                                                               |
+| ---------------- | ---------------------------------------------------------------------------------------------------------- |
+| Enter, Space     | Sorts by the column: ascending, descending, then unsorted again, like a click on the header.               |
+| Shift+←, Shift+→ | Makes a resizable column 10px narrower or wider. The new width is announced.                               |
+| Shift+Backspace  | Resets the column's width, like a double-click on its edge.                                                |
+| F2               | In a sortable column whose label has a control: goes to the control, Escape comes back to the header cell. |
+
+The sort state is on the header cell, so the sort button inside it isn't a Tab stop or announced of its own.
+
+### Groups and details
+
+| Key          | What it does                                                                                                   |
+| ------------ | -------------------------------------------------------------------------------------------------------------- |
+| Enter, Space | On a group header: expands or collapses the group.                                                             |
+| →, ←         | On a group header: expands or collapses the group.                                                             |
+| ↓            | From a row with an open detail: goes to the detail.                                                            |
+| Enter, F2    | On an open detail: goes to its controls. Tab and Shift+Tab move between them, Escape comes back to the detail. |
+
+Closing a detail while the focus is in it moves the focus to its row. When the focus moves into a row with an annotation, the annotation is announced.
+
+### Editing
+
+| Key                           | What it does                                                                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Enter, Space                  | On an editable cell: starts editing.                                                                                                  |
+| Enter                         | While editing: keeps the value and goes back to the cell. While editing goes on, every key belongs to the editor, the arrow keys too. |
+| Escape                        | While editing: drops the change and goes back to the cell.                                                                            |
+| Tab, Shift+Tab (in a new row) | Moves to the next or the previous field of a row that is being added, and out of the table from its last or first field.              |
+
+A field of a new row that you leave shows its value; Enter edits it again. The editors are named by their column for screen readers.
+
+### Controls in cells
+
+What gets the focus in a cell is decided from what the cell shows when it gets the focus, whatever the column's formatter is:
+
+- **A cell without controls** takes the focus itself.
+- **A cell with exactly one simple control** gives the focus to that control: a link, a button or a checkbox (native ones, `wa-button`, `owc-icon-button`, `wa-checkbox`), or an editable cell's `owc-click-editable-*`. Enter and Space work on it as usual, and the arrow keys move on to the next cell.
+- **A cell with several controls, or with one that uses more keys** (text inputs, selects, autocompletes, any other custom element with a control inside) takes the focus itself. Enter or F2 goes to its controls: Tab and Shift+Tab move between them, and every other key belongs to them. Escape comes back to the cell. Screen readers hear "Press Escape to return to the table" when the focus goes in.
+
+A control is an element the browser can focus: `a[href]`, `button`, `input`, `select`, `textarea`, and elements with `tabindex` or `contenteditable`. A custom element in a cell counts as a control if it can take the focus itself, or if it has one of these anywhere in its open shadow tree. **Content in a closed shadow root can't be seen**, so a custom element that keeps its controls there counts only if it takes the focus itself (with a `tabindex`, for example), and its inner controls aren't reached.
+
+### Around the table
+
+The info block, its action tabs, the filter builder, mass edit and the add-row button are not part of the grid. They are ordinary stops in the Tab order, before the table, and work with Enter and Space. In the settings tab, Tab moves through the column list; Alt+↑ and Alt+↓ move the focused column up or down, and each column's grip opens a menu with Move up, Move down, Move to top and Move to bottom.
+
 ## Localization
 
 owc-table comes with the option to localize on top of the formatter overwrites. it does so by using `webawesome localization`. Currently, it supports german and english. to change it, add a lang tag.
@@ -2914,7 +2992,7 @@ Unless stated otherwise, properties can be configured declaratively as HTML attr
 | `overrides`           | `Overrides`                    | overrides certain column options like visibility                                                                  |
 | `grow-full-width`     | `boolean`                      | stretches the columns without a `width` to the width of the table's container ([see Column Width](#column-width)) |
 | `selectable`          | `boolean`                      | defines if rows can be selected                                                                                   |
-| `getSelectorSettings` | `(row: T) => SelectorSettings` | gets the selector settings for that row                                                                           |
+| `getSelectorSettings` | `(row: T) => SelectorSettings` | gets the selector settings for that row; its `aria-label` names the row's checkbox (default "Select row")         |
 
 ### Filtering and Sorting API
 
@@ -2930,16 +3008,16 @@ Unless stated otherwise, properties can be configured declaratively as HTML attr
 
 ### Row Rendering API
 
-| Property              | Type                                        | Description                                                                                                      |
-| --------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `render-mode`         | `string`                                    | Sets how the rows are rendered ([see Row Rendering](#row-rendering))                                             |
-| `sticky-header`       | `boolean`                                   | makes the header sticky ([see Sticky Header](#sticky-header))                                                    |
-| `renderDetail`        | `renderDetail<T> \| renderDetailPromise<T>` | The function to render a detail ([see Row Details](#row-details))                                                |
-| `renderAnnotation`    | `RenderAnnotation<T>`                       | function to render annotations above the rows ([see Row Annotation](#row-annotations))                           |
-| `renderHeaderContent` | `RenderHeaderContent`                       | renders static content at the header ([see Add Header Content](#add-header-content))                             |
-| `openDetails`         | `(string \| number)[]`                      | Expands listed rows programmatically ([see Opening Details Programmatically](#opening-details-programmatically)) |
-| `getRowLinkSettings`  | `(row: T) => RowLinkSettings`               | sets the link for the rows ([see Rows as Links](#rows-as-links))                                                 |
-| `getRowId`            | `(row: T) => string \| number`              | returns the id of the specified row                                                                              |
+| Property              | Type                                        | Description                                                                                                                   |
+| --------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `render-mode`         | `string`                                    | Sets how the rows are rendered ([see Row Rendering](#row-rendering))                                                          |
+| `sticky-header`       | `boolean`                                   | makes the header sticky ([see Sticky Header](#sticky-header))                                                                 |
+| `renderDetail`        | `renderDetail<T> \| renderDetailPromise<T>` | The function to render a detail ([see Row Details](#row-details))                                                             |
+| `renderAnnotation`    | `RenderAnnotation<T>`                       | function to render annotations above the rows ([see Row Annotation](#row-annotations))                                        |
+| `renderHeaderContent` | `RenderHeaderContent`                       | renders static content at the header ([see Add Header Content](#add-header-content))                                          |
+| `openDetails`         | `(string \| number)[]`                      | Expands listed rows programmatically ([see Opening Details Programmatically](#opening-details-programmatically))              |
+| `getRowLinkSettings`  | `(row: T) => RowLinkSettings`               | sets the link for the rows ([see Rows as Links](#rows-as-links)); its `aria-label` names the link ([see Keyboard](#keyboard)) |
+| `getRowId`            | `(row: T) => string \| number`              | returns the id of the specified row                                                                                           |
 
 ### Grouping API
 
@@ -2963,6 +3041,12 @@ Unless stated otherwise, properties can be configured declaratively as HTML attr
 | ------------------ | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `virtualizer-mode` | `"auto" \| "always" \| "never"` | when the table renders only the rows in and around the visible area: `auto` (default) from 300 Data Rows on ([see Virtualizer Modes](#virtualizer-modes)) |
 | `scrollTarget`     | `Element \| null \| undefined`  | the element that scrolls the table; overrides the automatic detection, which is on while it's unset ([see Scroll Container](#scroll-container))           |
+
+### Accessibility API
+
+| Property | Type     | Description                                                                                                                       |
+| -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `label`  | `string` | the accessible name of the table's grid, e.g. "Employees"; without it, the grid is named "Table" (localization term `tableLabel`) |
 
 ### Actions & Toolbar API
 

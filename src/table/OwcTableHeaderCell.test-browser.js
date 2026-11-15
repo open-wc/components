@@ -1,4 +1,5 @@
 import { fixture, html, expect, oneEvent } from '@open-wc/testing';
+import { sendKeys, sendMouse } from '@web/test-runner-commands';
 import { OwcTableHeaderCell } from './OwcTableHeaderCell.js';
 
 customElements.define('owc-table-header-cell', OwcTableHeaderCell);
@@ -47,6 +48,52 @@ describe('owc-table-header-cell', () => {
     const el = await fixture(html`<owc-table-header-cell>First Name</owc-table-header-cell>`);
     expect(el.textContent).to.equal('First Name');
     expect(el.shadowRoot.querySelector('button')).to.exist;
+  });
+
+  it('keeps its sort button out of the accessibility tree and out of the Tab order', async () => {
+    const wrapper = await fixture(html`
+      <div>
+        <button id="before">before</button>
+        <owc-table-header-cell field="firstName">Name</owc-table-header-cell>
+        <button id="after">after</button>
+      </div>
+    `);
+    const el = wrapper.querySelector('owc-table-header-cell');
+    const button = el.shadowRoot.querySelector('button');
+    expect(button.getAttribute('aria-hidden')).to.equal('true');
+    await expect(el).to.be.accessible();
+
+    wrapper.querySelector('#before').focus();
+    await sendKeys({ press: 'Tab' });
+    expect(document.activeElement.id).to.equal('after');
+  });
+
+  it('sorts when its sort button is clicked', async () => {
+    const el = await fixture(
+      html`<owc-table-header-cell field="firstName">Name</owc-table-header-cell>`,
+    );
+    const rect = el.shadowRoot.querySelector('button').getBoundingClientRect();
+    setTimeout(() =>
+      sendMouse({
+        type: 'click',
+        position: [Math.round(rect.left + rect.width / 2), Math.round(rect.top + rect.height / 2)],
+      }),
+    );
+    await oneEvent(el, 'sort-changed');
+    expect(el.order).to.equal('asc');
+  });
+
+  it('cycles its sort with cycleSort(), as a click does', async () => {
+    const el = await fixture(
+      html`<owc-table-header-cell field="firstName">Name</owc-table-header-cell>`,
+    );
+    const orders = [];
+    el.addEventListener('sort-changed', () => orders.push(el.sorters[0].order));
+    el.cycleSort();
+    el.shadowRoot.querySelector('#wrapper').click();
+    el.cycleSort();
+    el.cycleSort();
+    expect(orders).to.deep.equal(['asc', 'desc', undefined, 'asc']);
   });
 
   it('hides the sort button when not sortable', async () => {

@@ -1,6 +1,7 @@
 import { fixture, html, expect, oneEvent } from '@open-wc/testing';
 import { OwcTableFilterBuilder } from './OwcTableFilterBuilder.js';
 import { globalSearchField } from './jsonToFilter.js';
+import { expectAccessible } from '../a11y/axe.test-browser.helpers.js';
 
 customElements.define('owc-table-filter-builder', OwcTableFilterBuilder);
 
@@ -110,6 +111,60 @@ describe('owc-table-filter-builder', () => {
       );
       expect(el.shadowRoot.querySelector('wa-input.global-search')).to.exist;
       expect(el.shadowRoot.querySelector('owc-table-filter')).to.not.exist;
+    });
+  });
+
+  describe('names of its controls', () => {
+    const namedColumns = [
+      ...columns,
+      { label: 'Age', field: 'age', filterable: true, filterType: 'number' },
+    ];
+
+    /**
+     * The names of the buttons and form controls of a filter entry, as their
+     * `label`s give them.
+     *
+     * @param {Element} filter
+     */
+    function namesIn(filter) {
+      return [...filter.shadowRoot.querySelectorAll('owc-icon-button, wa-select, wa-input')].map(
+        control => `${control.localName} ${/** @type {any} */ (control).label}`,
+      );
+    }
+
+    it('names the buttons, the operator and the value of a filter, and the global search', async () => {
+      const el = await fixture(
+        html`<owc-table-filter-builder
+          global-search
+          .columns=${namedColumns}
+          .value=${[
+            { field: 'firstName', operator: 'includes', value: 'Ada' },
+            { field: 'age', operator: 'between', value: { from: 1, to: 5 }, enabled: false },
+          ]}
+        ></owc-table-filter-builder>`,
+      );
+      expect(
+        /** @type {any} */ (el.shadowRoot.querySelector('wa-input.global-search')).label,
+      ).to.equal('Search');
+      const [firstName, age] = [...el.shadowRoot.querySelectorAll('owc-table-filter')].filter(
+        filter => /** @type {any} */ (filter).value.operator,
+      );
+      expect(namesIn(firstName)).to.deep.equal([
+        'owc-icon-button Delete filter',
+        'owc-icon-button Pause filter',
+        'owc-icon-button Negate filter',
+        'wa-select Operator',
+        'wa-input First Name',
+      ]);
+      expect(namesIn(age)).to.deep.equal([
+        'owc-icon-button Delete filter',
+        'owc-icon-button Resume filter',
+        'owc-icon-button Negate filter',
+        'wa-select Operator',
+        'wa-input Age',
+        'wa-input Age',
+      ]);
+      await expectAccessible(el);
     });
   });
 });

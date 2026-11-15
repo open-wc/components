@@ -29,6 +29,8 @@ import {
   toLocalDateInputValue,
   fromLocalDateInputValue,
 } from './localTime.js';
+import { visuallyHidden } from '../a11y/visuallyHidden.js';
+import { columnName } from '../field-path-helper/columnName.js';
 
 /** @typedef {{ from: Date; to: Date }} DateRange */
 
@@ -247,6 +249,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
       class="delete-button"
       name="x-circle"
       variant="regular"
+      .label=${this.#localize.term('tableDeleteFilter')}
       @click=${() => {
         // @ts-ignore
         this.value = { field: 'OwcTableFilterButton' };
@@ -260,6 +263,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
       class="toggle-button"
       variant="regular"
       name=${this.enabled ? 'pause-circle' : 'play-circle'}
+      .label=${this.#localize.term(this.enabled ? 'tablePauseFilter' : 'tableResumeFilter')}
       @click=${() => {
         this.value = { ...this.value, enabled: !this.enabled };
         this.#fireChangeEvent();
@@ -272,6 +276,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
       class="toggle-button"
       variant="regular"
       name="exclamation-circle"
+      .label=${this.#localize.term('tableNegateFilter')}
       @click=${() => {
         this.value = { ...this.value, negated: !this.negated };
         this.#fireChangeEvent();
@@ -379,6 +384,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
         () => {
           return html`<wa-select
               class="operator"
+              label=${this.#localize.term('tableOperator')}
               value=${this.value.operator}
               @change=${(/** @type {InputEvent} */ ev) => {
                 ev.stopPropagation();
@@ -488,6 +494,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
 
     return html`<wa-select
         class="operator"
+        label=${this.#localize.term('tableOperator')}
         value=${this.value.operator}
         @change=${(/** @type {InputEvent} */ ev) => {
           ev.stopPropagation();
@@ -520,6 +527,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
           ? ''
           : html` <wa-input
                 class="field-filter"
+                label=${columnName(this.column) ?? ''}
                 .value=${(() => {
                   const v = this.value;
                   const isDT = this.column?.filterType === 'datetime';
@@ -684,6 +692,7 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
               ${when(this.value.operator.startsWith('between'), () => {
                 return html`<wa-input
                   class="field-filter"
+                  label=${columnName(this.column) ?? ''}
                   .value=${(() => {
                     const isDT = this.column?.filterType === 'datetime';
                     const isD = this.column?.filterType === 'date';
@@ -852,8 +861,15 @@ export class OwcTableFilter extends ScopedElementsMixin(LitElement) {
         opacity: 1;
       }
 
-      :host(:hover) #controls {
+      :host(:hover) #controls,
+      #controls:focus-within {
         opacity: 1;
+      }
+
+      /* the labels name the operator and the value fields, the column selector shows what they filter */
+      .operator::part(form-control-label),
+      wa-input.field-filter::part(form-control-label) {
+        ${visuallyHidden}
       }
 
       #controls {

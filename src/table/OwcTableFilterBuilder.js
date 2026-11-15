@@ -10,6 +10,7 @@ import '@awesome.me/webawesome/dist/components/details/details.js';
 import '@awesome.me/webawesome/dist/components/input/input.js';
 import { globalSearchField } from './jsonToFilter.js';
 import { OwcLocalizeController } from '@open-wc/components/localization.js';
+import { visuallyHidden } from '../a11y/visuallyHidden.js';
 
 /**
  * @template {Record<string, unknown>} T
@@ -96,6 +97,7 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
           this.#fireChangeEvent();
         }}
         .value=${globalSearch.value.toString() || ''}
+        label=${this.#localize.term('tableSearch')}
         placeholder=${this.#localize.term('tableSearch')}
       >
         <wa-icon name="search" slot="start"></wa-icon>
@@ -562,6 +564,11 @@ export class OwcTableFilterBuilder extends ScopedElementsMixin(LitElement) {
 
       .separator-on-hover:hover owc-separator {
         opacity: 1;
+      }
+
+      /* the label names the search field, the placeholder shows what it is for */
+      .global-search::part(form-control-label) {
+        ${visuallyHidden}
       }
 
       .global-search {
