@@ -1,0 +1,298 @@
+/*
+ * Site theme for the @open-wc/components docs.
+ * Loaded after the Rocket atlas layout styles on every page.
+ */
+
+/* ---------- brand colors (the open-wc purple → blue) ---------- */
+
+:root,
+.atlas-header,
+.atlas-navigation,
+.atlas-toc {
+  --primary-color: #4f3bf6;
+  --primary-color-dark: #3a28d4;
+}
+
+:root {
+  --owc-brand-gradient: linear-gradient(120deg, #8a00e6 0%, #0062e0 100%);
+  --surface-red-color: #f1efff;
+  --docs-surface-red-color: #f1efff;
+}
+
+rocket-menu {
+  --rocket-menu-hover-background: #f7f6ff;
+  --rocket-menu-active-background: #f1efff;
+}
+
+/* ---------- header logo ---------- */
+
+img[slot='logo']:first-child:not(:only-child) {
+  width: 34px;
+}
+
+img[slot='logo']:nth-child(2) {
+  width: 190px;
+}
+
+@media (max-width: 460px) {
+  img[slot='logo']:nth-child(2) {
+    width: 150px;
+  }
+}
+
+/* ---------- home: hero ---------- */
+
+.hero {
+  min-height: 0;
+  padding-top: 64px;
+  padding-bottom: 48px;
+}
+
+.hero h1 {
+  font-size: clamp(2.5rem, 5.2vw, 3.9rem);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.hero-eyebrow {
+  letter-spacing: 0.04em;
+}
+
+.cta.primary,
+.cta.primary:hover {
+  background: var(--owc-brand-gradient);
+}
+
+.cta.primary:hover {
+  filter: brightness(0.92);
+}
+
+.hero-art {
+  min-height: 0;
+}
+
+.rocket-visual {
+  max-width: 560px;
+  aspect-ratio: auto;
+}
+
+.rocket-visual img {
+  width: 100%;
+  filter: none;
+}
+
+.spark {
+  display: none;
+}
+
+/* ---------- home: content sections ---------- */
+
+.home-content {
+  padding-bottom: 8px;
+}
+
+.home-content > h2 {
+  margin-top: 4rem;
+}
+
+.home-section-head {
+  max-width: 62ch;
+  margin: 3.5rem 0 1.25rem;
+}
+
+.home-section-head h2 {
+  margin: 0 0 0.4rem;
+  color: var(--primary-text-color-dark);
+  font-size: 1.8rem;
+  line-height: 1.2;
+}
+
+.home-section-head p {
+  margin: 0;
+  color: var(--secondary-text-color);
+}
+
+/* live demo framed like an app window */
+
+.home-window {
+  overflow: hidden;
+  border: 1px solid var(--line-color);
+  border-radius: 12px;
+  background: var(--surface-color);
+  box-shadow: 0 24px 60px hsl(var(--shadow-color) / 10%);
+}
+
+.home-window-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line-color);
+  background: var(--surface-soft-color);
+}
+
+.home-window-bar i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d5dce6;
+}
+
+.home-window-bar code {
+  margin-left: 8px;
+  color: var(--secondary-text-color);
+  font-size: 0.82rem;
+}
+
+.home-content .home-window-bar a {
+  margin-left: auto;
+  color: var(--primary-color);
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.home-content .home-window-bar a:hover {
+  text-decoration: underline;
+}
+
+.home-window-body {
+  height: 540px;
+  padding: 12px 16px 0;
+  overflow: auto;
+}
+
+/* keep the columns readable on phones: the window scrolls sideways instead */
+.home-window-body owc-table {
+  display: block;
+  min-width: 880px;
+}
+
+/* component categories */
+
+.home-categories {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.home-category {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border: 1px solid var(--line-color);
+  border-radius: 12px;
+  background: var(--surface-color);
+  box-shadow: 0 10px 28px hsl(var(--shadow-color) / 5%);
+}
+
+.home-category h3 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.12rem;
+}
+
+.home-content .home-category h3 a {
+  color: var(--primary-text-color-dark);
+  text-decoration: none;
+}
+
+.home-content .home-category h3 a:hover {
+  color: var(--primary-color);
+}
+
+.home-category .heading-anchor {
+  display: none;
+}
+
+.home-category h3 span {
+  color: var(--secondary-text-color);
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.home-content .home-category p {
+  margin: 6px 0 14px;
+  color: var(--secondary-text-color);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.home-category ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: auto 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-content .home-category li {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
+.home-content .home-category li a {
+  display: inline-block;
+  padding: 5px 9px;
+  border: 1px solid var(--line-color);
+  border-radius: 6px;
+  color: var(--primary-text-color);
+  background: var(--surface-soft-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.home-content .home-category li a:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: var(--surface-red-color);
+}
+
+/* the "How it works" card spans the row when it stands alone */
+
+.home-columns > :only-child {
+  grid-column: 1 / -1;
+}
+
+.home-columns {
+  padding-top: 40px;
+  padding-bottom: 72px;
+}
+
+@media (max-width: 1040px) {
+  .home-categories {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* headline first, illustration below it */
+  .hero-art {
+    order: 0;
+    min-width: 0;
+  }
+
+  .rocket-visual {
+    max-width: min(480px, 100%);
+  }
+
+  .rocket-visual img {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .home-categories {
+    grid-template-columns: 1fr;
+  }
+
+  .home-window-body {
+    height: 400px;
+    padding: 8px 8px 0;
+  }
+}

@@ -1,18 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 80" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 64" role="img" aria-labelledby="title">
   <title id="title">@open-wc/components</title>
-  <rect width="520" height="80" rx="12" fill="#ffffff" />
-  <path
-    d="M34 50 20 40l14-10 4 6-6 4 6 4-4 6Zm32 0-4-6 6-4-6-4 4-6 14 10-14 10Zm-20 8-8-3 16-36 8 3-16 36Z"
-    fill="#1f2937"
-  />
-  <text
-    x="102"
-    y="50"
-    fill="#1f2937"
-    font-family="Inter, Arial, sans-serif"
-    font-size="30"
-    font-weight="700"
-  >
-    @open-wc/components
+  <defs>
+    <linearGradient id="g" x1="0" y1="22" x2="0" y2="222" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9B00FF" />
+      <stop offset="1" stop-color="#0077FF" />
+    </linearGradient>
+  </defs>
+  <g transform="scale(0.262295)">
+    <path
+      d="M205.639259,176.936244 C207.430887,174.217233 209.093339,171.405629 210.617884,168.510161 M215.112174,158.724316 C216.385153,155.50304 217.495621,152.199852 218.433474,148.824851 M220.655293,138.874185 C221.231935,135.482212 221.637704,132.03207 221.863435,128.532919 M222,118.131039 C221.860539,114.466419 221.523806,110.85231 221.000113,107.299021 M218.885321,96.8583653 C218.001583,93.4468963 216.942225,90.1061026 215.717466,86.8461994 M211.549484,77.3039459 C209.957339,74.1238901 208.200597,71.0404957 206.290425,68.0649233 M200.180513,59.5598295 C181.848457,36.6639805 153.655709,22 122.036748,22 C66.7879774,22 22,66.771525 22,122 C22,177.228475 66.7879774,222 122.036748,222 C152.914668,222 180.52509,208.015313 198.875424,186.036326"
+      fill="none"
+      stroke="url(#g)"
+      stroke-width="42.0804674"
+    />
+    <g fill="url(#g)">
+      <rect x="75" y="75" width="41" height="94" rx="9" />
+      <rect x="128" y="75" width="41" height="41" rx="9" />
+      <rect x="128" y="128" width="41" height="41" rx="9" />
+    </g>
+  </g>
+  <text x="80" y="43" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="30" letter-spacing="-0.4">
+    <tspan fill="#64748b" font-weight="500">@open-wc/</tspan><tspan fill="#111827" font-weight="800">components</tspan>
   </text>
 </svg>

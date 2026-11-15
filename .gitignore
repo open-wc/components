@@ -23,6 +23,9 @@ assets/icons/*
 # generated
 **/generated.*
 
+# Rocket build cache (social preview images)
+.rocket
+
 .codex
 *.tgz
 .vscode
