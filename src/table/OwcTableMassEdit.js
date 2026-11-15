@@ -6,8 +6,11 @@ import '@awesome.me/webawesome/dist/components/button/button.js';
 import '@awesome.me/webawesome/dist/components/checkbox/checkbox.js';
 import '@awesome.me/webawesome/dist/components/input/input.js';
 import '@awesome.me/webawesome/dist/components/textarea/textarea.js';
+import { ifDefined } from 'lit/directives/if-defined.js';
 import { setFieldPath } from '../field-path-helper/setFieldPath.js';
 import { OwcLocalizeController } from '@open-wc/components/localization.js';
+import { visuallyHidden } from '../a11y/visuallyHidden.js';
+import { columnName } from '../field-path-helper/columnName.js';
 
 /**
  * @template {Record<string, unknown>} T
@@ -209,11 +212,15 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
     if (!column.editableOptions) {
       return nothing;
     }
+    // the form control is named by the column, which the column picker shows
+    const label = columnName(column);
     let clickEditableContent;
     // input
     if (column.editableOptions.type === 'textarea') {
       clickEditableContent = html`
         <wa-textarea
+          class="named-by-column"
+          label=${ifDefined(label)}
           @change=${(/** @type {{ target: any; }} */ ev) => {
             this.value = ev.target.value;
           }}
@@ -224,7 +231,9 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
     } else if (column.editableOptions.type === 'autocomplete') {
       clickEditableContent = html`
         <owc-autocomplete
+          class="named-by-column"
           lang=${this.lang}
+          label=${ifDefined(label)}
           .data=${column.editableOptions?.data}
           @change=${(/** @type {{ target: any; }} */ ev) => {
             this.value = ev.target.value;
@@ -240,13 +249,16 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
             // a checkbox carries its state in "checked", "value" is the static form value
             this.value = ev.target.checked;
           }}
+          class="named-by-column"
           ?checked=${this.value === true}
+          >${label ?? ''}</wa-checkbox
         >
-        </wa-checkbox>
       `;
     } else {
       clickEditableContent = html`
         <wa-input
+          class="named-by-column"
+          label=${ifDefined(label)}
           @change=${(/** @type {{ target: any; }} */ ev) => {
             this.value = ev.target.value;
           }}
@@ -261,6 +273,11 @@ export class OwcTableMassEdit extends ScopedElementsMixin(LitElement) {
     css`
       :host {
         display: block;
+      }
+
+      .named-by-column::part(form-control-label),
+      .named-by-column::part(label) {
+        ${visuallyHidden}
       }
     `,
   ];

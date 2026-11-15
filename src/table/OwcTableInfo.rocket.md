@@ -109,6 +109,22 @@ Reset button clears both stores.
 There is no `define` entry for it - like the mass edit it is registered as a scoped element
 inside `owc-table-info` and configured through the table's `store-name-prefix`.
 
+Columns can be reordered without dragging, too. Every column's grip is a button named
+"Move column: <label>" that opens a menu with Move up, Move down, Move to top and Move to
+bottom. Every way of reordering saves the order like a drag does.
+
+| Key            | What it does                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------------- |
+| Tab, Shift+Tab | Moves through the dropdown: the search, each column's grip and checkbox, then the footer buttons. |
+| Space          | On a column's checkbox: cycles its visibility.                                                    |
+| Enter, Space   | On a grip: opens its menu; ↑ and ↓ move in it, Enter chooses, Escape closes it.                   |
+| Alt+↑, Alt+↓   | On a column's grip or checkbox: moves the column up or down.                                      |
+| Escape         | Closes the dropdown.                                                                              |
+
+While a search filters the list, the grips are hidden and Alt+↑/↓ does nothing.
+
+For screen readers the dropdown is a group named "Columns" with a list of the columns. Each visibility checkbox is named by its column and its visibility, like "First Name: Show when filtered", and the footer's `?` button by what it shows ("What the checkboxes mean").
+
 ## Built-in action tabs
 
 `owc-table-info` owns the built-in action tabs. They are hidden by default and are enabled

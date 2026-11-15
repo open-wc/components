@@ -4,9 +4,12 @@ import { live } from 'lit/directives/live.js';
 import { OwcAutocomplete } from '@open-wc/components/OwcAutocomplete.js';
 import { mergeVisibility, nextVisibility } from './overrideHelpers.js';
 import '@awesome.me/webawesome/dist/components/checkbox/checkbox.js';
+import '@awesome.me/webawesome/dist/components/dropdown/dropdown.js';
+import '@awesome.me/webawesome/dist/components/dropdown-item/dropdown-item.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
 import { createRef, ref } from 'lit/directives/ref.js';
 import { OwcLocalizeController } from '@open-wc/components/localization.js';
+import { visuallyHidden } from '../a11y/visuallyHidden.js';
 
 /**
  * Modified version of https://jsfiddle.net/RubaXa/zLq5J/6 from
@@ -92,11 +95,36 @@ export class OwcTableSettings extends OwcAutocomplete {
     /** @type {T[]} */
     this.columns = [];
     this.syncWidth = false;
+    /** the items are columns with controls of their own, not options to pick @type {'list'} */
+    this.listRole = 'list';
+
+    const handleAutocompleteKeyDown = this.handleDocumentKeyDown;
+    /**
+     * The column list has controls of its own, so the keys they need don't reach the autocomplete:
+     * - Tab moves through the dropdown's controls instead of closing it. It closes once focus leaves.
+     * - Alt+ArrowUp and Alt+ArrowDown move a column, not the autocomplete's active option.
+     * - An open move menu handles all of its keys itself, in a `document` listener of its own that
+     *   runs after this one: Escape closes the menu, not the dropdown.
+     *
+     * @param {KeyboardEvent} ev
+     */
+    this.handleDocumentKeyDown = ev => {
+      const moveMenuOpen = Boolean(this.shadowRoot?.querySelector('wa-dropdown[open]'));
+      if (this.open && (ev.key === 'Tab' || ev.altKey || moveMenuOpen)) {
+        return;
+      }
+      handleAutocompleteKeyDown(ev);
+    };
     this.footer = () => {
       return html`
         <div id="footer">
           <div id="footer-actions">
-            <wa-button size="s" appearance="outlined" @click=${this.toggleLegend}> ? </wa-button>
+            <wa-button size="s" appearance="outlined" @click=${this.toggleLegend}>
+              <span aria-hidden="true">?</span>
+              <span class="visually-hidden"
+                >${this.#localize.term('tableColumnVisibilityLegend')}</span
+              >
+            </wa-button>
             <wa-button size="s" appearance="outlined" @click=${this.reset}
               >${this.#localize.term('tableReset')}</wa-button
             >
@@ -104,12 +132,19 @@ export class OwcTableSettings extends OwcAutocomplete {
           <div id="footer-legend" hidden>
             <p>${this.#localize.term('tableColumnVisibilityHint')}</p>
             <ul>
-              <li><wa-checkbox checked></wa-checkbox>${this.#localize.term('tableShowAlways')}</li>
               <li>
-                <wa-checkbox .indeterminate=${true}></wa-checkbox
-                >${this.#localize.term('tableShowWhenFiltered')}
+                <wa-checkbox checked tabindex="-1"
+                  >${this.#localize.term('tableShowAlways')}</wa-checkbox
+                >
               </li>
-              <li><wa-checkbox></wa-checkbox>${this.#localize.term('tableShowNever')}</li>
+              <li>
+                <wa-checkbox .indeterminate=${true} tabindex="-1"
+                  >${this.#localize.term('tableShowWhenFiltered')}</wa-checkbox
+                >
+              </li>
+              <li>
+                <wa-checkbox tabindex="-1">${this.#localize.term('tableShowNever')}</wa-checkbox>
+              </li>
             </ul>
           </div>
         </div>
@@ -128,19 +163,57 @@ export class OwcTableSettings extends OwcAutocomplete {
     const settingsLabel =
       column.labelString || (typeof column.label === 'string' ? column.label : column.field);
     const row = createRef();
-    return html`<div ${ref(row)} class="row option" data-index=${index}>
-      <wa-icon
-        ?hidden=${Boolean(this.search?.value)}
-        name="grip-horizontal"
-        label=${this.#localize.term('tableMoveColumn')}
-        class="grip"
-        @mouseenter=${() => row.value?.setAttribute('draggable', 'true')}
-        @mouseleave=${() => row.value?.removeAttribute('draggable')}
-      ></wa-icon>
+    const isFirst = index === 0;
+    const isLast = index === this.processedData.length - 1;
+    const visibility = {
+      always: this.#localize.term('tableShowAlways'),
+      ifFiltered: this.#localize.term('tableShowWhenFiltered'),
+      never: this.#localize.term('tableShowNever'),
+    }[visible];
+    return html`<div
+      ${ref(row)}
+      class="row option"
+      role="listitem"
+      data-index=${index}
+      @keydown=${this.#handleRowKeyDown}
+    >
+      <wa-dropdown
+        @wa-select=${this.#handleMoveSelect}
+        @wa-show=${this.#stopPropagation}
+        @wa-after-show=${this.#stopPropagation}
+        @wa-hide=${this.#stopPropagation}
+        @wa-after-hide=${this.#stopPropagation}
+      >
+        <button
+          slot="trigger"
+          type="button"
+          class="grip"
+          ?hidden=${Boolean(this.search?.value)}
+          aria-label=${`${this.#localize.term('tableMoveColumn')}: ${settingsLabel}`}
+          @mouseenter=${() => row.value?.setAttribute('draggable', 'true')}
+          @mouseleave=${() => row.value?.removeAttribute('draggable')}
+        >
+          <wa-icon name="grip-horizontal"></wa-icon>
+        </button>
+        <wa-dropdown-item value="up" ?disabled=${isFirst}
+          >${this.#localize.term('tableMoveColumnUp')}</wa-dropdown-item
+        >
+        <wa-dropdown-item value="down" ?disabled=${isLast}
+          >${this.#localize.term('tableMoveColumnDown')}</wa-dropdown-item
+        >
+        <wa-dropdown-item value="top" ?disabled=${isFirst}
+          >${this.#localize.term('tableMoveColumnToTop')}</wa-dropdown-item
+        >
+        <wa-dropdown-item value="bottom" ?disabled=${isLast}
+          >${this.#localize.term('tableMoveColumnToBottom')}</wa-dropdown-item
+        >
+      </wa-dropdown>
       <wa-checkbox
+        class="named-by-column"
         .indeterminate=${live(visible === 'ifFiltered')}
         ?checked=${live(visible === 'always')}
-      ></wa-checkbox>
+        >${settingsLabel}: ${visibility}</wa-checkbox
+      >
       <span>${settingsLabel}</span>
     </div>`;
   };
@@ -160,24 +233,131 @@ export class OwcTableSettings extends OwcAutocomplete {
         const index = parseInt(row.dataset.index || '-1');
         return this.data[index].field;
       });
-      this.localOverrides.order = order;
-
-      const url = this.getOverridesFromUrl();
-      const local = this.getOverridesFromLocalStorage();
-
-      localStorage.setItem(this.#localStorageKey(), JSON.stringify(this.localOverrides));
-
-      if (JSON.stringify(url) === JSON.stringify(local)) {
-        this.saveOverridesToUrl(this.localOverrides);
-      }
-
-      this.overrides.order = order;
-      this.dispatchEvent(new CustomEvent('change'));
-      this.reorderColumns(order);
+      this.#saveOrder(order);
     });
 
     super.firstUpdated(changedProperties);
   }
+
+  /**
+   * Makes a new column order the current one: in local storage, in the URL
+   * if it mirrors local storage, for the table (`change`) and in the list.
+   * Every way of reordering ends here, so they all save the same way.
+   *
+   * @param {string[]} order the fields of all columns
+   */
+  #saveOrder(order) {
+    this.localOverrides.order = order;
+
+    const url = this.getOverridesFromUrl();
+    const local = this.getOverridesFromLocalStorage();
+
+    localStorage.setItem(this.#localStorageKey(), JSON.stringify(this.localOverrides));
+
+    if (JSON.stringify(url) === JSON.stringify(local)) {
+      this.saveOverridesToUrl(this.localOverrides);
+    }
+
+    this.overrides.order = order;
+    this.dispatchEvent(new CustomEvent('change'));
+    this.reorderColumns(order);
+  }
+
+  /**
+   * Whether the list shows the columns in their order. A search filters the
+   * list, and a position in a filtered list says nothing about the order.
+   */
+  #canReorder() {
+    return !this.search?.value;
+  }
+
+  /**
+   * Moves a column to another position and saves the order.
+   *
+   * @param {number} from the column's index in the list
+   * @param {number} to its new index
+   * @returns {boolean} false if there is nowhere to move it
+   */
+  #moveColumn(from, to) {
+    const order = this.data.map(column => column.field);
+    if (!this.#canReorder() || from === to || to < 0 || to >= order.length) {
+      return false;
+    }
+    order.splice(to, 0, ...order.splice(from, 1));
+    this.#saveOrder(order);
+    return true;
+  }
+
+  /**
+   * Focuses a control of a column item once the list has rendered, and
+   * brings the item into view. A new order renders new items, so the focus
+   * on the moved one has to be restored.
+   *
+   * @param {number} index the column's index in the list
+   * @param {string} selector the control inside the item
+   */
+  async #focusColumnControl(index, selector) {
+    await this.updateComplete;
+    // in a virtualized list, the column's new place may not be rendered
+    await this.revealOption(index);
+    /** @type {HTMLElement | null | undefined} */
+    const control = this.shadowRoot?.querySelector(`#rows > [data-index="${index}"] ${selector}`);
+    // a grip can only take the focus once its new menu has rendered the slot it sits in
+    await control?.closest('wa-dropdown')?.updateComplete;
+    control?.focus();
+  }
+
+  /**
+   * The events of a move menu bubble and cross shadow roots. Outside they
+   * would look like this dropdown's own `wa-show` and `wa-hide`, so they stop here.
+   *
+   * @param {Event} ev
+   */
+  #stopPropagation = ev => {
+    ev.stopPropagation();
+  };
+
+  /**
+   * Moves a column to where the chosen item of its move menu says.
+   *
+   * @param {Event & { detail: { item: { value: string } } }} ev `wa-select` of a move menu
+   */
+  #handleMoveSelect = ev => {
+    this.#stopPropagation(ev);
+    const row = /** @type {HTMLElement} */ (ev.currentTarget).closest('.row');
+    const from = parseInt(/** @type {HTMLElement} */ (row).dataset.index || '-1');
+    const to = { up: from - 1, down: from + 1, top: 0, bottom: this.data.length - 1 }[
+      ev.detail.item.value
+    ];
+    if (to !== undefined && this.#moveColumn(from, to)) {
+      this.#focusColumnControl(to, '.grip');
+    }
+  };
+
+  /**
+   * Alt+ArrowUp and Alt+ArrowDown move the column item that has the focus.
+   *
+   * @param {KeyboardEvent} ev
+   */
+  #handleRowKeyDown = ev => {
+    const isMoveKey =
+      ev.altKey &&
+      !ev.ctrlKey &&
+      !ev.metaKey &&
+      !ev.shiftKey &&
+      (ev.key === 'ArrowUp' || ev.key === 'ArrowDown');
+    if (!isMoveKey) {
+      return;
+    }
+    ev.preventDefault();
+    const row = /** @type {HTMLElement} */ (ev.currentTarget);
+    const from = parseInt(row.dataset.index || '-1');
+    const to = ev.key === 'ArrowUp' ? from - 1 : from + 1;
+    if (this.#moveColumn(from, to)) {
+      const target = /** @type {HTMLElement} */ (ev.target);
+      this.#focusColumnControl(to, target.closest('wa-checkbox') ? 'wa-checkbox' : '.grip');
+    }
+  };
 
   #initializeOverrides() {
     this.#overridesInitialized = true;
@@ -237,6 +417,11 @@ export class OwcTableSettings extends OwcAutocomplete {
    * @param {MouseEvent} ev
    */
   handleOptionClick(ev) {
+    const target = /** @type {Element} */ (ev.target);
+    if (target.closest('wa-dropdown')) {
+      // the grip and its move menu reorder the column; only the rest of the item cycles its visibility
+      return;
+    }
     ev.preventDefault();
     let index;
     /** @type {HTMLElement | null} */
@@ -284,6 +469,8 @@ export class OwcTableSettings extends OwcAutocomplete {
       );
     }
 
+    // the checkbox's name says the visibility
+    this.requestUpdate();
     this.dispatchEvent(new CustomEvent('change'));
   }
 
@@ -411,18 +598,46 @@ export class OwcTableSettings extends OwcAutocomplete {
         pointer-events: none;
       }
 
+      /* named by its column and its visibility, which the row shows already */
+      .named-by-column::part(label),
+      .visually-hidden {
+        ${visuallyHidden}
+      }
+
       wa-checkbox,
       span {
         line-height: 1.2;
       }
 
-      .grip {
-        cursor: move;
+      wa-dropdown {
         flex-shrink: 0;
+      }
+
+      /* The grip is a button that looks like the icon alone: it is the drag handle and opens the move menu. */
+      .grip {
+        display: flex;
+        align-items: center;
+        cursor: move;
+        appearance: none;
+        background: none;
+        border: 0;
+        border-radius: var(--wa-border-radius-s);
+        color: inherit;
+        font: inherit;
+        /* 24px to click or tap at the default font size */
+        padding: 0.25em;
         /* Move slightly to left */
         margin-right: 0.2em;
-        margin-left: -0.2em;
-        margin-top: 0.2em;
+        margin-left: -0.45em;
+      }
+
+      .grip[hidden] {
+        display: none;
+      }
+
+      .grip:focus-visible {
+        outline: var(--wa-focus-ring);
+        outline-offset: var(--wa-focus-ring-offset);
       }
 
       .ghost {

@@ -15,15 +15,25 @@
  * when the list is laid out again.
  */
 export class GroupHeader {
-  /** @type {Pick<Group, 'label' | 'active' | 'backgroundColor' | 'textColor'>} */
+  /** @type {Pick<Group, 'key' | 'label' | 'active' | 'backgroundColor' | 'textColor'>} */
   #group;
 
   /**
-   * @param {Pick<Group, 'label' | 'active' | 'backgroundColor' | 'textColor'>} group the
+   * @param {Pick<Group, 'key' | 'label' | 'active' | 'backgroundColor' | 'textColor'>} group the
    *   group's definition, which `active` reads and changes
    */
   constructor(group) {
     this.#group = group;
+  }
+
+  /**
+   * What identifies the group, also after its definition was replaced by a
+   * new object: the value `groupSelector` returns for its rows.
+   *
+   * @returns {string | symbol}
+   */
+  get key() {
+    return this.#group.key;
   }
 
   /** The number of rows in the group, including rows being inserted. */
@@ -59,6 +69,9 @@ export class GroupHeader {
   }
 }
 
+/** The key of the group of rows that match no group definition. No definition can have it. */
+export const OTHERS_GROUP_KEY = Symbol('others group');
+
 /**
  * The header of the rows that match no group definition. It has no definition
  * of its own, so no colors; its label and whether it is expanded come from
@@ -81,10 +94,14 @@ export class OthersGroupHeader extends GroupHeader {
    * @param {(active: boolean) => void} callbacks.setActive expands or collapses the group
    */
   constructor({ label, isActive, setActive }) {
-    super({ label: '' });
+    super({ key: '', label: '' });
     this.#label = label;
     this.#isActive = isActive;
     this.#setActive = setActive;
+  }
+
+  get key() {
+    return OTHERS_GROUP_KEY;
   }
 
   get label() {
