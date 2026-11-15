@@ -41,6 +41,7 @@
     "CONTRIBUTING.md",
     "LICENSE",
     "README.md",
+    "public/open-wc-components-logo.svg",
     "dist-types/**/*",
     "exports/**/*",
     "src/**/*",
