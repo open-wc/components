@@ -213,13 +213,23 @@ export class VirtualizerController {
    */
   renderSlice({ first, items, before, after }, renderItem) {
     return html`
-      <div class="virtualizer-spacer" ${this.#topSpacerRef} style="height: ${before}px"></div>
+      <div
+        class="virtualizer-spacer"
+        role="none"
+        ${this.#topSpacerRef}
+        style="height: ${before}px"
+      ></div>
       ${repeat(
         items,
         item => item,
         (item, offset) => renderItem(item, first + offset),
       )}
-      <div class="virtualizer-spacer" ${this.#bottomSpacerRef} style="height: ${after}px"></div>
+      <div
+        class="virtualizer-spacer"
+        role="none"
+        ${this.#bottomSpacerRef}
+        style="height: ${after}px"
+      ></div>
     `;
   }
 

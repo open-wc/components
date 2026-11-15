@@ -19,6 +19,13 @@ export class OwcIconButton extends LitElement {
     disabled: { type: Boolean, reflect: true },
     label: { type: String },
     variant: { type: String },
+    expanded: {
+      // `expanded` and `expanded="true"` are true, `expanded="false"` is false
+      converter: {
+        fromAttribute: (/** @type {string | null} */ value) =>
+          value === null ? undefined : value !== 'false',
+      },
+    },
   };
 
   constructor() {
@@ -32,6 +39,13 @@ export class OwcIconButton extends LitElement {
     this.disabled = false;
     this.label = '';
     this.variant = '';
+    /**
+     * Whether what the button shows and hides is shown, for a button that
+     * toggles something, like a row's details (`aria-expanded`). Leave it
+     * unset on other buttons. Links have no such state.
+     * @type {boolean | undefined}
+     */
+    this.expanded = undefined;
   }
 
   /**
@@ -72,6 +86,7 @@ export class OwcIconButton extends LitElement {
     const isLink = !!this.href;
     const tag = isLink ? literal`a` : literal`button`;
     const link = getLinkAttributes(this);
+    const expanded = isLink || this.expanded == null ? undefined : String(Boolean(this.expanded));
     return html`
       <${tag}
         class="icon-button"
@@ -83,6 +98,7 @@ export class OwcIconButton extends LitElement {
         rel=${ifDefined(isLink ? link.rel : undefined)}
         aria-disabled=${this.disabled ? 'true' : 'false'}
         aria-label=${ifDefined(this.label || undefined)}
+        aria-expanded=${ifDefined(expanded)}
         tabindex=${this.disabled ? '-1' : '0'}
         @click=${this.#handleClick}
       >

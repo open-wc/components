@@ -15,14 +15,39 @@ export const de = {
   tableCancel: 'Abbrechen',
   tableColumns: 'Spalten',
   tableColumnVisibilityHint: 'Spalten werden in der Tabelle angezeigt, wenn:',
+  tableColumnVisibilityLegend: 'Was die Kästchen bedeuten',
+  /**
+   *
+   * @param {Number} width
+   * @returns {String}
+   */
+  tableColumnWidth: width => `${width} Pixel breit`,
   tableCopyExcel: 'Kopieren (Excel)',
+  tableDeleteFilter: 'Filter löschen',
+  tableDetails: 'Details',
+  tableDetailsClosed: 'Details geschlossen',
+  tableDetailsOpened: 'Details geöffnet',
   tableEmptyMessage: 'Keine Daten vorhanden',
   tableExport: 'Export',
   tableExportCsv: 'Exportieren (CSV)',
   tableFilter: 'Filter',
   tableFilterLexicon: 'Filter-Lexikon',
+  /**
+   *
+   * @param {String} label
+   * @param {Number} count
+   * @returns {String}
+   */
+  tableGroupLabel: (label, count) => `${label}, ${count} ${count === 1 ? 'Zeile' : 'Zeilen'}`,
+  tableInteractionHint: 'Escape drücken, um zur Tabelle zurückzukehren',
+  tableLabel: 'Tabelle',
   tableMassEdit: 'Massenbearbeitung',
   tableMoveColumn: 'Spalte verschieben',
+  tableMoveColumnDown: 'Nach unten',
+  tableMoveColumnToBottom: 'Ans Ende',
+  tableMoveColumnToTop: 'An den Anfang',
+  tableMoveColumnUp: 'Nach oben',
+  tableNegateFilter: 'Filter umkehren',
   tableNew: 'Neu',
   /**
    *
@@ -33,6 +58,8 @@ export const de = {
   tableNot: 'NICHT',
   tableNotFound: 'nicht gefunden',
   tableOpenDetails: 'Details öffnen',
+  tableOpenRow: 'Zeile öffnen',
+  tableOperator: 'Operator',
   tableOperatorBetween: 'zwischen',
   tableOperatorBetweenNoYear: 'zwischen (Jahr ignorieren)',
   tableOperatorEndsWith: 'endet mit',
@@ -56,10 +83,14 @@ export const de = {
   tableOperatorBefore: 'vor',
   tableOthers: 'Andere',
   tableOr: 'ODER',
+  tablePauseFilter: 'Filter pausieren',
   tablePreview: 'Vorschau',
   tableRefresh: 'Aktualisieren',
   tableReset: 'Zurücksetzen',
+  tableResumeFilter: 'Filter fortsetzen',
   tableSelectAll: 'Alle auswählen',
+  tableSelection: 'Auswahl',
+  tableSelectRow: 'Zeile auswählen',
   /**
    *
    * @param {Number} count
@@ -119,8 +150,41 @@ export const de = {
     `Bitte höchstens ${formatted} ${count === 1 ? 'Eintrag' : 'Einträge'} angeben.`,
   autoCompleteSelectAll: 'Alle auswählen',
   autoCompleteDeselectAll: 'Alle abwählen',
+  autoCompleteSearch: 'Suche',
+  autoCompleteUseFillMode: 'Werte einfügen, um sie auszuwählen',
+  autoCompleteUseSearch: 'Stattdessen suchen',
   clickEditableHint: 'Esc zum abbrechen',
   fileUploadLabel: 'Dateien hierher ziehen oder klicken, um hochzuladen',
   /** @param {string} name @param {string} maxSize */
   fileUploadTooLarge: (name, maxSize) => `${name} ist zu groß. Maximal erlaubt sind ${maxSize} MB.`,
+  /** @param {string} destination the name of a column */
+  pinboardCannotDrop: destination => `Ablegen in ${destination} nicht möglich`,
+  /** @param {string} card the name of the card */
+  pinboardCannotMove: card => `${card} kann nicht verschoben werden`,
+  /**
+   * @param {string} destination the name of a column or of a dropzone
+   * @param {number} [count] the number of its cards, if it keeps cards
+   */
+  pinboardDestination: (destination, count) =>
+    count === undefined
+      ? destination
+      : `${destination}, ${count} ${count === 1 ? 'Karte' : 'Karten'}`,
+  pinboardDropzoneDelete: 'Löschen',
+  pinboardDropzoneSuccess: 'Erledigt',
+  pinboardInteractionHint: 'Escape drücken, um zur Karte zurückzukehren',
+  pinboardMoveCancelled: 'Verschieben abgebrochen',
+  /**
+   * @param {string} card the name of the card
+   * @param {string} destination the name of the column or dropzone it is in now
+   * @param {number} [position] its position among the cards there, if it shows there
+   * @param {number} [count] the number of cards there
+   */
+  pinboardMoved: (card, destination, position, count) =>
+    position === undefined
+      ? `${card} nach ${destination} verschoben`
+      : `${card} nach ${destination} verschoben, ${position} von ${count}`,
+  pinboardMoveTo: 'Verschieben nach…',
+  /** @param {string} card the name of the card */
+  pinboardPickedUp: card =>
+    `${card} aufgenommen. Pfeiltasten wählen ein Ziel, Leertaste legt ab, Escape bricht ab.`,
 };

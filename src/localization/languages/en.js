@@ -15,14 +15,39 @@ export const en = {
   tableCancel: 'Cancel',
   tableColumns: 'Columns',
   tableColumnVisibilityHint: 'Columns are displayed in the table when:',
+  tableColumnVisibilityLegend: 'What the checkboxes mean',
+  /**
+   *
+   * @param {Number} width
+   * @returns {String}
+   */
+  tableColumnWidth: width => `${width} pixels wide`,
   tableCopyExcel: 'Copy (Excel)',
+  tableDeleteFilter: 'Delete filter',
+  tableDetails: 'Details',
+  tableDetailsClosed: 'Details closed',
+  tableDetailsOpened: 'Details opened',
   tableEmptyMessage: 'No data available',
   tableExport: 'Export',
   tableExportCsv: 'Export (CSV)',
   tableFilter: 'Filter',
   tableFilterLexicon: 'Filter lexicon',
+  /**
+   *
+   * @param {String} label
+   * @param {Number} count
+   * @returns {String}
+   */
+  tableGroupLabel: (label, count) => `${label}, ${count} ${count === 1 ? 'row' : 'rows'}`,
+  tableInteractionHint: 'Press Escape to return to the table',
+  tableLabel: 'Table',
   tableMassEdit: 'Bulk edit',
   tableMoveColumn: 'Move column',
+  tableMoveColumnDown: 'Move down',
+  tableMoveColumnToBottom: 'Move to bottom',
+  tableMoveColumnToTop: 'Move to top',
+  tableMoveColumnUp: 'Move up',
+  tableNegateFilter: 'Negate filter',
   tableNew: 'New',
   /**
    *
@@ -33,6 +58,8 @@ export const en = {
   tableNot: 'NOT',
   tableNotFound: 'not found',
   tableOpenDetails: 'Open details',
+  tableOpenRow: 'Open row',
+  tableOperator: 'Operator',
   tableOperatorBetween: 'between',
   tableOperatorBetweenNoYear: 'between (ignore year)',
   tableOperatorEndsWith: 'ends with',
@@ -56,10 +83,14 @@ export const en = {
   tableOperatorBefore: 'before',
   tableOthers: 'Others',
   tableOr: 'OR',
+  tablePauseFilter: 'Pause filter',
   tablePreview: 'Preview',
   tableRefresh: 'Refresh',
   tableReset: 'Reset',
+  tableResumeFilter: 'Resume filter',
   tableSelectAll: 'Select all',
+  tableSelection: 'Selection',
+  tableSelectRow: 'Select row',
   /**
    *
    * @param {Number} count
@@ -121,8 +152,41 @@ export const en = {
     `Please provide at most ${formatted} ${count === 1 ? 'entry' : 'entries'}.`,
   autoCompleteSelectAll: 'Select all',
   autoCompleteRemoveAll: 'Remove all',
+  autoCompleteSearch: 'Search',
+  autoCompleteUseFillMode: 'Paste values to select them',
+  autoCompleteUseSearch: 'Search instead',
   clickEditableHint: 'Esc to cancel',
   fileUploadLabel: 'Drag files here or click to upload',
   /** @param {string} name @param {string} maxSize */
   fileUploadTooLarge: (name, maxSize) => `${name} is too large. Maximum file size: ${maxSize} MB.`,
+  /** @param {string} destination the name of a column */
+  pinboardCannotDrop: destination => `Can't drop in ${destination}`,
+  /** @param {string} card the name of the card */
+  pinboardCannotMove: card => `${card} can't be moved`,
+  /**
+   * @param {string} destination the name of a column or of a dropzone
+   * @param {number} [count] the number of its cards, if it keeps cards
+   */
+  pinboardDestination: (destination, count) =>
+    count === undefined
+      ? destination
+      : `${destination}, ${count} ${count === 1 ? 'card' : 'cards'}`,
+  pinboardDropzoneDelete: 'Delete',
+  pinboardDropzoneSuccess: 'Done',
+  pinboardInteractionHint: 'Press Escape to return to the card',
+  pinboardMoveCancelled: 'Move cancelled',
+  /**
+   * @param {string} card the name of the card
+   * @param {string} destination the name of the column or dropzone it is in now
+   * @param {number} [position] its position among the cards there, if it shows there
+   * @param {number} [count] the number of cards there
+   */
+  pinboardMoved: (card, destination, position, count) =>
+    position === undefined
+      ? `Moved ${card} to ${destination}`
+      : `Moved ${card} to ${destination}, ${position} of ${count}`,
+  pinboardMoveTo: 'Move to…',
+  /** @param {string} card the name of the card */
+  pinboardPickedUp: card =>
+    `Picked up ${card}. Arrow keys choose a destination, Space drops, Escape cancels.`,
 };

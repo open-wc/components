@@ -22,6 +22,8 @@ html`<owc-icon-button name="gear" label="Settings" @click=${openSettings}></owc-
 - `label` becomes the accessible name; without it no empty `aria-label` is
   rendered
 - `disabled` blocks clicks and leaves the tab order - for links too
+- `expanded` marks a button that shows and hides something, like a row's
+  details: it sets `aria-expanded` on the inner button
 - `click()`, `focus()`, and `blur()` delegate to the inner control
 
 ## Docs & demos

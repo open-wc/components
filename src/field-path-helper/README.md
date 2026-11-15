@@ -16,9 +16,10 @@ internally by the table family.
 | [getFieldPath.js](./getFieldPath.js)                                                     | Reads the value at a dotted path; missing segments resolve to `''` (a `0` value is preserved). Arrays map over their elements.                        |
 | [setFieldPath.js](./setFieldPath.js)                                                     | Writes a value at a dotted path, creating intermediate objects as needed.                                                                             |
 | [getFieldPathContent.js](./getFieldPathContent.js)                                       | Renders a field for the table: applies column config, formatters (date/currency/number/percent, German locale defaults), links, and editing wrappers. |
+| [columnName.js](./columnName.js)                                                         | The name of a column for the controls that edit or filter its values: `labelString`, else a string `label`.                                           |
 | [getFieldPathContent.types.ts](./getFieldPathContent.types.ts), [leaves.ts](./leaves.ts) | The `Field<T>` path types (typed dotted paths via leaf inference).                                                                                    |
 | [litTemplateToTestString.js](./litTemplateToTestString.js)                               | Flattens a lit template into a plain string - used by tests to assert rendered content.                                                               |
 
 ## Tests
 
-- [getFieldPath.test.js](./getFieldPath.test.js), [setFieldPath.test.js](./setFieldPath.test.js), [getFieldPathContent.test.js](./getFieldPathContent.test.js) - logic tests (`node --test src/field-path-helper/getFieldPath.test.js` etc.)
+- [getFieldPath.test.js](./getFieldPath.test.js), [setFieldPath.test.js](./setFieldPath.test.js), [getFieldPathContent.test.js](./getFieldPathContent.test.js), [columnName.test.js](./columnName.test.js) - logic tests (`node --test src/field-path-helper/getFieldPath.test.js` etc.)

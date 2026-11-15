@@ -59,6 +59,48 @@ describe('owc-icon-button', () => {
     expect(inner(el).getAttribute('aria-label')).to.equal('Settings');
   });
 
+  it('says whether what it toggles is expanded, once expanded is set', async () => {
+    const el = await fixture(html`<owc-icon-button name="chevron-right"></owc-icon-button>`);
+    expect(inner(el).hasAttribute('aria-expanded')).to.equal(false);
+
+    el.expanded = false;
+    await el.updateComplete;
+    expect(inner(el).getAttribute('aria-expanded')).to.equal('false');
+
+    el.expanded = true;
+    await el.updateComplete;
+    expect(inner(el).getAttribute('aria-expanded')).to.equal('true');
+
+    el.expanded = undefined;
+    await el.updateComplete;
+    expect(inner(el).hasAttribute('aria-expanded')).to.equal(false);
+  });
+
+  it('takes expanded from its attribute, where "false" means collapsed', async () => {
+    const expanded = await fixture(html`<owc-icon-button name="gear" expanded></owc-icon-button>`);
+    expect(expanded.expanded).to.equal(true);
+    expect(inner(expanded).getAttribute('aria-expanded')).to.equal('true');
+
+    const collapsed = await fixture(
+      html`<owc-icon-button name="gear" expanded="false"></owc-icon-button>`,
+    );
+    expect(collapsed.expanded).to.equal(false);
+    expect(inner(collapsed).getAttribute('aria-expanded')).to.equal('false');
+
+    collapsed.removeAttribute('expanded');
+    await collapsed.updateComplete;
+    expect(collapsed.expanded).to.equal(undefined);
+    expect(inner(collapsed).hasAttribute('aria-expanded')).to.equal(false);
+  });
+
+  it('has no expanded state as a link', async () => {
+    const el = await fixture(
+      html`<owc-icon-button name="gear" href="/docs" .expanded=${true}></owc-icon-button>`,
+    );
+    expect(inner(el).tagName).to.equal('A');
+    expect(inner(el).hasAttribute('aria-expanded')).to.equal(false);
+  });
+
   it('forwards the variant to the icon only when set', async () => {
     const el = await fixture(html`<owc-icon-button name="x-circle"></owc-icon-button>`);
     expect(el.shadowRoot.querySelector('wa-icon').hasAttribute('variant')).to.equal(false);

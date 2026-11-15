@@ -85,6 +85,7 @@ export class OwcClickEditableInput extends OwcClickEditable {
               class="form"
               step="any"
               id="form-element"
+              label=${this.label ?? ''}
               @blur=${() => {
                 if (this.editable) {
                   this._submit();

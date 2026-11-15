@@ -5,6 +5,7 @@ import '@awesome.me/webawesome/dist/components/format-date/format-date.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { parseValueForType, toInputDateString } from './valueHelpers.js';
 import { OwcLocalizeController } from '@open-wc/components/localization.js';
+import { visuallyHidden } from '../a11y/visuallyHidden.js';
 
 export class OwcClickEditable extends LitElement {
   _localize = new OwcLocalizeController(this);
@@ -18,6 +19,7 @@ export class OwcClickEditable extends LitElement {
     readOnly: { type: Boolean, attribute: 'read-only', reflect: true },
     showCopyButton: { type: Boolean, attribute: 'show-copy-button', reflect: true },
     fallbackValue: { type: String },
+    label: { type: String },
   };
 
   /**
@@ -50,6 +52,14 @@ export class OwcClickEditable extends LitElement {
     this.readOnly = false;
     this.showCopyButton = false;
     this.fallbackValue = '-';
+    /**
+     * The accessible name of the form control while editing, e.g. the
+     * column of a table cell. It isn't shown: what labels the field visibly
+     * is the `label` slot, or what is around it.
+     *
+     * @type {string | undefined}
+     */
+    this.label = undefined;
   }
 
   /**
@@ -198,6 +208,9 @@ export class OwcClickEditable extends LitElement {
         this.focus();
       }
       if (ev.key === 'Escape') {
+        // The Escape is used up by cancelling: whatever is around the
+        // editor (a grid in interaction mode, a dialog) doesn't act on it too.
+        ev.preventDefault();
         // Restore the untouched value (not the input-formatted lastValue,
         // which would e.g. turn a Date value into a string)
         if (this.value !== this.valueBeforeEdit) {
@@ -272,6 +285,11 @@ export class OwcClickEditable extends LitElement {
 
       #form-element {
         font-size: inherit;
+      }
+
+      /* the label property names the form control without being shown */
+      #form-element::part(form-control-label) {
+        ${visuallyHidden}
       }
 
       :host([form-align='center']) .form-container-wrapper {
