@@ -45,7 +45,7 @@ export function highlightSearchTerms({
   let firstFoundIndex;
   for (const term of termList) {
     let offset = 0;
-    let startIndex = 0;
+    let startIndex;
     const startsWithMatch = term.substring(0, search.length) === search;
     const addForEnd = startsWithMatch ? search.length : term.length;
     do {

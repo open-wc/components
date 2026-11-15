@@ -1680,7 +1680,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
    * @type {import('../field-path-helper/getFieldPathContent.types.js').handleUpdate<T>}
    */
   #handleCellUpdate = async options => {
-    const autoSetData = (/** @type {T | undefined} */ data) => {
+    /** @param {T} [data] */
+    const autoSetData = data => {
       options.autoSetData(data);
       this._rowEdited();
     };
