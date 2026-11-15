@@ -192,7 +192,7 @@ export const additionalDropzoneColumnsPinboard = () => {
 
 ## Drop validation
 
-Whether or not a data item can be dropped in a specific column can be specified by the `.canDrop` function. If an item can't be dropped in a column it is greyed out as soon as it is lifted.
+Whether or not a data item can be dropped in a specific column can be specified by the `.canDrop` function. If an item can't be dropped in a column it is greyed out as soon as it is lifted. `canDrop` is only asked about columns: the dropzones, and their open lists, take every card.
 
 ```js demo
 export const dropValidationPinboard = () => {
@@ -371,16 +371,55 @@ export const largePinboard = () => {
 
 Cards are keyed by their object, and a column is sorted again only when its array or the `sorter` changes. When a change to a card affects its sort position, assign a new array for its column.
 
+## Keyboard
+
+The board is one stop in the page's Tab order, and the arrow keys move the focus from card to card. Screen readers announce every column as a list, named by its `label`, and every card with its position in the column ("2 of 5"). The dropzone buttons are Tab stops of their own, after the board.
+
+### Moving around
+
+| Key            | What it does                                                                                                                                                                                    |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tab, Shift+Tab | Moves into the board, to the card that had the focus last (the first card the first time), on to the dropzone buttons, and out of the board. Controls in cards are no Tab stops of their own.   |
+| ↑, ↓           | The previous or the next card of the column.                                                                                                                                                    |
+| ←, →           | The card at the same position in the column to the left or right, or its last card if it has fewer. Columns without cards are skipped; open dropzone lists count as columns after the last one. |
+| Home, End      | The first or the last card of the column.                                                                                                                                                       |
+| Enter, F2      | Goes to the controls in the card, like links and buttons, and its Move to… button. Tab and Shift+Tab move between them, Escape comes back to the card.                                          |
+| Enter, Space   | On a dropzone button: opens or closes the list of the cards it keeps.                                                                                                                           |
+
+### Moving a card
+
+| Key                             | What it does                                                                                                                                                                                   |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Space                           | Picks the focused card up.                                                                                                                                                                     |
+| ←, → (with a card picked up)    | Steps through where the card can go: the columns from left to right, then the dropzones. Each is announced, columns that can't take the card (`canDrop`) as such, and shown as while dragging. |
+| Space, Enter                    | Drops the card where it would go. On a column that can't take it, nothing happens but the announcement.                                                                                        |
+| Escape, Tab                     | Puts the card back. So does moving the focus elsewhere.                                                                                                                                        |
+| Shift+F10, the context menu key | Opens the card's Move to… menu.                                                                                                                                                                |
+
+Every card that can be moved has a **Move to…** button in its corner (a board with only one destination, a single column without dropzones, has none, since there is nowhere to move a card to), which shows while the pointer is over the card or the focus is in it, and always on touch screens. One click opens a menu of every column and dropzone the card can go to; columns that can't take the card are disabled. In the menu, ↑, ↓, Home, End and typing move between the destinations, Enter or Space moves the card, and Escape closes the menu. The button is the way to move cards without dragging, and the way for screen reader users who read the page in browse mode, which doesn't pass the arrow keys and Space on to the board.
+
+However a card is moved, by dragging, from the keyboard or through the menu, the board runs the same `onLift` and `onDrop` hooks in the same order. Then the focus follows the card to its new column, and the move is announced ("Moved Buy milk to Done, 3 of 7"). When the card went to a dropzone, the focus goes to the next card of the column it came from. If the focus has gone elsewhere while the hooks ran, it stays there.
+
+### Names and identity
+
+A card is announced with all the text it shows. Set `cardLabel` to name it with something shorter, like its title. The board keeps the focus on a card by its object; if you replace your card objects with new ones, e.g. when you load the data again, set `getCardId` so the focus stays on the same card.
+
+```js
+html`<owc-pinboard .cardLabel=${card => card.title} .getCardId=${card => card.id}></owc-pinboard>`;
+```
+
 ## API
 
 ### Attributes & properties
 
-| Property                               | Type                                    | Default      | Description                                                                                                                                                                                                                                                                                    |
-| -------------------------------------- | --------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `columns`                              | `{ label?, value, onDrop?, onLift? }[]` | `[]`         | The board columns. `onDrop`/`onLift` are optional — by default a card is moved into/out of the column automatically. Supplying one receives `(data, column, defaultAction)` and can call `defaultAction` itself to opt into, delay, or skip the default move.                                  |
-| `data`                                 | `T[][]`                                 | `[]`         | Card data per column, index-aligned with `columns`.                                                                                                                                                                                                                                            |
-| `fieldMapper`                          | `Fields<T>`                             | `{ body }`   | Maps a card to content: `body`, `header?`, `footer?`, `image?` (`{src, alt}`), `style?`.                                                                                                                                                                                                       |
-| `dropZones`                            | `{ delete?, success? }`                 | `{}`         | Extra drop targets. Adding a key (even `{}`) opts cards into that target with default remove-from-board behavior; add `data: []` to also keep a reopenable, `liftable`-configurable list. `onDrop`/`onLift` are optional overrides, same `(data, column, defaultAction)` signature as columns. |
-| `canDrop`                              | `(data, column) => boolean`             | `() => true` | Columns that reject the dragged card are grayed out and refuse the drop.                                                                                                                                                                                                                       |
-| `sorter`                               | `(a, b) => number`                      | keep order   | Sort within each column (applied to a copy). A column is sorted again when its array or the sorter changes.                                                                                                                                                                                    |
-| `virtualizerMode` (`virtualizer-mode`) | `'auto' \| 'always' \| 'never'`         | `'auto'`     | Render only the cards in and around the visible part of a column: from 300 cards on (`auto`), always, or never. See [Large boards](#large-boards).                                                                                                                                             |
+| Property                               | Type                                    | Default           | Description                                                                                                                                                                                                                                                                                    |
+| -------------------------------------- | --------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `columns`                              | `{ label?, value, onDrop?, onLift? }[]` | `[]`              | The board columns. `onDrop`/`onLift` are optional — by default a card is moved into/out of the column automatically. Supplying one receives `(data, column, defaultAction)` and can call `defaultAction` itself to opt into, delay, or skip the default move.                                  |
+| `data`                                 | `T[][]`                                 | `[]`              | Card data per column, index-aligned with `columns`.                                                                                                                                                                                                                                            |
+| `fieldMapper`                          | `Fields<T>`                             | `{ body }`        | Maps a card to content: `body`, `header?`, `footer?`, `image?` (`{src, alt}`), `style?`.                                                                                                                                                                                                       |
+| `dropZones`                            | `{ delete?, success? }`                 | `{}`              | Extra drop targets. Adding a key (even `{}`) opts cards into that target with default remove-from-board behavior; add `data: []` to also keep a reopenable, `liftable`-configurable list. `onDrop`/`onLift` are optional overrides, same `(data, column, defaultAction)` signature as columns. |
+| `canDrop`                              | `(data, column) => boolean`             | `() => true`      | Columns that reject the dragged card are grayed out and refuse the drop.                                                                                                                                                                                                                       |
+| `sorter`                               | `(a, b) => number`                      | keep order        | Sort within each column (applied to a copy). A column is sorted again when its array or the sorter changes.                                                                                                                                                                                    |
+| `cardLabel`                            | `(data) => string`                      | the card's text   | The name of a card for assistive technology. Without it, a card is named by all the text it shows; return something short, like the card's title.                                                                                                                                              |
+| `getCardId`                            | `(data) => string \| number`            | the card's object | What identifies a card, so the keyboard focus stays on it when its object is replaced by a new one. Set it if you rebuild your card objects, e.g. when you load the data again. The ids have to be unique on the board.                                                                        |
+| `virtualizerMode` (`virtualizer-mode`) | `'auto' \| 'always' \| 'never'`         | `'auto'`          | Render only the cards in and around the visible part of a column: from 300 cards on (`auto`), always, or never. See [Large boards](#large-boards).                                                                                                                                             |
