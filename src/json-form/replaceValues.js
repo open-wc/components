@@ -60,7 +60,7 @@ function parseTernaries(text, obj, dataParameter = {}) {
     (_, key, op, compStr, first, second) => {
       const checkValue = resolveProperty(key, obj, dataParameter);
       const compData = typeof checkValue === 'number' ? Number.parseFloat(compStr) : compStr;
-      let evaluation = false;
+      let evaluation;
       if (op === '===') {
         evaluation = checkValue === compData;
       } else if (op === '!==') {

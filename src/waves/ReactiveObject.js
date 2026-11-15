@@ -24,7 +24,14 @@ if (NODE_MODE) {
   global.customElements ??= customElements;
 }
 const DEV_MODE = true;
-let issueWarning;
+const issuedWarnings = new Set();
+const issueWarning = (code, warning) => {
+  if (!issuedWarnings.has(code)) {
+    issuedWarnings.add(code);
+    // eslint-disable-next-line no-console
+    console.warn(warning);
+  }
+};
 const trustedTypes = global.trustedTypes;
 // Temporary workaround for https://crbug.com/993268
 // Currently, any attribute starting with "on" is considered to be a
@@ -856,7 +863,7 @@ export class ReactiveObject extends SmallEventTarget {
         }
       }
     }
-    let shouldUpdate = false;
+    let shouldUpdate;
     const changedProperties = this._$changedProperties;
     try {
       shouldUpdate = this.shouldUpdate(changedProperties);
@@ -869,8 +876,7 @@ export class ReactiveObject extends SmallEventTarget {
       }
     } catch (e) {
       // Prevent `firstUpdated` and `updated` from running when there's an
-      // update exception.
-      shouldUpdate = false;
+      // update exception (the rethrow below skips them).
       // Ensure element can accept additional updates after an exception.
       this.__markUpdated();
       throw e;
