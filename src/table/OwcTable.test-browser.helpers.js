@@ -391,6 +391,29 @@ export function clickBeside(cell) {
   });
 }
 
+/**
+ * Drags the mouse along the middle of one element, or from the middle of one
+ * element to the middle of another, as a user does to select text.
+ *
+ * @param {Element} from
+ * @param {Element} [to] defaults to a drag from the left to the right end of `from`
+ */
+export async function dragOver(from, to) {
+  const start = from.getBoundingClientRect();
+  const end = (to ?? from).getBoundingClientRect();
+  const y = (/** @type {DOMRect} */ rect) => Math.round(rect.top + rect.height / 2);
+  const startX = to ? start.left + start.width / 2 : start.left + 1;
+  const endX = to ? end.left + end.width / 2 : end.right - 1;
+  await sendMouse({ type: 'move', position: [Math.round(startX), y(start)] });
+  await sendMouse({ type: 'down' });
+  await sendMouse({
+    type: 'move',
+    position: [Math.round((startX + endX) / 2), Math.round((y(start) + y(end)) / 2)],
+  });
+  await sendMouse({ type: 'move', position: [Math.round(endX), y(end)] });
+  await sendMouse({ type: 'up' });
+}
+
 /** @param {Element} row */
 export function rowLink(row) {
   return /** @type {HTMLAnchorElement | null} */ (row.querySelector('a.row-click'));

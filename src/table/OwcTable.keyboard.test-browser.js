@@ -7,11 +7,13 @@ import {
   columns,
   data,
   rows,
+  tableFixture,
   settle,
   grid,
   headerRow,
   bodyRows,
   cellsOf,
+  dragOver,
   betweenButtons,
   focusedTable,
   press,
@@ -846,6 +848,28 @@ describe('owc-table keyboard', () => {
       cellsOf(bodyRows(el)[1])[0].focus();
       expect(focusAt(el)).to.equal('1:0');
       expect(deepActiveElement().matches('input[type="checkbox"]')).to.be.true;
+    });
+
+    it('gets the focus when the mouse button comes up, so a drag over the text beside it selects that text', async () => {
+      const el = await tableFixture(
+        html`<owc-table
+          .columns=${[
+            {
+              label: 'Name',
+              field: 'firstName',
+              formatter: (/** @type {{ firstName: string }} */ row) =>
+                html`<span class="name">${row.firstName}</span> <button class="edit">Edit</button>`,
+            },
+            columns[1],
+          ]}
+          .data=${data}
+        ></owc-table>`,
+      );
+      const name = bodyRows(el)[1].querySelector('.name');
+      await dragOver(name);
+      expect(String(getSelection())).to.equal(name.textContent);
+      expect(focusAt(el)).to.equal('1:0');
+      expect(deepActiveElement().matches('button.edit')).to.be.true;
     });
 
     describe('with several controls', () => {

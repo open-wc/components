@@ -171,7 +171,9 @@ Three rules keep the grid one Tab stop:
   the focus belongs (`#focusTargetOf`, from `controlsIn`): on the cell, or on its control
   if it has exactly one simple control (a link, button, checkbox or
   `owc-click-editable-*`). Navigation keys focus that element directly. Focus that lands on the cell another way, from Tab or
-  from a click beside the control, is handed on to the control. While the focus is on a
+  from a click beside the control, is handed on to the control. For a press of the mouse
+  button that happens when the button comes up (`#forwardFocusOnRelease`): moving the focus
+  during the press would keep it from starting a text selection. While the focus is on a
   control, the cell has `tabindex="-1"` too, so nothing in the grid is a Tab stop:
   otherwise Shift+Tab would stop at the cell and be handed back to the control.
 
@@ -253,18 +255,34 @@ content that is empty when it renders, there is no `aria-labelledby` at all.
 which the three `:nth-child(2)` border rules and the hover rule rely on. It lets the
 pointer through (`pointer-events: none`), so a click reaches the cell it is on, which
 moves the focus there. `#handleRowClick` on the row does the rest: it toggles the
-selection for a click in the selector cell, toggles the detail for a click beside what a
-cell shows (not on `.cell-text` or `.cell-full`), and fires `rowClick`.
+selection for a click in the selector cell, opens the row for a click anywhere else in
+it (it follows the row's link, or toggles the detail of a `detail` or `detailDeferred`
+row), and fires `rowClick`.
 
-In a row with a link, the link takes the clicks. What the cells show paints above the
-link (`.cell-text` and `.cell-full` are positioned and come after it), so in these rows
-it lets the pointer through to the link, and only its child elements take the pointer:
-a click on text follows the link natively, and controls keep working. A click on a child
-element that is no control of its cell (a badge), and that didn't handle the click
-(`defaultPrevented`), is passed on to the link by `#handleRowClick`. The selector cell
-and the cell of the detail toggle come before the link and would be covered by it, so
-they have a `z-index`. A click on a row's link focuses the link, so the roving focus
-goes to the row's first data cell, whichever cell was clicked.
+A click on what a cell shows (`.cell-text`, `.cell-full`) opens the row like a click
+beside it, unless it is for something else:
+
+- a click for a control of the cell, a `label` or a `summary` (`#isForCellContent`), or
+  one that something in the cell handled (`defaultPrevented`);
+- a drag. The browser fires `click` for a drag too when the button comes up in the
+  element it went down in, or in the row for a drag across cells. `#endsDrag` compares
+  the click with where the button went down (`#pressedAt`, more than `DRAG_DISTANCE`
+  pixels away), so a drag that selects text only selects;
+- the second and third click of a double or triple click on what a cell shows
+  (`detail` above 1), which select a word or a line. The first click has opened the
+  row, and these don't close it again or follow the link a second time.
+
+All of them still fire `rowClick`, as they do in simple rows. What the cells show keeps
+the text cursor, which shows where a selection starts; the hand shows beside it.
+
+In a row with a link, the link takes the clicks beside what the cells show. What the
+cells show paints above the link (`.cell-text` and `.cell-full` are positioned and come
+after it) and takes the pointer itself, so its text can be selected and controls keep
+working. `#handleRowClick` passes a click on it on to the link (`followLink`, with the
+click's Ctrl, Cmd and Shift). The selector cell and the cell of the detail toggle come
+before the link and would be covered by it, so they have a `z-index`. A click on the
+link itself focuses the link, so the roving focus goes to the row's first data cell; a
+click on what a cell shows moves it to that cell.
 
 **Selection.** A selectable table has `aria-multiselectable` on the grid and
 `aria-selected` on every Data Row; insert rows can't be selected and have none.

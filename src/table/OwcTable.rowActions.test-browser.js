@@ -20,6 +20,7 @@ import {
   linkActivations,
   clickOn,
   clickBeside,
+  dragOver,
   rowLink,
   linkTable,
 } from './OwcTable.test-browser.helpers.js';
@@ -285,6 +286,48 @@ describe('owc-table row actions', () => {
         expect(clicked).to.deep.equal([data[0], data[1], data[1]]);
       });
 
+      it("lets the text of the row be selected: a drag over it doesn't follow the link, a click on it afterwards does", async () => {
+        const el = await tableFixture(linkTable);
+        const activations = linkActivations(el);
+        const [first, second] = bodyRows(el);
+        const text = cellsOf(first)[0].querySelector('.cell-text');
+
+        // the text cursor shows where a selection starts; beside the text, the link shows the hand
+        expect(getComputedStyle(text).cursor).to.equal('auto');
+        expect(getComputedStyle(rowLink(first)).cursor).to.equal('pointer');
+
+        // in the cell of the link, which gets the focus once the button is up
+        await dragOver(text);
+        expect(activations).to.deep.equal([]);
+        expect(String(getSelection()).trim()).to.equal(text.textContent.trim());
+        expect(deepActiveElement()).to.equal(rowLink(first));
+
+        // across cells, where the click that ends the drag is the row's
+        await dragOver(
+          cellsOf(second)[0].querySelector('.cell-text'),
+          cellsOf(second)[2].querySelector('.cell-text'),
+        );
+        expect(activations).to.deep.equal([]);
+        expect(String(getSelection())).to.not.equal('');
+
+        await clickOn(text);
+        expect(activations).to.deep.equal(['#row-1']);
+        expect(String(getSelection())).to.equal('');
+
+        // the second click of a double click, which selects a word (`sendMouse` can't send one)
+        const rect = text.getBoundingClientRect();
+        text.dispatchEvent(
+          new MouseEvent('click', {
+            bubbles: true,
+            composed: true,
+            detail: 2,
+            clientX: rect.left + rect.width / 2,
+            clientY: rect.top + rect.height / 2,
+          }),
+        );
+        expect(activations).to.deep.equal(['#row-1']);
+      });
+
       it("doesn't cover the controls of the row: the detail toggle, the checkbox and a button", async () => {
         /** @type {string[]} */
         const pressed = [];
@@ -370,10 +413,15 @@ describe('owc-table row actions', () => {
         expect(activations).to.deep.equal(['#row-3', 'shift+#row-3']);
         expect(clicked).to.deep.equal([data[2], data[2]]);
 
+        // a drag over the element, which selects its text: a click of the row, not of its link
+        await dragOver(row.querySelector('.tag'));
+        expect(activations).to.deep.equal(['#row-3', 'shift+#row-3']);
+        expect(clicked).to.deep.equal([data[2], data[2], data[2]]);
+
         // an element that handles its click itself
         await clickOn(row.querySelector('.copy'));
         expect(activations).to.deep.equal(['#row-3', 'shift+#row-3']);
-        expect(clicked).to.deep.equal([data[2], data[2], data[2]]);
+        expect(clicked).to.deep.equal([data[2], data[2], data[2], data[2]]);
 
         // a label, whose click is for its control
         const label = row.querySelector('label.done').getBoundingClientRect();

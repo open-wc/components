@@ -108,6 +108,9 @@ const EMPTY_ITEM = Symbol('empty message row');
 /** The checkbox of a row in the selector column. */
 const SELECTION_CHECKBOX = '.owc-selectable-checkbox';
 
+/** How far the pointer moves between press and release, in pixels, before a click counts as the end of a drag. */
+const DRAG_DISTANCE = 4;
+
 /** The link of a row in the `link` and `linkWithDetail` modes, seen from the row. */
 const ROW_LINK = ':scope > .cell > a.row-click';
 
@@ -545,6 +548,16 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
 
   /** @type {WeakMap<import('./groupedList.js').Group, GroupHeader>} */
   #groupHeaders = new WeakMap();
+
+  /**
+   * Where the mouse button went down in the grid, in client coordinates.
+   *
+   * @type {{ x: number, y: number } | undefined}
+   */
+  #pressedAt;
+
+  /** Whether the mouse button just went down in the grid: the focus that moves now follows that press. */
+  #pressing = false;
 
   /**
    * The header of the group of rows that belong to no group in `groupList`:
@@ -1852,14 +1865,20 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     if (!onControl && path[0] !== target && !this.#forwardingFocus) {
       // The focus is on the cell, but belongs on its control; or it is on
       // something in the cell that is no control, like a clicked icon.
-      this.#forwardingFocus = true;
-      try {
-        this.#focusCell(cell, target);
-      } finally {
-        this.#forwardingFocus = false;
+      if (this.#pressing) {
+        // Moving the focus while the mouse button goes down would keep the
+        // press from starting a text selection, so it waits for the release.
+        this.#forwardFocusOnRelease(cell);
+      } else {
+        this.#forwardingFocus = true;
+        try {
+          this.#focusCell(cell, target);
+        } finally {
+          this.#forwardingFocus = false;
+        }
+        this.#announceAll(messages);
+        return;
       }
-      this.#announceAll(messages);
-      return;
     }
     if (onControl && target === cell) {
       if (this.#interactionCell !== cell) {
@@ -1871,6 +1890,25 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     }
     this.#announceAll(messages);
     this.#setTabStop(path[0] === cell ? cell : undefined);
+  }
+
+  /**
+   * Hands the focus in a cell on to where it belongs (`#focusTargetOf`) once
+   * the mouse button comes up, if the focus is still in the cell then.
+   *
+   * @param {HTMLElement} cell
+   */
+  #forwardFocusOnRelease(cell) {
+    window.addEventListener(
+      'mouseup',
+      () => {
+        const active = /** @type {ShadowRoot} */ (this.renderRoot).activeElement;
+        if (active && cell.contains(active)) {
+          this.#focusCell(cell);
+        }
+      },
+      { once: true, capture: true },
+    );
   }
 
   /**
@@ -3216,18 +3254,43 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
       return;
     }
-    const link = /** @type {Element} */ (ev.currentTarget).querySelector(ROW_LINK);
-    if (link && onContent && !ev.defaultPrevented && !this.#isForCellContent(path)) {
-      // The row's link covers the text of the cells, but not the elements in
-      // them. A click on one that does nothing with it follows the link too:
-      // that click then fires `rowClick`.
-      followLink(link, ev);
-      return;
-    }
-    if (this.#togglesDetail() && !onContent) {
-      this.#toggleDetail(row);
+    // What the cells show can be selected: a drag over the row, whose end is
+    // a click too, and the further clicks of a double or triple click on
+    // text select, and aren't for the row's link or detail.
+    const opensRow =
+      !this.#endsDrag(ev) &&
+      (!onContent || (ev.detail <= 1 && !ev.defaultPrevented && !this.#isForCellContent(path)));
+    if (opensRow) {
+      const link = /** @type {Element} */ (ev.currentTarget).querySelector(ROW_LINK);
+      if (link && onContent) {
+        // What the cells show lies above the row's link. A click on it that
+        // nothing in the cell does anything with follows the link too: that
+        // click then fires `rowClick`.
+        followLink(link, ev);
+        return;
+      }
+      if (this.#togglesDetail()) {
+        this.#toggleDetail(row);
+      }
     }
     this.dispatchEvent(new RowClickEvent('rowClick', row));
+  }
+
+  /**
+   * Whether a click ends a drag of the mouse: the browser fires a click for a
+   * drag too when the button comes up in the row it went down in. A click
+   * without a pointer position, from the keyboard or from `click()`, never
+   * does.
+   *
+   * @param {MouseEvent} ev
+   */
+  #endsDrag(ev) {
+    const pressed = this.#pressedAt;
+    return (
+      ev.detail > 0 &&
+      pressed !== undefined &&
+      Math.hypot(ev.clientX - pressed.x, ev.clientY - pressed.y) > DRAG_DISTANCE
+    );
   }
 
   /**
@@ -3286,6 +3349,12 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
    * @param {MouseEvent} ev
    */
   #handleTableMouseDown(ev) {
+    this.#pressedAt = { x: ev.clientX, y: ev.clientY };
+    // The browser moves the focus for a press right after this event, in the same task.
+    this.#pressing = true;
+    setTimeout(() => {
+      this.#pressing = false;
+    });
     const target = /** @type {HTMLElement} */ (ev.target);
     const visibleColumnIndex = target.dataset.visibleColumnIndex;
     if (target.classList.contains('cell-resize') && visibleColumnIndex) {
@@ -3670,29 +3739,17 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
         pointer-events: none;
       }
 
-      /* A row that toggles its detail does so for clicks beside what its cells show. */
+      /*
+       * A row that toggles its detail does so for a click anywhere in it. What
+       * its cells show keeps the text cursor, which shows where a selection
+       * starts.
+       */
       .row:has(> div.row-click) > .cell {
         cursor: pointer;
       }
 
       .row:has(> div.row-click) > .cell :is(.cell-text, .cell-full) {
         cursor: auto;
-      }
-
-      /*
-       * A row's link is in the row's first data cell and covers the whole row.
-       * The text of the cells lets the pointer through to it, so a click on
-       * text follows the link. Elements in the cells take the pointer
-       * themselves, so controls keep working. The selector cell lies above the
-       * link as a whole.
-       */
-      .row:has(> .cell > a.row-click) > .cell:not(.cell-selector) :is(.cell-text, .cell-full) {
-        pointer-events: none;
-        cursor: pointer;
-      }
-
-      .row:has(> .cell > a.row-click) > .cell:not(.cell-selector) :is(.cell-text, .cell-full) > * {
-        pointer-events: auto;
       }
 
       /*
