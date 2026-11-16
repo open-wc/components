@@ -63,6 +63,68 @@ describe('the label of the form control', () => {
   }
 });
 
+describe('the focus ring of the read view', () => {
+  const editables = {
+    'owc-click-editable-input': html`<owc-click-editable-input
+      value="hello"
+    ></owc-click-editable-input>`,
+    'owc-click-editable-textarea': html`<owc-click-editable-textarea
+      value="hello"
+    ></owc-click-editable-textarea>`,
+    'owc-click-editable-autocomplete': html`<owc-click-editable-autocomplete
+      value="a"
+      .data=${[{ label: 'Apple', value: 'a' }]}
+    ></owc-click-editable-autocomplete>`,
+    'owc-click-editable-input-autofill': html`<owc-click-editable-input-autofill
+      value="hello"
+    ></owc-click-editable-input-autofill>`,
+  };
+
+  for (const [name, template] of Object.entries(editables)) {
+    it(`is the one of the theme on ${name}, for the keyboard only`, async () => {
+      const wrapper = await fixture(html`
+        <div style="--wa-focus-ring: solid 3px rgb(0, 0, 255); --wa-focus-ring-offset: 2px">
+          <button id="before">before</button>
+          ${template}
+        </div>
+      `);
+      const el = /** @type {import('./OwcClickEditable.js').OwcClickEditable} */ (
+        wrapper.lastElementChild
+      );
+      await el.updateComplete;
+      const unfocused = getComputedStyle(display(el));
+      expect(unfocused.outlineStyle).to.equal('none');
+
+      /** @type {HTMLElement} */ (wrapper.querySelector('#before')).focus();
+      await sendKeys({ press: 'Tab' });
+      expect(el.shadowRoot.activeElement).to.equal(display(el));
+      const focused = getComputedStyle(display(el));
+      expect(focused.outlineStyle).to.equal('solid');
+      expect(focused.outlineWidth).to.equal('3px');
+      expect(focused.outlineColor).to.equal('rgb(0, 0, 255)');
+      expect(focused.outlineOffset).to.equal('2px');
+    });
+  }
+
+  it('is a visible ring without a theme too', async () => {
+    const wrapper = await fixture(html`
+      <div>
+        <button id="before">before</button>
+        <owc-click-editable-input value="hello"></owc-click-editable-input>
+      </div>
+    `);
+    const el = /** @type {import('./OwcClickEditable.js').OwcClickEditable} */ (
+      wrapper.lastElementChild
+    );
+    await el.updateComplete;
+    /** @type {HTMLElement} */ (wrapper.querySelector('#before')).focus();
+    await sendKeys({ press: 'Tab' });
+    const focused = getComputedStyle(display(el));
+    expect(focused.outlineStyle).to.equal('solid');
+    expect(parseFloat(focused.outlineWidth)).to.be.at.least(2);
+  });
+});
+
 describe('owc-click-editable-input', () => {
   it('renders the value and is not editable initially', async () => {
     const el = await fixture(

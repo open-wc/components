@@ -42,6 +42,8 @@ fires while editing. `parsedValue` exposes the value parsed per `type`
 - `read-only`, `show-copy-button`, `form-align`, `label`/`help-text` slots
 - `label` property: the accessible name of the input or textarea while editing,
   visually hidden (`owc-table` sets it to the column's label)
+- The focused text shows the focus ring of the theme for the keyboard
+  (`--wa-focus-ring`, `--wa-focus-ring-offset`), as `owc-icon-button` does
 - Keyboard: Enter or Space on the focused text starts editing; Enter commits
   (in the autocomplete, Enter picks the active option, which commits) and
   Escape cancels, both returning the focus to the text

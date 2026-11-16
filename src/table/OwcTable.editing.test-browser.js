@@ -1,4 +1,4 @@
-import { html, expect, nextFrame, waitUntil } from '@open-wc/testing';
+import { fixture, html, expect, nextFrame, waitUntil } from '@open-wc/testing';
 import { sendKeys } from '@web/test-runner-commands';
 import { deepActiveElement } from '../a11y/controls.js';
 import {
@@ -7,6 +7,7 @@ import {
   rows,
   tableFixture,
   settle,
+  grid,
   bodyRows,
   betweenButtons,
   focusedTable,
@@ -122,6 +123,52 @@ describe('owc-table editing', () => {
       });
     });
   }
+
+  it("shows the focus ring of the theme around the read view of a focused editable cell, where the cell doesn't clip it", async () => {
+    const wrapper = await fixture(html`
+      <div style="--wa-focus-ring: solid 3px rgb(0, 0, 255); --wa-focus-ring-offset: 1px">
+        <button id="before">before</button>
+        <owc-table .columns=${editorColumns({})} .data=${data}></owc-table>
+      </div>
+    `);
+    const el = /** @type {Table} */ (wrapper.querySelector('owc-table'));
+    await settle(el);
+    /** @type {HTMLElement} */ (wrapper.querySelector('#before')).focus();
+    await press('Tab');
+    for (const key of ['ArrowDown', 'ArrowDown']) {
+      const readView = /** @type {HTMLElement} */ (deepActiveElement());
+      expect(readView.matches('.display')).to.be.true;
+      const style = getComputedStyle(readView);
+      expect(style.outlineStyle).to.equal('solid');
+      expect(style.outlineWidth).to.equal('3px');
+      expect(style.outlineColor).to.equal('rgb(0, 0, 255)');
+      // the ring lies around the read view, inside everything that clips on its way up to the grid
+      const reach = parseFloat(style.outlineWidth) + parseFloat(style.outlineOffset);
+      const ring = readView.getBoundingClientRect();
+      /** @type {Node | null} */
+      let node = readView;
+      while (node && node !== grid(el)) {
+        if (
+          node instanceof Element &&
+          getComputedStyle(node).overflow !== 'visible' &&
+          node !== readView
+        ) {
+          const box = node.getBoundingClientRect();
+          const where = `${node.localName}.${node.className}`;
+          expect(ring.left - reach, where).to.be.at.least(box.left + node.clientLeft);
+          expect(ring.top - reach, where).to.be.at.least(box.top + node.clientTop);
+          expect(ring.right + reach, where).to.be.at.most(
+            box.left + node.clientLeft + node.clientWidth,
+          );
+          expect(ring.bottom + reach, where).to.be.at.most(
+            box.top + node.clientTop + node.clientHeight,
+          );
+        }
+        node = node instanceof ShadowRoot ? node.host : node.parentNode;
+      }
+      await press(key);
+    }
+  });
 
   it('starts editing with Space too, which the editor then types', async () => {
     const el = await focusedTable(

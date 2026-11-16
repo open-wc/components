@@ -267,6 +267,12 @@ export class OwcClickEditable extends LitElement {
         anchor-name: --my-anchor;
       }
 
+      /* The read view shows the keyboard focus with the ring of the theme, as owc-icon-button does. */
+      .display:focus-visible {
+        outline: var(--wa-focus-ring, 2px solid Highlight);
+        outline-offset: var(--wa-focus-ring-offset, 1px);
+      }
+
       .form-container-wrapper {
         position: absolute;
         --top-left-top: calc(anchor(--my-anchor top));
