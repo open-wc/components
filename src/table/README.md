@@ -414,6 +414,15 @@ controls are reached in interaction mode only:
   when a control's action takes the annotation away, the focus goes to the remembered
   cell instead of falling to the page.
 
+axe's `aria-required-children` doesn't accept controls in an annotation: they are in the
+grid, but in no row. That finding is accepted (`ACCEPTED_FINDINGS` in the
+[a11y helpers](../a11y/README.md)), for annotations only: making it pass means rendering
+annotations outside the grid, over space reserved in each row, with their height and
+position synced by script and a second measuring pass for the virtualizer
+([ADR-0006](../../docs/adr/0006-own-an-in-flow-vertical-virtualizer.md) keeps rows in flow
+to avoid that). What counts is that the keyboard and a screen reader work with the
+annotation where it is, which the keyboard tests and the manual check cover.
+
 **Editing.** An editable cell renders an `owc-click-editable-*` element
 (`getFieldPathContent`), which is the cell's single simple control, so it takes the
 focus: on its read view (`.display`) while it doesn't edit, in its form control while it
@@ -513,9 +522,10 @@ handlers, and share their fixtures and helpers in `OwcTable.test-browser.helpers
 as the pinboard's suites do. `OwcTable.axe.test-browser.js` runs axe over every configuration of the grid:
 each `render-mode`, selectable, editable with an insert row, grouped with the Others
 group, virtualized, with a sticky header, empty, loading, with annotations and an open
-detail, and with the column settings open. `OwcTable.toolbar.test-browser.js` runs it
+detail, with controls in an annotation, and with the column settings open. `OwcTable.toolbar.test-browser.js` runs it
 over the parts around the grid (filter builder, action tabs, mass edit, add-row button),
 with one keyboard smoke test each. Both use `expectAccessible` from the
-[a11y helpers](../a11y/README.md), which ignores only findings in Web Awesome's markup. Logic tests
+[a11y helpers](../a11y/README.md), which ignores only findings in Web Awesome's markup
+and the one about controls in an annotation. Logic tests
 (`node --test src/table/*.test.js`) cover the helper modules, including the
 operator semantics and their SQL-capability matrix.

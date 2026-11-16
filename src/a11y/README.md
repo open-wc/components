@@ -42,11 +42,15 @@ The helper remembers the original `tabindex` values it changes. Interaction mode
 ## `axe.test-browser.helpers.js`
 
 `expectAccessible(element)` for browser tests: axe over the element, like
-`expect(element).to.be.accessible()`, but with a list of findings that are Web Awesome's
-markup, not ours (`WEB_AWESOME_FINDINGS`), each with its reason. A rule on that list is
-ignored only for the elements its `accepts` check describes; anything else it reports
-still fails the test. Today: `landmark-unique` for the unnamed regions of open
+`expect(element).to.be.accessible()`, but with a list of accepted findings
+(`ACCEPTED_FINDINGS`), each with its reason. A rule on that list is ignored only for the
+findings its `accepts` check describes; anything else it reports still fails the test.
+Two are Web Awesome's markup, not ours: `landmark-unique` for the unnamed regions of open
 `wa-details`, and `label-title-only` for a `wa-select` with a visually hidden `label`.
+One is a decision about ours: `aria-required-children` for the controls in an annotation
+of `owc-table`, which are in the grid but in no row (see the
+[table's README](../table/README.md)). It is accepted only when every child axe reports
+is in an annotation.
 Add to it only for markup the components can't change, and fix everything else: axe
 can't read the name of a `wa-checkbox` (its content is slotted into the `<label>` of
 its shadow tree), so a header cell that holds one is named by text of its own, as the
