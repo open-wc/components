@@ -22,7 +22,9 @@ import {
   isInView,
   containers,
   rowClicks,
+  clickOn,
   clickBeside,
+  dragOver,
   people,
   cityGroups,
   detailTable,
@@ -350,6 +352,109 @@ describe('owc-table details', () => {
         );
       });
     }
+
+    for (const renderMode of ['detail', 'detailDeferred']) {
+      it(`toggles with a click anywhere in the row, on the text of a cell too (${renderMode})`, async () => {
+        const el = await tableFixture(detailTable(renderMode));
+        const clicked = rowClicks(el);
+        const text = () => cellsOf(bodyRows(el)[1])[2].querySelector('.cell-text');
+        // the text cursor shows where a selection starts; beside the text, the row shows the hand
+        expect(getComputedStyle(text()).cursor).to.equal('auto');
+        expect(getComputedStyle(cellsOf(bodyRows(el)[1])[2]).cursor).to.equal('pointer');
+
+        await clickOn(text());
+        await settle(el);
+        expect(el.openDetails).to.deep.equal(['2']);
+        expect(focusAt(el), 'the click moved the focus to its cell').to.equal('1:2');
+
+        await clickOn(text());
+        await settle(el);
+        expect(el.openDetails).to.deep.equal([]);
+
+        await clickBeside(cellsOf(bodyRows(el)[1])[2]);
+        await settle(el);
+        expect(el.openDetails).to.deep.equal(['2']);
+        expect(clicked).to.deep.equal([data[1], data[1], data[1]]);
+      });
+    }
+
+    it("doesn't toggle the detail for a drag that selects text, in a cell or across the cells of a row", async () => {
+      const el = await tableFixture(detailTable('detail'));
+      const cells = cellsOf(bodyRows(el)[1]);
+      await dragOver(cells[0].querySelector('.cell-text'));
+      await settle(el);
+      expect(String(getSelection()).trim()).to.equal('Sarah');
+      expect(el.openDetails).to.deep.equal([]);
+
+      // a press on selected text would drag that text
+      getSelection().removeAllRanges();
+      await dragOver(cells[0].querySelector('.cell-text'), cells[2].querySelector('.cell-text'));
+      await settle(el);
+      expect(String(getSelection())).to.not.equal('');
+      expect(el.openDetails).to.deep.equal([]);
+
+      await clickBeside(cells[2]);
+      await settle(el);
+      expect(el.openDetails).to.deep.equal(['2']);
+    });
+
+    it('opens the detail once for a double click on text, whose second click selects the word', async () => {
+      const el = await tableFixture(detailTable('detail'));
+      const text = cellsOf(bodyRows(el)[1])[0].querySelector('.cell-text');
+      await clickOn(text);
+      await settle(el);
+      expect(el.openDetails).to.deep.equal(['2']);
+      // the second click of a double click, which `sendMouse` can't send
+      const rect = text.getBoundingClientRect();
+      text.dispatchEvent(
+        new MouseEvent('click', {
+          bubbles: true,
+          composed: true,
+          detail: 2,
+          clientX: rect.left + rect.width / 2,
+          clientY: rect.top + rect.height / 2,
+        }),
+      );
+      await settle(el);
+      expect(el.openDetails).to.deep.equal(['2']);
+    });
+
+    it('leaves a click to what handles it in a cell: a control, a label, or an element that prevents the default', async () => {
+      /** @type {string[]} */
+      const pressed = [];
+      const el = await tableFixture(
+        html`<owc-table
+          render-mode="detail"
+          .columns=${[
+            columns[0],
+            {
+              label: 'Actions',
+              field: 'actions',
+              formatter: row =>
+                html`<button class="edit" @click=${() => pressed.push(row.firstName)}>Edit</button>
+                  <span class="copy" @click=${event => event.preventDefault()}>copy</span>
+                  <label class="done">done <input type="checkbox" /></label>
+                  <span class="tag">active</span>`,
+            },
+          ]}
+          .data=${data}
+          .renderDetail=${() => html`<p>Detail</p>`}
+        ></owc-table>`,
+      );
+      const row = bodyRows(el)[1];
+      await clickOn(row.querySelector('button.edit'));
+      await clickOn(row.querySelector('.copy'));
+      await clickOn(row.querySelector('label.done input'));
+      await settle(el);
+      expect(pressed).to.deep.equal(['Sarah']);
+      expect(row.querySelector('label.done input').checked).to.be.true;
+      expect(el.openDetails).to.deep.equal([]);
+
+      // an element that does nothing with the click, like a badge
+      await clickOn(row.querySelector('.tag'));
+      await settle(el);
+      expect(el.openDetails).to.deep.equal(['2']);
+    });
 
     it('says the toggles in the language of the table', async () => {
       const el = await focusedTable(
