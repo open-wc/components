@@ -7,7 +7,7 @@ import { bodyRows, rows, settle, tableFixture } from './OwcTable.test-browser.he
 
 // axe over every configuration of the table that the keyboard accessibility
 // spec lists (C2). `expectAccessible` ignores only findings in Web Awesome's
-// markup, each with its reason.
+// markup and the controls of an annotation, each with its reason.
 
 /** @typedef {import('./OwcTable.test-browser.helpers.js').Table} Table */
 
@@ -218,6 +218,53 @@ describe('owc-table passes axe', () => {
       ></owc-table>`,
     );
     await expectAccessible(el);
+  });
+
+  describe('with controls in an annotation', () => {
+    const renderAnnotation = (/** @type {Record<string, unknown>} */ row) =>
+      row.id === '2'
+        ? html`Overdue <button>Settle</button> <a href="#invoice">Invoice</a>`
+        : nothing;
+
+    /** The rules of the violations axe reports for an element, with nothing ignored. */
+    async function violatedRules(/** @type {Element} */ el) {
+      const { violations } = await /** @type {any} */ (window).axe.run(el);
+      return violations.map((/** @type {{ id: string }} */ { id }) => id);
+    }
+
+    it('but for the rule that wants them in a row, which is accepted for annotations', async () => {
+      const el = await axeFixture(
+        html`<owc-table
+          .columns=${columns}
+          .data=${data}
+          .renderAnnotation=${renderAnnotation}
+        ></owc-table>`,
+      );
+      await expectAccessible(el);
+      // the one finding that is accepted: when axe stops reporting it, its exception can go
+      expect(await violatedRules(el)).to.deep.equal(['aria-required-children']);
+    });
+
+    it('and still fails for controls in the grid that are in no row and in no annotation', async () => {
+      const el = await axeFixture(
+        html`<owc-table
+          .columns=${columns}
+          .data=${data}
+          .renderAnnotation=${renderAnnotation}
+        ></owc-table>`,
+      );
+      const stray = document.createElement('button');
+      stray.textContent = 'Stray';
+      /** @type {ShadowRoot} */ (el.shadowRoot).querySelector('.table-body')?.append(stray);
+
+      let failure;
+      try {
+        await expectAccessible(el);
+      } catch (error) {
+        failure = /** @type {Error} */ (error);
+      }
+      expect(failure?.message).to.include('aria-required-children');
+    });
   });
 
   describe('with the column settings open', () => {
