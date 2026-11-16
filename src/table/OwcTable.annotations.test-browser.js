@@ -10,6 +10,9 @@ import {
   focusedTable,
   press,
   focusAt,
+  cellHasFocus,
+  tabStops,
+  settle,
   liveRegion,
   textInput,
   clickOn,
@@ -144,5 +147,130 @@ describe('owc-table annotations', () => {
     await press('Shift+Tab');
     expect(focusAt(el)).to.equal('1:0');
     expect(await saysNothing(el)).to.be.true;
+  });
+  describe('with controls', () => {
+    /**
+     * Sarah's row has an annotation with a button and a link. The button
+     * settles the invoice, which takes the annotation away.
+     */
+    const actionTable = () => {
+      let settled = false;
+      return html`<owc-table
+        .columns=${withButton}
+        .data=${data}
+        .renderAnnotation=${row =>
+          row.id === '2' && !settled
+            ? html`Overdue
+                <button
+                  class="settle"
+                  @click=${event => {
+                    settled = true;
+                    event.target.getRootNode().host.requestUpdate();
+                  }}
+                >
+                  Settle
+                </button>
+                <a class="invoice" href="#invoice">Invoice</a>`
+            : nothing}
+      ></owc-table>`;
+    };
+
+    /** The class of the annotation's control that has the focus. */
+    function focusedAction() {
+      const active = deepActiveElement();
+      return active?.closest('.row-annotation') ? active.className : undefined;
+    }
+
+    it("aren't Tab stops: the grid stays one Tab stop, in both directions", async () => {
+      const { el, before, after } = await betweenButtons(actionTable());
+      expect(await tabStops(el, before, after)).to.deep.equal(['0:0']);
+      expect(await tabStops(el, after, before, 'Shift+Tab')).to.deep.equal(['0:0']);
+    });
+
+    it('are reached with F2 from a cell of the row: Tab and Shift+Tab move between them, and Escape comes back to the cell', async () => {
+      const el = await focusedTable(actionTable());
+      clearLiveRegion(el);
+      await press('ArrowDown');
+      await waitUntil(
+        () =>
+          liveRegion(el).textContent === 'Overdue Settle Invoice Press F2 to reach its controls',
+        'the annotation is said with how to reach its controls',
+      );
+      await press('ArrowRight');
+      expect(focusAt(el)).to.equal('1:1');
+      clearLiveRegion(el);
+
+      await press('F2');
+      expect(focusedAction()).to.equal('settle');
+      await waitUntil(
+        () => liveRegion(el).textContent === 'Press Escape to return to the table',
+        'the hint is said',
+      );
+      await press('Tab');
+      expect(focusedAction()).to.equal('invoice');
+      await press('Tab');
+      expect(focusedAction(), 'Tab goes around').to.equal('settle');
+      await press('Shift+Tab');
+      expect(focusedAction()).to.equal('invoice');
+      // the arrow keys are the control's, not the grid's
+      await press('ArrowDown');
+      expect(focusedAction()).to.equal('invoice');
+
+      await press('Escape');
+      expect(focusAt(el)).to.equal('1:1');
+      expect(cellHasFocus(el)).to.be.true;
+      await press('ArrowDown');
+      expect(focusAt(el)).to.equal('2:1');
+    });
+
+    it("are reached with F2 from a cell's one control too, where Escape comes back to", async () => {
+      const el = await focusedTable(actionTable());
+      await press('ArrowDown');
+      await press('End');
+      expect(deepActiveElement().className).to.equal('action');
+      await press('F2');
+      expect(focusedAction()).to.equal('settle');
+      await press('Escape');
+      expect(focusAt(el)).to.equal('1:3');
+      expect(deepActiveElement().className).to.equal('action');
+    });
+
+    it('are in interaction mode when the pointer focuses one: Tab stays in the annotation, and Escape goes to its row', async () => {
+      const { el, after } = await betweenButtons(actionTable());
+      clearLiveRegion(el);
+      await clickOn(el.shadowRoot.querySelector('.row-annotation .invoice'));
+      expect(focusedAction()).to.equal('invoice');
+      await waitUntil(
+        () => liveRegion(el).textContent === 'Press Escape to return to the table',
+        'the hint is said',
+      );
+      await press('Tab');
+      expect(focusedAction()).to.equal('settle');
+      expect(document.activeElement).to.not.equal(after);
+      await press('Escape');
+      expect(focusAt(el)).to.equal('1:0');
+    });
+
+    it('give the focus back to the row when their action takes the annotation away', async () => {
+      const el = await focusedTable(actionTable());
+      await press('ArrowDown');
+      await press('ArrowRight');
+      await press('F2');
+      expect(focusedAction()).to.equal('settle');
+      await press('Enter');
+      await settle(el);
+      expect(el.shadowRoot.querySelector('.row-annotation')).to.equal(null);
+      expect(focusAt(el)).to.equal('1:1');
+    });
+
+    it('leaves F2 alone in a row whose annotation has no controls, and in rows without one', async () => {
+      const el = await focusedTable(annotatedTable);
+      await press('F2');
+      expect(focusAt(el)).to.equal('0:0');
+      await press('ArrowDown');
+      await press('F2');
+      expect(focusAt(el)).to.equal('1:0');
+      expect(cellHasFocus(el)).to.be.true;
+    });
   });
 });

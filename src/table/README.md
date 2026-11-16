@@ -159,9 +159,10 @@ Three rules keep the grid one Tab stop:
   first cell of the first body row before the grid remembers one), never a control.
   While that cell isn't rendered, the grid element itself is the Tab stop, and moves the
   focus on to the cell when it gets it from Tab, which brings the row back in.
-- Controls in cells never are Tab stops. After every render, `keepOutOfTabOrder` puts
-  `tabindex="-1"` on the native controls and on every custom element in the cells'
-  content (`.cell-text`, `.cell-full` and the header cells' labels). On a shadow host
+- Controls in cells never are Tab stops, and neither are controls in a row's annotation.
+  After every render, `keepOutOfTabOrder` puts `tabindex="-1"` on the native controls and
+  on every custom element in the cells' content (`.cell-text`, `.cell-full` and the header
+  cells' labels) and in the annotations (`MANAGED_CONTENT`). On a shadow host
   that takes its whole shadow tree out of the Tab order. The pass shares a composed-tree
   traversal with control discovery, including open shadow roots and assigned slots;
   it only changes attributes on elements it hasn't handled yet or that made themselves Tab stops again.
@@ -186,7 +187,7 @@ region says how to leave.
 
 **Keys.** One `keydown` listener on the grid, `#handleGridKeydown`, handles all of
 them but Shift+Space (see Selection). It finds the cell the key comes from in the event's path and ignores keys from
-anywhere else in the grid (annotations), keys another listener
+anywhere else in the grid, keys another listener
 has handled (`defaultPrevented`), and keys from an editable cell's editor while it
 edits, except Tab in an insert row (see Editing). `keyName` of the [a11y helpers](../a11y/README.md) names the key (like `Control+Home`),
 and [gridNavigation.js](./gridNavigation.js) says where a navigation key moves the focus (`moveInGrid`), as a
@@ -396,6 +397,22 @@ live region when the focus comes into its row from another row (`isSameRow` on w
 grid remembered before), whichever cell or control gets the focus. Not again while the
 focus moves within the row, nor when it comes back to the row from outside the table.
 With the interaction hint in the same focus move, both are said as one message.
+
+An annotation can have controls, like a button that settles what it warns about. They
+are no Tab stops, and an annotation is no cell the arrow keys could reach, so its
+controls are reached in interaction mode only:
+
+- F2 on a cell of the Data Row goes to the annotation's first control, from the cell or
+  from the cell's one simple control. A cell with several controls keeps F2 for its own.
+  The announcement of such an annotation ends with how to get there (`tableAnnotationHint`).
+- A click on one of the controls does the same.
+- While the focus is on one of them (`#annotationIn`), `#interactionCell` is the
+  annotation, nothing in the grid is a Tab stop, and the grid remembers a cell of the
+  Data Row (`#enteredAnnotation`). `#handleAnnotationKey` cycles through the controls with
+  Tab and Shift+Tab, and Escape returns to that cell. Every other key is the control's.
+- The focus in an annotation counts as the grid's through a render (`#hasRovingFocus`):
+  when a control's action takes the annotation away, the focus goes to the remembered
+  cell instead of falling to the page.
 
 **Editing.** An editable cell renders an `owc-click-editable-*` element
 (`getFieldPathContent`), which is the cell's single simple control, so it takes the

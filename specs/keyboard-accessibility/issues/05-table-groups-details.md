@@ -58,6 +58,17 @@ Kept: the group header (button, keys, styles, scroll margin, focus ring), the `m
 - `#focusTargetOf` has a third condition (`#isDetailCell`); an insert row never has a detail.
 - `#handleGridFocusin` collects what the live region says in `messages` and says it once at the end (`#announceAll`); add to it rather than calling `announce` next to it.
 
+**Controls in annotations (2026-11-16, after the review of the branch)**
+
+The review found K1 broken for annotations: 01 noted that their controls were still Tab stops, this ticket took the details' controls out of the Tab order, and the annotations' stayed. Now:
+
+- `keepOutOfTabOrder` covers `.row-annotation` too (`MANAGED_CONTENT`), so the grid stays one Tab stop.
+- An annotation still is no row (K9), so the arrow keys don't reach it. Its controls are reached in interaction mode: **F2** on a cell of its Data Row goes to the first one, from the cell or from the cell's one simple control. Tab and Shift+Tab cycle through them, Escape returns to the cell, and "Press Escape to return to the table" is said on the way in. A cell with several controls keeps F2 for its own controls; the annotation is reached from the row's other cells. Enter isn't used: on a plain cell it is the row's action.
+- The pointer can focus one of the controls directly, which is the same interaction mode. Escape then goes to the Data Row, at the column the grid remembered.
+- So that a screen reader user learns about F2, the announcement of an annotation with controls ends with a new term, `tableAnnotationHint` ("Press F2 to reach its controls").
+- When a control's action takes the annotation away, the focus goes to the remembered cell of the row (the focus in an annotation counts as the grid's through a render).
+- Tests: "owc-table annotations" > "with controls" in `OwcTable.annotations.test-browser.js`. The Tab stop test fails without the `keepOutOfTabOrder` change.
+
 **For 11 (axe, docs, changeset)**
 
 - The Keyboard section needs: group headers (Enter/Space toggle, → expand, ← collapse), details (↓ reaches an open detail, Enter/F2 in, Escape out), and that annotations are said when the focus enters their row.

@@ -6,6 +6,7 @@ export const de = {
 
   tableAddFilter: 'Filter hinzufügen',
   tableAnd: 'UND',
+  tableAnnotationHint: 'F2 drücken, um zu den Bedienelementen zu gelangen',
   /**
    *
    * @param {Number} count

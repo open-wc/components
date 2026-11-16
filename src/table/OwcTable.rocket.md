@@ -1363,7 +1363,7 @@ export const annotation = () => {
 };
 ```
 
-Annotations are useful for displaying status indicators, badges, warnings, or other supplementary information.
+Annotations are useful for displaying status indicators, badges, warnings, or other supplementary information. An annotation can contain controls, like a button; see [Groups and details](#groups-and-details) for how the keyboard reaches them.
 
 ---
 
@@ -2875,8 +2875,9 @@ The sort state is on the header cell, so the sort button inside it isn't a Tab s
 | →, ←         | On a group header: expands or collapses the group.                                                             |
 | ↓            | From a row with an open detail: goes to the detail.                                                            |
 | Enter, F2    | On an open detail: goes to its controls. Tab and Shift+Tab move between them, Escape comes back to the detail. |
+| F2           | In a row whose annotation has controls: goes to them. Tab and Shift+Tab move between them, Escape comes back.  |
 
-Closing a detail while the focus is in it moves the focus to its row. When the focus moves into a row with an annotation, the annotation is announced.
+Closing a detail while the focus is in it moves the focus to its row. When the focus moves into a row with an annotation, the annotation is announced. Controls in an annotation, like a button, aren't Tab stops: F2 on a cell of the row reaches them, unless the cell has several controls of its own, where F2 goes to those. Screen readers hear "Press F2 to reach its controls" after such an annotation.
 
 ### Editing
 
