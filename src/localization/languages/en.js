@@ -6,6 +6,7 @@ export const en = {
 
   tableAddFilter: 'Add filter',
   tableAnd: 'AND',
+  tableAnnotationHint: 'Press F2 to reach its controls',
   /**
    *
    * @param {Number} count

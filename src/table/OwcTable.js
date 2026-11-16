@@ -96,6 +96,9 @@ const CELLS = ':scope > .cell, :scope > .full-width-cell';
 /** The elements that hold what a cell shows, where its controls are: a detail's `wa-details` is its cell. */
 const CELL_CONTENT = '.cell-text, .cell-full, owc-table-header-cell, .detail-row > wa-details';
 
+/** What keeps its controls out of the Tab order: what the cells show, and the annotations of the rows. */
+const MANAGED_CONTENT = `${CELL_CONTENT}, .row-annotation`;
+
 /** A header cell's sort button isn't a control of its cell: the cell sorts. */
 const CELL_CONTROL_OPTIONS = { transparent: 'owc-table-header-cell' };
 
@@ -656,7 +659,7 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     const grid = this.#grid;
     if (grid) {
       // New rows and new cell content bring new controls with every render.
-      keepOutOfTabOrder(grid, CELL_CONTENT);
+      keepOutOfTabOrder(grid, MANAGED_CONTENT);
       if (this.#hadFocusBeforeRender) {
         this.#keepFocusAfterRender();
       }
@@ -1361,7 +1364,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   #tabStop;
 
   /**
-   * The cell whose controls have the focus in interaction mode.
+   * The cell, or the annotation of a row, whose controls have the focus in
+   * interaction mode.
    *
    * @type {HTMLElement | undefined}
    */
@@ -1434,6 +1438,71 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       }
     }
     return undefined;
+  }
+
+  /**
+   * The annotation whose control an event comes from. An annotation is no
+   * cell, so its controls are reached in interaction mode only: with F2 from
+   * a cell of its Data Row, or with the pointer.
+   *
+   * @param {EventTarget[]} path the event's composed path
+   */
+  #annotationIn(path) {
+    const annotation = /** @type {HTMLElement | undefined} */ (
+      path.find(
+        target =>
+          target instanceof HTMLElement &&
+          target.getRootNode() === this.renderRoot &&
+          target.matches('.row-container > .row-annotation'),
+      )
+    );
+    return annotation && controlsIn(annotation).some(control => path.includes(control))
+      ? annotation
+      : undefined;
+  }
+
+  /**
+   * The annotation of a cell's Data Row, if it has controls.
+   *
+   * @param {HTMLElement} cell
+   */
+  #annotationWithControlsOf(cell) {
+    const annotation = cell.parentElement?.previousElementSibling;
+    return annotation instanceof HTMLElement &&
+      annotation.matches('.row-annotation') &&
+      controlsIn(annotation).length > 0
+      ? annotation
+      : undefined;
+  }
+
+  /**
+   * The cell the focus returns to from an annotation: the remembered cell,
+   * which is in the annotation's Data Row while the focus is in the annotation.
+   *
+   * @param {HTMLElement} annotation
+   */
+  #cellOfAnnotation(annotation) {
+    const row = /** @type {HTMLElement | null} */ (annotation.nextElementSibling);
+    const cells = /** @type {NodeListOf<HTMLElement> | undefined} */ (row?.querySelectorAll(CELLS));
+    const column = this.#remembered.column ?? 0;
+    return cells?.[Math.min(column, cells.length - 1)];
+  }
+
+  /**
+   * Whether an element is in the annotation that is in interaction mode, and
+   * that annotation is the one of a cell's row.
+   *
+   * @param {HTMLElement} cell
+   * @param {Element} element
+   */
+  #isInAnnotationOf(cell, element) {
+    const annotation = this.#interactionCell;
+    return (
+      annotation !== undefined &&
+      annotation === cell.parentElement?.previousElementSibling &&
+      annotation.matches('.row-annotation') &&
+      annotation.contains(element)
+    );
   }
 
   /**
@@ -1578,10 +1647,18 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     return indexOfRow(this.#list.items, row, this.getRowId);
   }
 
-  /** Whether the roving focus is in the grid: on a cell, in a cell, or parked on the grid itself. */
+  /**
+   * Whether the roving focus is in the grid: on a cell, in a cell, in the
+   * annotation of a row, or parked on the grid itself.
+   */
   #hasRovingFocus() {
     const active = /** @type {ShadowRoot | undefined} */ (this.renderRoot)?.activeElement;
-    return Boolean(active) && (active === this.#grid || this.#cellOf(active ?? null) !== undefined);
+    return (
+      Boolean(active) &&
+      (active === this.#grid ||
+        this.#cellOf(active ?? null) !== undefined ||
+        this.#interactionCell?.contains(active ?? null) === true)
+    );
   }
 
   /**
@@ -1623,6 +1700,8 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       if (active !== grid) {
         this.#holdFocusOnGrid();
       }
+    } else if (active && this.#isInAnnotationOf(cell, active)) {
+      // on a control of the row's annotation, which the render kept
     } else if (!active || this.#cellOf(active) !== cell) {
       this.#focusCell(cell);
       // In a row this render created, the controls haven't rendered their
@@ -1851,14 +1930,22 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     }
     const cell = this.#cellIn(path);
     if (!cell) {
+      const annotation = this.#annotationIn(path);
+      if (annotation) {
+        this.#enteredAnnotation(annotation);
+      }
       return;
     }
     const previousRow = this.#remembered.row;
     this.#remember(this.#positionOf(cell));
-    // what the live region says: the annotation of a row the focus comes into
+    // what the live region says: the annotation of a row the focus comes
+    // into, and how to reach the annotation's controls
     const messages = isSameRow(previousRow, this.#remembered.row)
       ? []
       : [this.#annotationTextOf(cell)].filter(text => text !== '');
+    if (messages.length > 0 && this.#annotationWithControlsOf(cell)) {
+      messages.push(this.#localize.term('tableAnnotationHint'));
+    }
     const controls = controlsIn(cell, CELL_CONTROL_OPTIONS);
     const target = this.#focusTargetOf(cell, controls);
     const onControl = controls.some(control => path.includes(control));
@@ -1890,6 +1977,25 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
     }
     this.#announceAll(messages);
     this.#setTabStop(path[0] === cell ? cell : undefined);
+  }
+
+  /**
+   * The focus is on a control of an annotation, which is interaction mode:
+   * the grid remembers a cell of the annotation's Data Row, where Escape
+   * returns to, and nothing in the grid is a Tab stop.
+   *
+   * @param {HTMLElement} annotation
+   */
+  #enteredAnnotation(annotation) {
+    const cell = this.#cellOfAnnotation(annotation);
+    if (cell) {
+      this.#remember(this.#positionOf(cell));
+    }
+    if (this.#interactionCell !== annotation) {
+      this.#interactionCell = annotation;
+      this.#announceAll([this.#localize.term('tableInteractionHint')]);
+    }
+    this.#setTabStop(undefined);
   }
 
   /**
@@ -1959,10 +2065,15 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
   #handleGridKeydown(event) {
     const path = event.composedPath();
     const cell = this.#cellIn(path);
-    if (event.defaultPrevented || (!cell && path[0] !== event.currentTarget)) {
+    const annotation = cell ? undefined : this.#annotationIn(path);
+    if (event.defaultPrevented || (!cell && !annotation && path[0] !== event.currentTarget)) {
       return;
     }
     const key = keyName(event);
+    if (annotation) {
+      this.#handleAnnotationKey(event, key, annotation, path);
+      return;
+    }
     if (cell && (key === 'Tab' || key === 'Shift+Tab') && this.#isInInsertRow(cell)) {
       // also from an editor that edits: Tab moves on like in a form
       this.#tabInInsertRow(event, key, cell, path);
@@ -1989,9 +2100,22 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       const [first] = controlsIn(cell, CELL_CONTROL_OPTIONS);
       if (!first && isEnter) {
         this.#triggerRowAction(cell, event);
-      } else if (first && (key === 'Enter' || key === 'F2')) {
+        return;
+      }
+      if (first) {
+        if (key === 'Enter' || key === 'F2') {
+          event.preventDefault();
+          focusControl(first);
+        }
+        return;
+      }
+    }
+    if (cell && key === 'F2') {
+      // F2 has nothing to go into in this cell: it goes to the controls of the row's annotation.
+      const annotation = this.#annotationWithControlsOf(cell);
+      if (annotation) {
         event.preventDefault();
-        focusControl(first);
+        focusControl(controlsIn(annotation)[0]);
       }
       return;
     }
@@ -2004,6 +2128,31 @@ export class OwcTable extends ScopedElementsMixin(LitElement) {
       event.preventDefault();
       // Without a cell to move from, the first key goes to the first cell.
       void this.#focusPosition(from ? to : this.#firstPosition());
+    }
+  }
+
+  /**
+   * The keys of interaction mode in an annotation: Tab and Shift+Tab cycle
+   * through its controls, and Escape returns to the Data Row. Every other key
+   * is left to the controls, and all of them to an editor that edits.
+   *
+   * @param {KeyboardEvent} event
+   * @param {string} key
+   * @param {HTMLElement} annotation
+   * @param {EventTarget[]} path the event's composed path
+   */
+  #handleAnnotationKey(event, key, annotation, path) {
+    if (path.some(isActiveEditor)) {
+      return;
+    }
+    if (key === 'Escape') {
+      event.preventDefault();
+      const cell = this.#cellOfAnnotation(annotation);
+      if (cell) {
+        this.#focusCell(cell);
+      }
+    } else {
+      handleInteractionKey(event, annotation);
     }
   }
 
