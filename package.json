@@ -94,7 +94,7 @@
     "@eslint/eslintrc": "^3.3.7",
     "@eslint/js": "^10.0.1",
     "@open-wc/testing": "^5.0.0",
-    "@rocket/js": "^0.3.0",
+    "@rocket/js": "^0.3.1",
     "@types/node": "^24.19.2",
     "@web/dev-server": "^1.0.1",
     "@web/mocks": "^3.0.1",
