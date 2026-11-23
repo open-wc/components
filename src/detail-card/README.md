@@ -5,6 +5,10 @@ summary row (icon, text, right-aligned detail like a price) that expands to
 detail content on click. Filled slots are detected automatically; the `open`
 state stays in sync in both directions.
 
+For the common two-column summary, use the optional `heading`, `description`, `value` and
+`value-description` slots. The card owns their stacks and typography. Custom `text` and `detail`
+slots retain precedence for existing consumers.
+
 ## Usage
 
 ```js
@@ -23,7 +27,7 @@ html`<owc-detail-card accent-color="#2563eb">
 ## Docs & demos
 
 See [OwcDetailCard.rocket.md](./OwcDetailCard.rocket.md) for live demos and
-the API reference; published on the docs site under `/detail-card/`.
+the API reference; published on the docs site under `/data/detail-card/`.
 
 ## Files
 

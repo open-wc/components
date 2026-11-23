@@ -14,7 +14,23 @@ import '@awesome.me/webawesome/dist/components/icon/icon.js';
  * @slot icon - The icon or leading visual.
  * @slot text - The primary text column, e.g. title and subtitle.
  * @slot detail - The right-aligned summary column, e.g. price and period.
+ * @slot heading - Primary text in the default summary stack; overridden by text.
+ * @slot description - Supporting text below heading; overridden by text.
+ * @slot value - Primary value in the right-aligned stack; overridden by detail.
+ * @slot value-description - Supporting value text; overridden by detail.
+ * @slot badge - Optional badge positioned over the summary's trailing edge.
  * @slot suffix - An optional trailing indicator. Defaults to a chevron.
+ * @csspart content - The summary row, including its surface, spacing and padding.
+ * @csspart icon - The leading visual container.
+ * @csspart text - The primary text column.
+ * @csspart detail - The right-aligned value column.
+ * @csspart heading - The default heading slot.
+ * @csspart description - The default supporting-text slot.
+ * @csspart value - The default primary-value slot.
+ * @csspart value-description - The default supporting-value slot.
+ * @csspart suffix - The trailing indicator container.
+ * @csspart badge - The badge container.
+ * @csspart body - The expanded body.
  * @cssproperty --owc-detail-card-accent-color - The accent rail color.
  * @cssproperty --owc-detail-card-accent-width - The accent rail width.
  * @cssproperty --owc-detail-card-background - The header and body background.
@@ -44,6 +60,10 @@ export class OwcDetailCard extends LitElement {
       'text',
       'detail',
       'suffix',
+      'heading',
+      'description',
+      'value',
+      'value-description',
     );
     this.accentColor = '';
     this.open = false;
@@ -55,7 +75,9 @@ export class OwcDetailCard extends LitElement {
   willUpdate() {
     this.withBody = this.hasSlotController.test('[default]');
     this.withIcon = this.hasSlotController.test('icon');
-    this.withDetail = this.hasSlotController.test('detail');
+    this.withDetail = ['detail', 'value', 'value-description'].some(name =>
+      this.hasSlotController.test(name),
+    );
   }
 
   /**
@@ -82,27 +104,57 @@ export class OwcDetailCard extends LitElement {
         @wa-hide=${this.handleToggle}
       >
         <div slot="summary" class="summary">
-          <div class="content">
-            <div class="icon">
+          <div part="content" class="content">
+            <div part="icon" class="icon">
               <slot name="icon"></slot>
             </div>
-            <div class="text">
-              <slot name="text"></slot>
+            <div part="text" class="text">
+              <slot name="text">
+                <div class="summary-stack">
+                  <slot
+                    part="heading"
+                    name="heading"
+                    class="primary"
+                    ?hidden=${!this.hasSlotController.test('heading')}
+                  ></slot>
+                  <slot
+                    part="description"
+                    name="description"
+                    class="secondary"
+                    ?hidden=${!this.hasSlotController.test('description')}
+                  ></slot>
+                </div>
+              </slot>
             </div>
-            <div class="detail">
-              <slot name="detail"></slot>
+            <div part="detail" class="detail">
+              <slot name="detail">
+                <div class="summary-stack">
+                  <slot
+                    part="value"
+                    name="value"
+                    class="primary"
+                    ?hidden=${!this.hasSlotController.test('value')}
+                  ></slot>
+                  <slot
+                    part="value-description"
+                    name="value-description"
+                    class="secondary"
+                    ?hidden=${!this.hasSlotController.test('value-description')}
+                  ></slot>
+                </div>
+              </slot>
             </div>
-            <div class="suffix">
+            <div part="suffix" class="suffix">
               <slot name="suffix">
                 <wa-icon name="chevron-down"></wa-icon>
               </slot>
             </div>
           </div>
-          <div class="badge">
+          <div part="badge" class="badge">
             <slot name="badge"></slot>
           </div>
         </div>
-        <div class="body">
+        <div part="body" class="body">
           <slot></slot>
         </div>
       </wa-details>
@@ -226,6 +278,43 @@ export class OwcDetailCard extends LitElement {
       .detail {
         min-inline-size: 0;
         text-align: end;
+      }
+
+      .summary-stack {
+        display: grid;
+        gap: var(--wa-space-3xs, 0.125rem);
+        min-inline-size: 0;
+        overflow-wrap: anywhere;
+        line-height: var(--wa-line-height-condensed, 1.2);
+      }
+
+      .primary,
+      .secondary {
+        display: block;
+        min-inline-size: 0;
+      }
+
+      .primary {
+        font-family: var(--wa-font-family-heading, inherit);
+        font-size: var(--wa-font-size-s, 0.875rem);
+        font-weight: var(--wa-font-weight-heading, 600);
+      }
+
+      .secondary {
+        color: var(--wa-color-text-quiet, #666);
+        font-family: var(--wa-font-family-body, inherit);
+        font-size: var(--wa-font-size-xs, 0.75rem);
+        font-weight: var(--wa-font-weight-body, 400);
+      }
+
+      .primary::slotted(*),
+      .secondary::slotted(*) {
+        margin: 0;
+        font: inherit;
+      }
+
+      [hidden] {
+        display: none !important;
       }
 
       .suffix {

@@ -8,9 +8,10 @@ export const config = {
     iconName: 'postcard',
   },
 };
-import { atlasDocLayout as docLayout } from '@rocket/js/layouts/atlasDoc.js';
+import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
 import { docsData } from '@open-wc/components/docsData.js';
 
+export const components = atlasDocComponents;
 export const layout = pageData => docLayout(pageData, docsData);
 ```
 
@@ -19,6 +20,7 @@ import { html } from 'lit';
 
 import '@open-wc/components/define/owc-detail-card.js';
 import '@awesome.me/webawesome/dist/components/icon/icon.js';
+import '@awesome.me/webawesome/dist/components/badge/badge.js';
 ```
 
 # Detail Card
@@ -31,6 +33,35 @@ Use `owc-detail-card` when a dense list or overview needs to show the most impor
 and let users expand a row for supporting detail. The whole summary row toggles the body. Filled
 slots are detected automatically, so the layout collapses cleanly when you omit the icon, detail
 column, or body content.
+
+## Structured summary
+
+Use the optional `heading`, `description`, `value` and `value-description` slots for the repeated
+two-column summary. The module owns their stacking, spacing and typography; callers supply
+localized values and supporting content. Existing `text` and `detail` slots remain available for
+custom layouts and take precedence over the default stacks in their respective columns.
+
+```js demo
+export const structuredSummary = () => html`
+  <owc-detail-card accent-color="var(--wa-color-warning-fill-loud)">
+    <wa-icon
+      slot="icon"
+      src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/icons/wallet2.svg"
+      aria-hidden="true"
+    ></wa-icon>
+    <span slot="heading">Savings plan</span>
+    <span slot="description">Example provider</span>
+    <span slot="value">€ 5,000</span>
+    <span slot="value-description">Monthly: € 150</span>
+    <wa-badge slot="badge" variant="neutral" pill>External plan</wa-badge>
+    <p>Supporting information supplied by the application.</p>
+  </owc-detail-card>
+`;
+```
+
+Omit unused fields to remove their space. Keep action controls in the expandable body, so the
+summary remains one keyboard-operable disclosure. Status labels, money/date formatting and
+domain rules belong to the consumer.
 
 ## Basic expanded card
 
@@ -213,13 +244,25 @@ export const detailCardList = () => html`
 
 ### Slots
 
-| Slot        | Description                                         |
-| ----------- | --------------------------------------------------- |
-| _(default)_ | Expandable detail content below the summary row.    |
-| `icon`      | The leading icon/visual.                            |
-| `text`      | The primary text column.                            |
-| `detail`    | The right-aligned summary column (e.g. price).      |
-| `suffix`    | Trailing indicator; defaults to a rotating chevron. |
+| Slot                | Description                                                    |
+| ------------------- | -------------------------------------------------------------- |
+| _(default)_         | Expandable detail content below the summary row.               |
+| `icon`              | The leading icon/visual.                                       |
+| `text`              | Custom primary text column; overrides heading and description. |
+| `detail`            | Custom value column; overrides value and value-description.    |
+| `heading`           | Primary text in the default summary stack.                     |
+| `description`       | Supporting text below the heading.                             |
+| `value`             | Primary value in the right-aligned stack.                      |
+| `value-description` | Supporting text below the value.                               |
+| `badge`             | Optional badge above the summary's trailing edge.              |
+| `suffix`            | Trailing indicator; defaults to a rotating chevron.            |
+
+### CSS parts
+
+`content`, `icon`, `text`, `detail`, `suffix`, `badge` and `body` expose the existing layout areas.
+`heading`, `description`, `value` and `value-description` expose the default stack slots. Use
+these parts for application-specific spacing and presentation instead of duplicating disclosure
+structure or reaching into the shadow root.
 
 ### CSS custom properties
 
