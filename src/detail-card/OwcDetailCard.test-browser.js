@@ -1,4 +1,5 @@
-import { fixture, html, expect, oneEvent } from '@open-wc/testing';
+import { fixture, html, expect, waitUntil } from '@open-wc/testing';
+import { sendKeys } from '@web/test-runner-commands';
 import { OwcDetailCard } from './OwcDetailCard.js';
 
 customElements.define('owc-detail-card', OwcDetailCard);
@@ -39,26 +40,20 @@ describe('owc-detail-card', () => {
     el.remove();
   });
 
-  it('opens via property and syncs back when the inner details closes (regression)', async () => {
+  it('opens via property and closes via the public trigger', async () => {
     const el = await fixture(
       html`<owc-detail-card>
         <div slot="text">text</div>
         body
       </owc-detail-card>`,
     );
-    const details = el.shadowRoot.querySelector('wa-details');
     expect(el.open).to.equal(false);
 
     el.open = true;
     await el.updateComplete;
-    expect(details.hasAttribute('open')).to.equal(true);
-
-    // user closes the inner details; the host used to listen for a toggle
-    // event that wa-details never fires
-    setTimeout(() => {
-      details.open = false;
-    });
-    await oneEvent(details, 'wa-hide');
+    expect(el.hasAttribute('open')).to.equal(true);
+    el.focus();
+    await sendKeys({ press: 'Enter' });
     await el.updateComplete;
     expect(el.open).to.equal(false);
   });
@@ -69,7 +64,7 @@ describe('owc-detail-card', () => {
         <div slot="text">text</div>
       </owc-detail-card>`,
     );
-    const details = el.shadowRoot.querySelector('wa-details');
+    const details = el.shadowRoot.querySelector('.card');
     expect(details.style.getPropertyValue('--owc-detail-card-accent-color')).to.equal(
       'rgb(200, 0, 0)',
     );
@@ -129,13 +124,12 @@ describe('owc-detail-card', () => {
     const content = el.shadowRoot.querySelector('.content');
     expect(getComputedStyle(content).borderBottomWidth).to.equal('2px');
     expect(getComputedStyle(content).borderEndStartRadius).to.equal('8px');
-    const slot = el.shadowRoot.querySelector('slot:not([name])');
-    const changed = oneEvent(slot, 'slotchange');
     el.append(document.createTextNode('Body'));
-    await changed;
+    await waitUntil(() => el.withBody);
     await el.updateComplete;
-    expect(getComputedStyle(content).borderBottomWidth).to.equal('0px');
-    expect(getComputedStyle(content).borderEndStartRadius).to.equal('0px');
+    const expandedContent = el.shadowRoot.querySelector('.content');
+    expect(getComputedStyle(expandedContent).borderBottomWidth).to.equal('0px');
+    expect(getComputedStyle(expandedContent).borderEndStartRadius).to.equal('0px');
   });
   it('inherits Web Awesome tokens through the summary slot and uses them for layout', async () => {
     const host = await fixture(
@@ -152,7 +146,6 @@ describe('owc-detail-card', () => {
     );
     const card = host.querySelector('owc-detail-card');
     await card.updateComplete;
-    await card.shadowRoot.querySelector('wa-details').updateComplete;
     const header = card.querySelector('[slot=text]');
     expect(getComputedStyle(header).getPropertyValue('--wa-space-3xs').trim()).to.equal('3px');
     expect(

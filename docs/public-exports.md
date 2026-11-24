@@ -15,6 +15,15 @@ public namespaces.
 - `OwcTemplateEditorOld` is intentionally retained as a legacy internal implementation used by
   `OwcTemplateEditor`; it is not exported as its own package entry point.
 
+## New Component Exports
+
+New UI components use grouped entry points under their component directory. ActionCard adds
+`action-card/OwcActionCard.js` and `action-card/define/owc-action-card.js`, backed by
+`src/action-card/OwcActionCard.js` and documented in `src/action-card/OwcActionCard.rocket.md`.
+The package's existing wildcard export resolves both runtime files and generated declarations.
+The counts and top-level entries below describe the initial release audit; those legacy entries
+remain stable.
+
 ## Top-Level Component And Package Exports
 
 | Export file                 | Source module                                                      | Documentation                                                                      | Layout status                                               |

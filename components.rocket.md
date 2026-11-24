@@ -66,6 +66,7 @@ Application shell and page structure.
 - [Tabs](/layout/tabs): tabbed content.
 - [Loading Screen](/layout/loading-screen): centered spinner with progress for application startup.
 - [Separator](/layout/separator): horizontal or vertical divider with optional label.
+- [Action Card](/layout/action-card): icon, heading and description with optional full-width actions.
 
 ## Utilities
 
