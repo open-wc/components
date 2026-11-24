@@ -14,8 +14,6 @@ describe('owc-detail-card structured summary', () => {
         <p>Contract details supplied by the application.</p>
       </owc-detail-card>
     `);
-    const detail = card.shadowRoot.querySelector('wa-details');
-    await detail.updateComplete;
     const heading = card.querySelector('[slot="heading"]').getBoundingClientRect();
     const description = card.querySelector('[slot="description"]').getBoundingClientRect();
     const value = card.querySelector('[slot="value"]').getBoundingClientRect();
@@ -26,8 +24,7 @@ describe('owc-detail-card structured summary', () => {
     expect(valueDescription.top).to.be.greaterThan(value.top);
     expect(value.left).to.be.greaterThan(heading.left);
     expect(card.withDetail).to.equal(true);
-    const header = detail.shadowRoot.querySelector('[part="header"]');
-    header.focus();
+    card.focus();
     await sendKeys({ press: 'Enter' });
     await waitUntil(() => card.open);
     await sendKeys({ press: 'Space' });

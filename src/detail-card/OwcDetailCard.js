@@ -20,6 +20,8 @@ import '@awesome.me/webawesome/dist/components/icon/icon.js';
  * @slot value-description - Supporting value text; overridden by detail.
  * @slot badge - Optional badge positioned over the summary's trailing edge.
  * @slot suffix - An optional trailing indicator. Defaults to a chevron.
+ * @event card-toggle - Bubbling/composed { open } notification forwarded from Web Awesome transitions.
+ * @csspart trigger - The Web Awesome disclosure header, absent for static summaries.
  * @csspart content - The summary row, including its surface, spacing and padding.
  * @csspart icon - The leading visual container.
  * @csspart text - The primary text column.
@@ -46,6 +48,7 @@ export class OwcDetailCard extends LitElement {
   static properties = {
     accentColor: { type: String, attribute: 'accent-color' },
     open: { type: Boolean, reflect: true },
+    headingLevel: { type: Number, attribute: 'heading-level' },
     withIcon: { type: Boolean, reflect: true, attribute: 'with-icon' },
     withDetail: { type: Boolean, reflect: true, attribute: 'with-detail' },
     withBody: { type: Boolean, reflect: true, attribute: 'with-body' },
@@ -67,12 +70,40 @@ export class OwcDetailCard extends LitElement {
     );
     this.accentColor = '';
     this.open = false;
+    this.headingLevel = 3;
     this.withIcon = false;
     this.withDetail = false;
     this.withBody = false;
   }
 
-  willUpdate() {
+  /** Focus the disclosure trigger, or the static heading when no details exist. */
+  /** @param {FocusOptions} [options] */
+  focus(options) {
+    const target = this.withBody
+      ? this.shadowRoot?.querySelector('wa-details')?.header
+      : /** @type {HTMLElement | null | undefined} */ (
+          this.shadowRoot?.querySelector('.static-summary')
+        );
+    target?.focus(options);
+  }
+
+  /** Open the details and wait for Web Awesome's expansion animation. */
+  async show() {
+    await this.updateComplete;
+    const details = this.shadowRoot?.querySelector('wa-details');
+    await details?.updateComplete;
+    return details?.show();
+  }
+
+  /** @param {import('lit').PropertyValues} changedProperties */
+  willUpdate(changedProperties) {
+    if (
+      changedProperties.has('open') &&
+      !this.open &&
+      this.shadowRoot?.querySelector('.body')?.matches(':focus-within')
+    ) {
+      this.focus({ preventScroll: true });
+    }
     this.withBody = this.hasSlotController.test('[default]');
     this.withIcon = this.hasSlotController.test('icon');
     this.withDetail = ['detail', 'value', 'value-description'].some(name =>
@@ -80,84 +111,125 @@ export class OwcDetailCard extends LitElement {
     );
   }
 
-  /**
-   * Syncs the host open property when the inner wa-details shows/hides.
-   * wa-details fires wa-show/wa-hide (never toggle); the after-variants only
-   * fire once the animation finished, which stalls in background tabs.
-   * @param {Event & { currentTarget: HTMLElement & { open?: boolean } }} event
-   */
+  async updated() {
+    const details = this.shadowRoot?.querySelector('wa-details');
+    await details?.updateComplete;
+    if (details) {
+      // Web Awesome 3.14 references this header ID without assigning it. Its
+      // default region would also create a landmark for every expanded card.
+      details.header.id = 'header';
+      details.body.setAttribute('role', 'group');
+    }
+  }
+
+  /** @param {Event} event */
   handleToggle(event) {
-    this.open = !!event.currentTarget?.open;
+    if (event.target === event.currentTarget) {
+      this.open = event.type === 'wa-show';
+      this.dispatchEvent(
+        new CustomEvent('card-toggle', {
+          detail: { open: this.open },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+    }
+  }
+
+  renderSummary() {
+    return html`
+      <div part="content" class="content">
+        <div part="icon" class="icon">
+          <slot name="icon"></slot>
+        </div>
+        <div part="text" class="text">
+          <slot name="text">
+            <div class="summary-stack">
+              <slot
+                part="heading"
+                name="heading"
+                class="primary"
+                ?hidden=${!this.hasSlotController.test('heading')}
+              ></slot>
+              <slot
+                part="description"
+                name="description"
+                class="secondary"
+                ?hidden=${!this.hasSlotController.test('description')}
+              ></slot>
+            </div>
+          </slot>
+        </div>
+        <div part="detail" class="detail">
+          <slot name="detail">
+            <div class="summary-stack">
+              <slot
+                part="value"
+                name="value"
+                class="primary"
+                ?hidden=${!this.hasSlotController.test('value')}
+              ></slot>
+              <slot
+                part="value-description"
+                name="value-description"
+                class="secondary"
+                ?hidden=${!this.hasSlotController.test('value-description')}
+              ></slot>
+            </div>
+          </slot>
+        </div>
+        <div part="suffix" class="suffix">
+          <slot name="suffix">
+            <wa-icon name="chevron-down"></wa-icon>
+          </slot>
+        </div>
+      </div>
+      <div part="badge" class="badge">
+        <slot name="badge"></slot>
+      </div>
+    `;
   }
 
   render() {
-    const styles = this.accentColor
-      ? { '--owc-detail-card-accent-color': this.accentColor }
-      : undefined;
-
+    const styles = this.accentColor ? { '--owc-detail-card-accent-color': this.accentColor } : {};
+    const level = [1, 2, 3, 4, 5, 6].includes(this.headingLevel) ? this.headingLevel : 3;
     return html`
-      <wa-details
-        class="card${this.accentColor ? ' card--with-accent' : ''}"
-        style=${styleMap(styles ?? {})}
-        ?open=${this.open}
-        @wa-show=${this.handleToggle}
-        @wa-hide=${this.handleToggle}
-      >
-        <div slot="summary" class="summary">
-          <div part="content" class="content">
-            <div part="icon" class="icon">
-              <slot name="icon"></slot>
-            </div>
-            <div part="text" class="text">
-              <slot name="text">
-                <div class="summary-stack">
-                  <slot
-                    part="heading"
-                    name="heading"
-                    class="primary"
-                    ?hidden=${!this.hasSlotController.test('heading')}
-                  ></slot>
-                  <slot
-                    part="description"
-                    name="description"
-                    class="secondary"
-                    ?hidden=${!this.hasSlotController.test('description')}
-                  ></slot>
+      <div class="card${this.accentColor ? ' card--with-accent' : ''}" style=${styleMap(styles)}>
+        ${
+          this.withBody
+            ? html`
+                <wa-details
+                  exportparts="header:trigger"
+                  .open=${this.open}
+                  @wa-show=${this.handleToggle}
+                  @wa-hide=${this.handleToggle}
+                >
+                  <div
+                    slot="summary"
+                    part="summary"
+                    class="summary"
+                    role="heading"
+                    aria-level=${level}
+                  >
+                    ${this.renderSummary()}
+                  </div>
+                  <div part="body" class="body" ?inert=${!this.open}>
+                    <slot></slot>
+                  </div>
+                </wa-details>
+              `
+            : html`<div
+                  part="summary"
+                  class="summary static-summary"
+                  role="heading"
+                  aria-level=${level}
+                  tabindex="-1"
+                >
+                  ${this.renderSummary()}
                 </div>
-              </slot>
-            </div>
-            <div part="detail" class="detail">
-              <slot name="detail">
-                <div class="summary-stack">
-                  <slot
-                    part="value"
-                    name="value"
-                    class="primary"
-                    ?hidden=${!this.hasSlotController.test('value')}
-                  ></slot>
-                  <slot
-                    part="value-description"
-                    name="value-description"
-                    class="secondary"
-                    ?hidden=${!this.hasSlotController.test('value-description')}
-                  ></slot>
-                </div>
-              </slot>
-            </div>
-            <div part="suffix" class="suffix">
-              <slot name="suffix">
-                <wa-icon name="chevron-down"></wa-icon>
-              </slot>
-            </div>
-          </div>
-          <div part="badge" class="badge">
-            <slot name="badge"></slot>
-          </div>
-        </div>
-        <div part="body" class="body">
-          <slot></slot>
-        </div>
-      </wa-details>
+                <slot hidden></slot>`
+        }
+      </div>
     `;
   }
 
@@ -179,7 +251,7 @@ export class OwcDetailCard extends LitElement {
         color: var(--wa-color-text-normal);
       }
 
-      wa-details::part(base) {
+      .card {
         border: none;
         padding: 0;
         box-shadow: none;
@@ -194,28 +266,43 @@ export class OwcDetailCard extends LitElement {
         );
       }
 
-      wa-details::part(summary) {
+      .summary {
+        display: block;
+        position: relative;
+        width: 100%;
         padding: 0;
         margin: 0;
+        border: 0;
+        border-radius: var(--owc-detail-card-border-radius);
+        background: transparent;
+        font: inherit;
+        color: inherit;
+        text-align: start;
       }
 
-      wa-details::part(header) {
+      wa-details::part(details) {
+        border: none;
+        border-radius: inherit;
+        background: transparent;
+        overflow: visible;
+      }
+
+      wa-details::part(header),
+      wa-details::part(content) {
         padding: 0;
+      }
+
+      wa-details::part(summary) {
+        width: 100%;
       }
 
       wa-details::part(icon) {
         display: none;
       }
 
-      wa-details::part(content) {
-        margin: 0;
-        padding: 0;
-      }
-
-      .summary {
-        display: block;
-        position: relative;
-        width: 100%;
+      .summary:focus-visible {
+        outline: var(--wa-focus-ring, 3px solid Highlight);
+        outline-offset: var(--wa-focus-ring-offset, 2px);
       }
 
       .content {
@@ -235,13 +322,13 @@ export class OwcDetailCard extends LitElement {
         box-shadow: var(--owc-detail-card-shadow);
       }
 
-      :host([with-body]) wa-details[open] .content {
+      :host([with-body][open]) .content {
         border-block-end-width: 0;
         border-end-start-radius: 0;
         border-end-end-radius: 0;
       }
 
-      .card:not(.card--with-accent)::part(base) {
+      .card:not(.card--with-accent) {
         background: transparent;
       }
 
@@ -342,7 +429,7 @@ export class OwcDetailCard extends LitElement {
         font-size: var(--wa-font-size-2xs, 11px);
       }
 
-      wa-details[open] .suffix {
+      :host([open]) .suffix {
         transform: rotate(180deg);
       }
 
@@ -378,6 +465,21 @@ export class OwcDetailCard extends LitElement {
 
       :host(:not([with-body])) .body {
         display: none;
+      }
+
+      :host(:not([with-body])) .suffix {
+        display: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        wa-details {
+          --show-duration: 0s;
+          --hide-duration: 0s;
+        }
+
+        .suffix {
+          transition: none;
+        }
       }
 
       :host(:not([with-icon])) .icon,
