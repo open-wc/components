@@ -137,8 +137,11 @@ New public UI component exports need colocated Rocket docs or demos; new public 
 Export public types deliberately through package entry points.
 Keep component-specific types with the owning component, use shared public type exports only for deliberate shared APIs, and do not document internal-only types as importable.
 
-Update the `package.json` `exports` map in the same change whenever a public entry point is added, renamed, or removed.
-Internal file movement should not change the exports map unless the public surface intentionally changes.
+Expose public entry points through files under `exports/` using the existing `./*` mapping in
+`package.json`. Do not add named export-map entries for paths already covered by this wildcard,
+including component classes, types and `define/*` modules. Update the map only when a public path
+requires a different mapping or the wildcard contract changes. Internal file movement should
+preserve the public entry points.
 
 Add a changeset for consumer-visible public API changes, including added, removed, or renamed exports, behavior changes, and migration-relevant fixes.
 Internal refactors that do not affect consumers do not need a changelog entry.
@@ -152,6 +155,29 @@ Adding a peer dependency for a public export should normally include a short ADR
 
 Run a release-hygiene check when changing public docs, examples, package metadata, exports, or package contents.
 Those changes must not introduce private/internal references, secrets, private URLs, private registry assumptions, stale package branding, or accidental scratch/agent material in shipped files.
+
+## Component Documentation
+
+Before changing a Rocket component page, compare its structure with nearby pages such as
+`src/input-slider/OwcInputSlider.rocket.md` and `src/count-up/OwcCountUp.rocket.md`.
+Use the shared Atlas documentation layout and export its `atlasDocComponents` binding as
+`components`. Reuse the shared demo, code and table renderers.
+
+Start with a short description of current behavior and the smallest working example. Follow with
+focused, generic examples for individual features, then an API reference covering relevant
+properties and defaults, slots, events and styling hooks. Keep demo headings below their section
+headings in the document hierarchy. Match the surrounding pages' typography and spacing through
+the shared renderer.
+
+Keep business-specific data preparation in consumer applications. Record preview migrations in
+changesets and implementation or release-verification evidence in the feature's specs. Include
+limitations on the component page when they affect a consumer's choices or implementation.
+
+Review the page's structure and examples alongside a comparable page, and check both inline and
+standalone demos at narrow and desktop widths. Exercise the documented interactions as part of
+the change's normal validation.
+Keep wide API tables usable in a named container that supports keyboard scrolling without
+overflowing the page.
 
 ## Dependency and Lockfile Policy
 

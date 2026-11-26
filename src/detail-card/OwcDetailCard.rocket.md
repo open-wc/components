@@ -8,7 +8,8 @@ export const config = {
     iconName: 'postcard',
   },
 };
-import { atlasDocLayout as docLayout } from '@rocket/js/layouts/atlasDoc.js';
+import { atlasDocLayout as docLayout, atlasDocComponents } from '@rocket/js/layouts/atlasDoc.js';
+export const components = atlasDocComponents;
 import { docsData } from '@open-wc/components/docsData.js';
 
 export const layout = pageData => docLayout(pageData, docsData);

@@ -84,6 +84,7 @@
   "dependencies": {
     "@awesome.me/webawesome": "^3.14.0",
     "@cfworker/json-schema": "^4.1.6",
+    "@giuseppe-scotto-lavina/html-in-canvas-polyfill": "^1.0.4",
     "@open-wc/lit-helpers": "^0.7.0",
     "@open-wc/scoped-elements": "2.1.5",
     "countup.js": "^2.9.0",
