@@ -137,8 +137,11 @@ New public UI component exports need colocated Rocket docs or demos; new public 
 Export public types deliberately through package entry points.
 Keep component-specific types with the owning component, use shared public type exports only for deliberate shared APIs, and do not document internal-only types as importable.
 
-Update the `package.json` `exports` map in the same change whenever a public entry point is added, renamed, or removed.
-Internal file movement should not change the exports map unless the public surface intentionally changes.
+Expose public entry points through files under `exports/` using the existing `./*` mapping in
+`package.json`. Do not add named export-map entries for paths already covered by this wildcard,
+including component classes, types and `define/*` modules. Update the map only when a public path
+requires a different mapping or the wildcard contract changes. Internal file movement should
+preserve the public entry points.
 
 Add a changeset for consumer-visible public API changes, including added, removed, or renamed exports, behavior changes, and migration-relevant fixes.
 Internal refactors that do not affect consumers do not need a changelog entry.
@@ -158,7 +161,7 @@ Those changes must not introduce private/internal references, secrets, private U
 Before changing a Rocket component page, compare its structure with nearby pages such as
 `src/input-slider/OwcInputSlider.rocket.md` and `src/count-up/OwcCountUp.rocket.md`.
 Use the shared Atlas documentation layout and export its `atlasDocComponents` binding as
-`components`; the lint command checks this binding. Reuse the shared demo, code and table renderers.
+`components`. Reuse the shared demo, code and table renderers.
 
 Start with a short description of current behavior and the smallest working example. Follow with
 focused, generic examples for individual features, then an API reference covering relevant
