@@ -1,0 +1,9 @@
+{
+  "name": "doughnut-installed-consumer",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@open-wc/components": "file:/tmp/open-wc-components-0.4.0.tgz",
+    "lit": "^3.3.1"
+  }
+}

@@ -28,6 +28,18 @@
     "url": "https://opencollective.com/modern-web"
   },
   "exports": {
+    "./OwcDoughnutChart.js": {
+      "types": "./dist-types/exports/OwcDoughnutChart.d.ts",
+      "default": "./exports/OwcDoughnutChart.js"
+    },
+    "./OwcDoughnutChart.types.js": {
+      "types": "./dist-types/exports/OwcDoughnutChart.types.d.ts",
+      "default": "./exports/OwcDoughnutChart.types.js"
+    },
+    "./define/owc-doughnut-chart.js": {
+      "types": "./dist-types/exports/define/owc-doughnut-chart.d.ts",
+      "default": "./exports/define/owc-doughnut-chart.js"
+    },
     "./*": {
       "types": "./dist-types/exports/*",
       "default": "./exports/*"
@@ -57,7 +69,7 @@
     "clear:wireit": "rm -rf .wireit",
     "debug": "web-test-runner --watch",
     "format": "eslint . --ignore-pattern .gitignore --fix && prettier \"**/*.{ts,js,json,md}\" --write --ignore-path .gitignore --ignore-path .prettierignore",
-    "lint": "eslint . --ignore-pattern .gitignore && prettier \"**/*.{ts,js,json,md}\" --check --ignore-path .gitignore --ignore-path .prettierignore",
+    "lint": "node scripts/check-rocket-pages.js && eslint . --ignore-pattern .gitignore && prettier \"**/*.{ts,js,json,md}\" --check --ignore-path .gitignore --ignore-path .prettierignore",
     "start": "rocket start",
     "test": "wireit",
     "test:node": "wireit",
@@ -84,6 +96,7 @@
   "dependencies": {
     "@awesome.me/webawesome": "^3.14.0",
     "@cfworker/json-schema": "^4.1.6",
+    "@giuseppe-scotto-lavina/html-in-canvas-polyfill": "^1.0.4",
     "@open-wc/lit-helpers": "^0.7.0",
     "@open-wc/scoped-elements": "2.1.5",
     "countup.js": "^2.9.0",
